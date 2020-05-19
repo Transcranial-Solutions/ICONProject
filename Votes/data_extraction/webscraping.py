@@ -161,7 +161,7 @@ for j in range(len(prep_address)):
     rewards_df = pd.DataFrame(data=rewards_d)
 
     # export to csv
-    rewards_df.to_csv(rewardsPath + prep_address[j] + 'prep_rewards.csv', index=False)
+    rewards_df.to_csv(rewardsPath + prep_address[j] + '_prep_rewards.csv', index=False)
 
     print("Rewards for " + prep_address[j] + ": Done - " + str(j + 1) + " out of " + str(len(prep_address)))
 
