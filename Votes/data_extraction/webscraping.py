@@ -2,7 +2,7 @@
 #########################################################################
 ## Project: ICON Vote Data Visualisation                               ##
 ## Date: May 2020                                                      ##
-## Author: Tono (Transcranial Solutions)                               ##
+## Author: Tono / Sung Wook Chung (Transcranial Solutions)             ##
 ## transcranial.solutions@gmail.com                                    ##
 ##                                                                     ##
 ## This programme is distributed in the hope that it will be useful,   ##
