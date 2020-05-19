@@ -188,7 +188,7 @@ for k in range(len(prep_address)):
     validator = extract_values(jreq, 'validator')
     votes = extract_values(jreq, 'amount')
     created_at = extract_values(jreq, 'created_at')
-    # validator_name = extract_values(jreq, 'validator_name')
+    validator_name = extract_values(jreq, 'validator_name')
 
     d=[]
     df=[]
@@ -196,15 +196,17 @@ for k in range(len(prep_address)):
     d = {'block_id': block_id,
          'delegator': delegator,
          'validator': validator,
+         'validator_name': validator_name,
          'votes': votes,
          'created_at': created_at}
-         #'validator_name': validator_name
+         
 
      # convert into dataframe
      df = pd.DataFrame(data=d)
      
-     # convert timestamp into date
-     df['date'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%d/%m/%Y, %I:%M:%S, %A")
+     # convert timestamp into date & day
+     df['date'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%d/%m/%Y %I:%M")
+     df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%A")
     
      # write to csv
      df.to_csv(votePath + validator[0] + '.csv', index=False)
