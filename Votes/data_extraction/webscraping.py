@@ -202,7 +202,11 @@ for k in range(len(prep_address)):
 
      # convert into dataframe
      df = pd.DataFrame(data=d)
-
+     
+     # convert timestamp into date
+     df['date'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%d/%m/%Y, %I:%M:%S, %A")
+    
+     # write to csv
      df.to_csv(votePath + validator[0] + '.csv', index=False)
 
      print("Votes for " + validator[0] + ": Done - " + str(k+1) + " out of " + str(len(prep_address)))
