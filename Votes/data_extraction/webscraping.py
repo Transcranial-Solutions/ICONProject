@@ -204,9 +204,10 @@ for k in range(len(prep_address)):
      # convert into dataframe
      df = pd.DataFrame(data=d)
      
-     # convert timestamp into date & day
-     df['date'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%d/%m/%Y %I:%M")
-     df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%A")
+     # convert timestamp into date, time & day
+     df['date'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%d/%m/%Y")
+     df['time'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%d/%m/%Y")
+     df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
     
      # write to csv
      df.to_csv(votePath + validator[0] + '.csv', index=False)
