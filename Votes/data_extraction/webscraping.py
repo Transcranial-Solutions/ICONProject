@@ -154,7 +154,7 @@ for j in range(len(prep_address)):
     # combining strings into list
     rewards_d = {'address': rewards_address,
          'block_id': rewards_block,
-         'date': rewards_date,
+         'datetime': rewards_date,
          'rewards': rewards_icx}
 
     # convert into dataframe
@@ -205,7 +205,7 @@ for k in range(len(prep_address)):
      df = pd.DataFrame(data=d)
      
      # convert timestamp into date & day
-     df['date'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%d-%m-%Y %H:%M:%S")
+     df['datetime'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%d-%m-%Y %H:%M:%S")
      df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
     
      # write to csv
