@@ -206,7 +206,7 @@ for k in range(len(prep_address)):
      
      # convert timestamp into date, time & day
      df['date'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%d/%m/%Y")
-     df['time'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%d/%m/%Y")
+     df['time'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%H:%M:%S")
      df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
     
      # write to csv
