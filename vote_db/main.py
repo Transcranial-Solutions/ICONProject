@@ -1,9 +1,8 @@
-import sqlite3
+import sqlite3, requests
 from rpc import get_block, get_transaction_result
 
 # Psuedocode
-#
-#
+
 #  Open database
 #  Initialize schema
 #
@@ -12,6 +11,7 @@ from rpc import get_block, get_transaction_result
 #        
 #        For every transaction in list:
 #              Test if transaction --> cx0000000...0. Continue on to next transaction if not.
+#              Test if transaction method is set_delegation
 #              Test if transaction was successful. Discard if unsucessful and insert into db if successful.
 #      
 DB = "db/vote.db"
@@ -34,22 +34,30 @@ def main():
     connection.commit()
     connection.close()
 
+    # Process blocks
+    counter = 0
+    while True:
+        try:
+            ## TODO
+        except KeyError:
+            ## TODO
+            print(f"All blocks processed. Last block: {}", counter)
+            break
+        
+            
 
 
+def execute_sqlscript(scriptfile, db):
+    connection = sqlite3.connect(DB)
+    cursor = connection.cursor()
+    
+    with open(scriptfile, 'r') as f:
+        for line in f:
+            cursor.execute(line)
+    
+    connection.commit()
+    connection.close()
 
 
-
-class vote_transaction:
-    def __init__(block_timestamp = None, from_ = None, data = None, 
-                 txhash = None, block = None, to = None, status = None):
-        self.block_timestamp
-        self.from_
-        self.data
-        self.txhash
-        self.block
-        self.to
-        self.status
-
-    def insert_into_db(db = "db/vote.db"):
-        ## TODO
-
+if __name__ = __main__:
+    main()
