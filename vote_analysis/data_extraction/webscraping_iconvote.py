@@ -36,7 +36,7 @@ pd.set_option('display.max_columns',10)
 
 # making path for saving
 currPath = os.getcwd()
-outPath = currPath + '\\output\\'
+outPath = os.path.join(currPath, "output")
 if not os.path.exists(outPath):
     os.mkdir(outPath)
 
@@ -90,7 +90,7 @@ prep_d = {'address': prep_address,
 prep_df = pd.DataFrame(data=prep_d)
 
 # export to csv
-prep_df.to_csv(outPath + 'icon_prep_details.csv', index=False)
+prep_df.to_csv(os.path.join(outPath, 'icon_prep_details.csv'), index=False)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ logos ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -98,7 +98,7 @@ prep_df.to_csv(outPath + 'icon_prep_details.csv', index=False)
 prep_logo = extract_values(jprep_list_url, 'logo')
 
 # saving path for logos
-logoPath = outPath + '\\logos\\'
+logoPath = os.path.join(outPath, 'logos')
 if not os.path.exists(logoPath):
     os.mkdir(logoPath)
 
@@ -114,7 +114,7 @@ for i in range(len(prep_logo)):
         else:
             pass
 
-        urllib.request.urlretrieve(prep_logo[i], logoPath + prep_name[i] + filetype)
+        urllib.request.urlretrieve(prep_logo[i], os.path.join(logoPath, prep_name[i] + filetype))
         print(prep_name[i] + ": Done - " + str(i+1) + ' out of ' + str(len(prep_logo)))
 
     except:
@@ -124,7 +124,7 @@ for i in range(len(prep_logo)):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ P-REP Reward Info~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # saving path for voting data per each P-REP
-rewardsPath = outPath + '\\rewards\\'
+rewardsPath = os.path.join(outPath, "rewards")
 if not os.path.exists(rewardsPath):
     os.mkdir(rewardsPath)
 
@@ -178,7 +178,7 @@ for j in range(len(prep_address)):
         rewards_df = pd.DataFrame(data=rewards_d, index=[0])
 
     # export to csv
-    rewards_df.to_csv(rewardsPath + prep_address[j] + '_prep_rewards.csv', index=False)
+    rewards_df.to_csv(os.path.join(rewardsPath, prep_address[j]) + '_prep_rewards.csv', index=False)
 
     print("Rewards for " + prep_address[j] + ": Done - " + str(j + 1) + " out of " + str(len(prep_address)))
 
@@ -186,7 +186,7 @@ for j in range(len(prep_address)):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # saving path for voting data per each P-REP
-votesPath = outPath + '\\votes\\'
+votesPath = os.path.join(outPath, "votes")
 if not os.path.exists(votesPath):
     os.mkdir(votesPath)
 
@@ -226,6 +226,6 @@ for k in range(len(prep_address)):
      df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
 
      # write to csv
-     df.to_csv(votesPath + validator[0] + '.csv', index=False)
+     df.to_csv(os.path.join(votesPath, validator[0] + '.csv'), index=False)
 
      print("Votes for " + validator[0] + ": Done - " + str(k+1) + " out of " + str(len(prep_address)))
