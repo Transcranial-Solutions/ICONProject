@@ -29,9 +29,6 @@ def main():
     args = parser.parse_args()
     print(args)
     
-    
-    
-
     ## TODO
     ## Create csv files --> list of fileobjects?
     
@@ -41,20 +38,6 @@ def main():
     for block in blocks:
         block = Block(block)
         filtered_transactions = block.filter_transactions(block.transaction_list, **args.filter)
-
-        ## Create and 
-
-    ## Process blocks
-    #counter = 0
-    #while True:
-    #    try:
-    #        ## TODO
-    #    except KeyError:
-    #        ## TODO
-    #        print(f"All blocks processed. Last block: {}", counter)
-    #        break
-        
-            
 
 
 
