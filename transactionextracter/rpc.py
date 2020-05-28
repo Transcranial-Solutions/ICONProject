@@ -4,7 +4,8 @@ import json
 
 HEADERS = {'content-type': 'application/json'}
 URL = "https://ctz.solidwallet.io/api/v3" 
-
+#URL = "http://95.179.230.6:9000/api/v3"
+#URL = "http://127.0.0.1:9000/api/v3"
 
 def get_block(blocknr):
     blocknr = hex(blocknr)
