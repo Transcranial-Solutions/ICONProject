@@ -184,7 +184,6 @@ for j in range(len(prep_address)):
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
 # saving path for voting data per each P-REP
 votesPath = os.path.join(outPath, "votes")
 if not os.path.exists(votesPath):
@@ -206,7 +205,6 @@ for k in range(len(prep_address)):
     votes = extract_values(jreq, 'amount')
     created_at = extract_values(jreq, 'created_at')
     validator_name = extract_values(jreq, 'validator_name')
-
 
     d=[]
     df=[]
