@@ -148,7 +148,7 @@ ax2.set_title('Total Votes in each P-Rep', fontsize=14, weight='bold')
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=5.5)
 red_line = mlines.Line2D([], [], color=color, label='Red bars represent data without outliers', linewidth=3)
-plt.legend(handles=[red_line], loc='lower right', fontsize='small')
+plt.legend(handles=[red_line], loc='lower right', fontsize='medium')
 plt.tight_layout()
 
 # save figure
@@ -170,7 +170,7 @@ ax2.set_title('Total Number of Voters by P-Rep \n(in total vote ranking order)',
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=5.5)
 red_line = mlines.Line2D([], [], color=color, label='Red bars represent data without outliers', linewidth=3)
-plt.legend(handles=[red_line], loc='lower right', fontsize='small')
+plt.legend(handles=[red_line], loc='lower right', fontsize='medium')
 plt.tight_layout()
 
 # save figure
@@ -193,7 +193,7 @@ ax2.set_title('Average Votes per Voter in each P-Rep \n(in total vote ranking or
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=5.5)
 red_line = mlines.Line2D([], [], color=color, label='Red bars represent data without outliers', linewidth=3)
-plt.legend(handles=[red_line], loc='lower right', fontsize='small')
+plt.legend(handles=[red_line], loc='lower right', fontsize='medium')
 plt.tight_layout()
 
 # save figure
