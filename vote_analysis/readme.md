@@ -6,5 +6,6 @@ ICON Foundation websites (https://tracker.icon.foundation/governance).
 
 Webscrapes the data, saves into csv, manipulates & calculates, produces images.
 
-If you have any question or feedback, please e-mail at transcranial.solutions@gmail.com
-Thank you.https://github.com/Transcranial-Solutions/ICONProject
+If you have any question or feedback, please e-mail at transcranial.solutions@gmail.com.
+
+Thank you.
