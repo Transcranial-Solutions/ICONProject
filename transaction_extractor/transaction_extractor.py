@@ -29,6 +29,10 @@ def main():
     args = parser.parse_args()
     print(args)
     
+
+    filter_criteria = {}
+    for criteria in args.filter:
+        filter_criteria[criteria] = True
     ## TODO
     ## Create csv files --> list of fileobjects?
     
@@ -37,7 +41,7 @@ def main():
     counter = 0
     for block in blocks:
         block = Block(block)
-        filtered_transactions = block.filter_transactions(block.transaction_list, **args.filter)
+        filtered_transactions = block.filter_transactions(block.transaction_list, **filter_criteria)
 
 
 

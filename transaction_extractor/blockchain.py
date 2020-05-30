@@ -101,14 +101,17 @@ class Transaction:
         ## TODO
         ## Return bool
         pass
+
     def is_claimiscore():
         ## TODO
         ## Return bool
         pass
+
     def was_successful():
         ## TODO
-        ## return bool
+        ## Return bool
         pass
+
     def get_transaction_result(txhash, db):
         return json.loads(db.get(txhash))
 
