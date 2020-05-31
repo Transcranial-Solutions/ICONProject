@@ -112,6 +112,11 @@ class Transaction:
         ## Return bool
         pass
 
+    def write_transaction():
+        ## TODO
+        ## Return touple of transaction data. None if a category does not exist.
+        pass
+
     def get_transaction_result(txhash, db):
         return json.loads(db.get(txhash))
 
