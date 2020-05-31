@@ -14,10 +14,8 @@
 
 import pandas as pd
 import numpy as np
-import scipy.stats as sp # for calculating standard error
 import matplotlib.pyplot as plt # for improving our visualizations
 import matplotlib.lines as mlines
-import matplotlib.ticker as ticker
 import seaborn as sns
 import os
 desired_width = 320
@@ -100,7 +98,7 @@ unique_voter_prep = unique_voter_prep.drop_duplicates(subset=['delegator', 'vali
 # 1~2 p-rep voters
 # mean by all
 one_prep_voter = mean_by_all[mean_by_all['bar_bin'] == '1-2'].reset_index(drop=True)
-n_one_prep_voter_all = "(n = " + str(len(one_prep_voter.index)) + ")"
+n_one_prep_voter_all = "(N = " + str(len(one_prep_voter.index)) + ")"
 one_prep_voter = pd.merge(one_prep_voter, unique_voter_prep, how='inner', on=['delegator'])
 one_prep_voter_count = one_prep_voter.groupby(['validator_name'])['bar_bin'].agg('count').reset_index()
 # one_prep_voter_count = one_prep_voter_count.sort_values(by='bar_bin', ascending=False).reset_index(drop=True)
@@ -159,6 +157,7 @@ plt.tight_layout()
 plt.savefig(os.path.join(resultsPath, "n_prep_voted_per_voter_per_month.png"))
 
 # heatmap
+pivot_table_month = pivot_table_month.sort_index(ascending=False)
 sns.set_style("darkgrid")
 plt.style.use("dark_background")
 ax = plt.subplots(figsize=(8, 5))

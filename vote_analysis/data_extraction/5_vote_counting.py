@@ -214,14 +214,30 @@ ax2.figure.savefig(os.path.join(resultsPath, "mean_n_vots_per_voter_by_prep.png"
 # plt.tight_layout()
 
 
-
-# World Map ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Count P-Reps by Country ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 df = pd.merge(votes_and_voters_per_prep, prep_df[['name', 'alpha-3', 'city', 'country', 'sub-region']],
               how='left', left_on='validator_name', right_on='name')
 df = df[['cum_votes', 'alpha-3', 'country']]
 df = df.groupby(['country', 'alpha-3'])['cum_votes'].agg(['sum', 'count']).reset_index()
 df = df.sort_values(by="count", ascending=False)
 
+
+# Number of P-Reps in given country
+sns.set(style="darkgrid")
+plt.style.use("dark_background")
+ax = plt.subplots(figsize=(8, 6))
+ax = sns.barplot(x="count", y="country", data=df, color="b")
+ax.set_xlabel('P-Reps (count)', fontsize=10)
+ax.set_ylabel('Countries', fontsize=10)
+ax.set_title('Number of P-Reps in Various Countries', fontsize=12, weight='bold')
+plt.xticks(fontsize=10)
+plt.yticks(fontsize=8)
+plt.tight_layout()
+# save figure
+ax.figure.savefig(os.path.join(resultsPath, "prep_count_per_country.png"))
+
+
+# World Map ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 import plotly.graph_objects as go
 import plotly.io as pio
 pio.renderers.default = "browser"
@@ -251,19 +267,6 @@ fig.show()
 # save figure
 fig.write_image(os.path.join(resultsPath, "total_n_voters_map.png"))
 
-# Number of P-Reps in given country
-sns.set(style="darkgrid")
-plt.style.use("dark_background")
-ax = plt.subplots(figsize=(8, 6))
-ax = sns.barplot(x="count", y="country", data=df, color="b")
-ax.set_xlabel('P-Reps (count)', fontsize=10)
-ax.set_ylabel('Countries', fontsize=10)
-ax.set_title('Number of P-Reps in Various Countries', fontsize=12, weight='bold')
-plt.xticks(fontsize=10)
-plt.yticks(fontsize=8)
-plt.tight_layout()
-# save figure
-ax.figure.savefig(os.path.join(resultsPath, "prep_count_per_country.png"))
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voter Count Over Time ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
