@@ -197,7 +197,7 @@ plt.legend(handles=[red_line], loc='lower right', fontsize='medium')
 plt.tight_layout()
 
 # save figure
-ax2.figure.savefig(os.path.join(resultsPath, "mean_n_vots_per_voter_by_prep.png"))
+ax2.figure.savefig(os.path.join(resultsPath, "mean_n_votes_per_voter_by_prep.png"))
 
 # Median Votes by P-Reps ~~~~~~~~~~~~~~~~~~~~~~~#
 # sns.set(style="whitegrid")
