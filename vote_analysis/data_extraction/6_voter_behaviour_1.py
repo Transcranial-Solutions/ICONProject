@@ -148,7 +148,7 @@ plt.rcParams["axes.labelsize"] = 14
 sns.set_style("darkgrid")
 plt.style.use("dark_background")
 ax = plt.subplots(figsize=(9, 5))
-ax = sns.violinplot(x="month", y="counts", data=mean_by_month)\
+ax = sns.violinplot(x="month", y="counts", data=mean_by_month, linewidth=1.75)\
     .set(xlabel="Time (month)",
     ylabel="Vote Allocation")
 plt.title('Spread of Vote Allocation Over Time (Violin plot)', fontsize=14, weight='bold')
