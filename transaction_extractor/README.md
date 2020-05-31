@@ -8,7 +8,7 @@ More advanced features will be added when a basic working product has been achie
 Ideas for future features:
  - Syncronize and keep previously written csv files up to date with the current block height.
  - Option to use RPC to extract transactions instead of a local leveldb database.
- - Output results as sqlite databases instead of csv files.
+ - Option to output results as sqlite databases instead of csv files.
 
 
 ## Limitations
