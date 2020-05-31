@@ -1,2 +1,2 @@
 # ICONProject
-Codes related to Icon Network (ICX)
+Codes related to ICON Network (ICX)
