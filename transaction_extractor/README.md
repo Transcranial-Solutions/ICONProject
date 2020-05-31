@@ -1,7 +1,7 @@
 # ITX - Icon Transaction Extractor
 
 ## About
-This is a tool for extracting transactions from ICON blockchain using filter criterias. Filters could be anything from staking, delegation, claimiscore or transactions associated with a particular decentralized application such as Iconbet. Transactions belonging to different filtering criteria will be written to separate csv files.
+This is a command line tool for extracting transactions from ICON blockchain using filter criterias. Filters could be anything from staking, delegation, claimiscore or transactions associated with a particular decentralized application such as Iconbet. Transactions belonging to different filtering criteria will be written to separate csv files.
 
 More advanced features will be added when a basic working product has been achieved.
 
