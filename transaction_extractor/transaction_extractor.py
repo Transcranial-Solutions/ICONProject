@@ -57,6 +57,8 @@ def main():
         block = Block(block)
         filtered_transactions = block.filter_transactions(block.transaction_list, **filter_criteria)
 
+        # Write transactions to csv files.
+        # TODO
 
 
 def write_to_csv():
