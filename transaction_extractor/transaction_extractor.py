@@ -35,6 +35,7 @@ def main():
     start_time = time.time()
     block_counter = 0
     transaction_counter = 0
+    last_progress_report = 0
     timer = Time(60, report_progress)
 
     # Keyword arguments to be passed to filtermethod in blockclass.
@@ -74,7 +75,8 @@ def report_progress():
     print(f"Blocks:        {block_counter}/{args.last-block}  ")
     print(f"Transactions:  {transaction_counter}  ")
     print(f"Eta:           {datetime.timedelta(seconds(eta)}  ")
-    previous_block = block_counter
+
+    last_progress_report = block_counter
     timer = Time(60, report_progress)
 
 def syncronize():
