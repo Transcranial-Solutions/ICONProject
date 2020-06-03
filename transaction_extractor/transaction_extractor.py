@@ -4,7 +4,7 @@ from blockchain import Transaction
 import plyvel
 import signal
 import time
-from threading import Timer
+from threading import Timer, Thread
 import datetime
 
         
@@ -97,6 +97,48 @@ class GracefulExiter():
 
     def exit(self):
         return self.state
+
+
+class ProgressTracker(Thread):
+
+    def __init__(self, start_block, end_block):
+        self.start_time = time.time()
+        self.start_block = start_block
+        self.end_block = end-block
+        self.block_counter = 0
+        self.transaction_counter = 0
+        self.blockheight_last_report = start_block
+
+
+    def run(self):
+        while True:
+            time.sleep(60)
+            self.report_progress()
+            self.blockheight_last_report = self.block_counter
+
+
+    def report_progress():
+        print("Progress report")
+        print("---------------")
+        print(f"Runtime:       {self.runtime()}")
+        print(f"Speed:         {self.speed()} b/s")
+        print(f"Blocks:        {self.block_counter}/{args.last-block}  ")
+        print(f"Transactions:  {self.transaction_counter}  ")
+        print(f"Eta:           {self.eta()}  ")
+
+
+    def runtime():
+        return datetime.timedelta(seconds(time.time() - self.start_time))
+
+
+    def speed():
+        return round((self.block_counter - self.blockheight_last_report) / 60)
+
+
+    def eta():
+        return datetime.timedelta(seconds(args.last-block - self.block_counter) / self.speed())
+
+
 
 
 
