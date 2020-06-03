@@ -31,12 +31,11 @@ def main():
      args = parser.parse_args()
 
     
-    # Keep track of and report progress  Idea --> maybe make a class to handle this?
-    start_time = time.time()
-    block_counter = 0
-    transaction_counter = 0
-    last_progress_report = 0
-    timer = Time(60, report_progress)
+    # Thread to keep track of and report progress. Will report progress every 60 seconds. Exits when program exits.
+    progress_tracker = ProgressTracker(args.first-block, args.last-block, interval = 60)
+    progress_tracker.daemon = True
+    progress_tracker.start()
+    
 
     # Keyword arguments to be passed to filtermethod in blockclass.
     filter_criteria = {}
@@ -46,7 +45,6 @@ def main():
    
     # Create csv files --> list of fileobjects?
     ## TODO
-    
     
 
 
@@ -65,21 +63,7 @@ def write_to_csv():
     ## TODO
     pass
 
-def report_progress():
-    runtime = time.time() - start_time
-    speed = (block_counter - lastblock) / 60
-    eta = ((args.last-block - block_counter) / speed)
 
-    print("Progress report")
-    print("---------------")
-    print(f"Runtime:       {datetime.timedelta(seconds(runtime)}")
-    print(f"Speed:         {speed} b/s")
-    print(f"Blocks:        {block_counter}/{args.last-block}  ")
-    print(f"Transactions:  {transaction_counter}  ")
-    print(f"Eta:           {datetime.timedelta(seconds(eta)}  ")
-
-    last_progress_report = block_counter
-    timer = Time(60, report_progress)
 
 def syncronize():
     ## TODO
@@ -101,14 +85,15 @@ class GracefulExiter():
 
 class ProgressTracker(Thread):
 
-    def __init__(self, start_block, end_block):
+    def __init__(self, start_block, end_block, report_interval = 60):
+        Thread.__init__(self)
         self.start_time = time.time()
         self.start_block = start_block
         self.end_block = end-block
         self.block_counter = 0
         self.transaction_counter = 0
         self.blockheight_last_report = start_block
-
+        self.report_interval = report_interval
 
     def run(self):
         while True:
@@ -122,7 +107,7 @@ class ProgressTracker(Thread):
         print("---------------")
         print(f"Runtime:       {self.runtime()}")
         print(f"Speed:         {self.speed()} b/s")
-        print(f"Blocks:        {self.block_counter}/{args.last-block}  ")
+        print(f"Blocks:        {self.block_counter}/{self.end_block}  ")
         print(f"Transactions:  {self.transaction_counter}  ")
         print(f"Eta:           {self.eta()}  ")
 
