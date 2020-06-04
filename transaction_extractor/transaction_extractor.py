@@ -1,6 +1,7 @@
 import argparse
 from blockchain import Block
 from blockchain import Transaction
+import csv
 import plyvel
 import signal
 import time
@@ -24,7 +25,7 @@ def main():
                         help='Last block to extract transactions from')
     parser.add_argument('--filter', choices = ["delegation", "claimiscore", "staking", 'iconbet'], type=str, 
                         nargs = '+', help='Transactions to extract from the blockchain')
-    parser.add_argument('--output', metavar = 'path', type = str, nargs = 1, default = "./output/",
+    parser.add_argument('--output', metavar = 'path', type = str, nargs = 1, default = "output/",
                         help = 'Output folder')
     parser.add_argument('--syncronize', action = 'store_true',
                         help = "Syncronize previously written csv files up to current block height")
@@ -43,20 +44,38 @@ def main():
         filter_criteria[criteria] = True
    
    
-    # Create csv files --> list of fileobjects?
-    ## TODO
-    
+    # Create csv files. Filtercriteria as key and fileobj as value.
+    file_objects = {}
+    for criteria in arg.filter:
+        file_objects[criteria] = open(args.outout + criteria + ".csv", 'a')
+        writer = csv.writer(file_objects['citeria'])
+        writer.writerow("[columns]")
+
 
 
     # Loop through all blocks and extract transactions according to filter criteria
     blocks = range(args.first-block, args.last-block + 1)
-    counter = 0
     for block in blocks:
         block = Block(block)
         filtered_transactions = block.filter_transactions(block.transaction_list, **filter_criteria)
 
         # Write transactions to csv files.
-        # TODO
+        for key, val in filtered_transactions:
+            if val:
+                writer = csv.writer(fileobjects[key])
+                for transaction in val:
+                    writer.writerow(transaction)
+                    progress_tracker.transaction_counter += 1        
+            else:
+                continue
+        
+        progress_tracker.block_counter += 1
+
+    
+    # Close all fileobjects
+    for val in fileobjects.values():
+        val.close()
+        
 
 
 def write_to_csv():
@@ -97,7 +116,7 @@ class ProgressTracker(Thread):
 
     def run(self):
         while True:
-            time.sleep(60)
+            time.sleep(self.report_interval)
             self.report_progress()
             self.blockheight_last_report = self.block_counter
 
