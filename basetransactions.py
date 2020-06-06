@@ -12,7 +12,7 @@ URL = "http://95.179.230.6:9000/api/v3"
 
 # Constants
 STARTBLOCK = 10364000       # ~ date for decentralization
-INTERVAL = 43200            # ~ block in one day
+INTERVAL = 40000            # ~ block in one day
 COLUMNS = ("block", "irep", "rrep", "totaldelegation", "value", "timestamp")
 LOOP = 1000000000000000000  # one icx
 
