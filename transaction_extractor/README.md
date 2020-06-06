@@ -12,4 +12,4 @@ Ideas for future features:
 
 
 ## Limitations
-The first version will require a local copy of the blockchain database. You could achive this in two ways. Either you need to run a citizen node on you local machine, or you could download a snapshot of the blockchain (maintained by Icon Foundation). The first option would be more suitable if you would like to keep your extracted transaction data up to data over time. The second option would suffice if you just want some transaction data up to the current point in time.
+The first version will require a local copy of the blockchain database. This can be achived in two ways. Either you need to run a citizen node on you local machine, or you could download a snapshot of the blockchain (maintained by Icon Foundation). The first option would be more suitable if you would like to keep your extracted transaction data up to date over time. The second option would suffice if you just want some transaction data up to the current point in time.

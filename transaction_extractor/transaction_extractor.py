@@ -11,40 +11,48 @@ import datetime
         
 
 def main():
+    #Get default arguments from file.
+    config = configparser.ConfigParser()
+    config.read('itx.ini')
+    df_args = dict(config['defaults'])
+
+
     # Handle command line arguments.
     parser = argparse.ArgumentParser(description="Tool for extracting transactions from " 
                                                   "ICON blockchain using filter criterias. "
                                                   "Transactions of different filtercriteria will "
                                                   "be written to seperate .csv files.")
     
-    parser.add_argument('--leveldb', metavar = 'path', type = str, nargs = 1,
+    parser.add_argument('--blocks', metavar = '<start> <end>', type = int, nargs = 2,
+                        help = "Blocks to extract transactions from")
+    parser.add_argument('--source', choices = ["leveldb", "rpc"], type = str, default = df_args['source'])
+    parser.add_argument('--leveldb', metavar = 'path', type = str, nargs = 1, default = df_args['leveldb'],
                         help='Path to your local node\'s leveldb.')
-    parser.add_argument('--first-block', metavar = 'start', type = int, nargs = 1,
-                        help='First block to extract transactions from')
-    parser.add_argument('--last-block', metavar = 'end', type = int, nargs = 1,
-                        help='Last block to extract transactions from')
-    parser.add_argument('--filter', choices = ["delegation", "claimiscore", "staking", 'iconbet'], type=str, 
-                        nargs = '+', help='Transactions to extract from the blockchain')
-    parser.add_argument('--output', metavar = 'path', type = str, nargs = 1, default = "output/",
+    parser.add_argument('--rpc', metavar = '<endpoints>', type = str, nargs = '+', default = df_args['rpc'])
+    parser.add_argument('--output-type', choices = ["csv", "sqlite3"], type = str, default = df_args['output-type'])
+    parser.add_argument('--output', metavar = 'path', type = str, nargs = 1, default = df_args['output'],
                         help = 'Output folder')
+    parser.add_argument('--filter', choices = ["delegation", "claimiscore", "staking", 'iconbet'], type=str, 
+                        nargs = '+', help='Transactions to extract from the blockchain', default = None)
+    
     parser.add_argument('--syncronize', action = 'store_true',
                         help = "Syncronize previously written csv files up to current block height")
-     args = parser.parse_args()
+    args = parser.parse_args()
 
     
     # Thread to keep track of and report progress. Will report progress every 60 seconds. Exits when program exits.
-    progress_tracker = ProgressTracker(args.first-block, args.last-block, interval = 60)
+    progress_tracker = ProgressTracker(args.first-block, args.last-block, interval = 30)
     progress_tracker.daemon = True
     progress_tracker.start()
     
-
+    
     # Keyword arguments to be passed to filtermethod in blockclass.
     filter_criteria = {}
     for criteria in args.filter:
         filter_criteria[criteria] = True
    
    
-    # Create csv files. Filtercriteria as key and fileobj as value.
+    # Create csv files. Store open fileobjects as values in a dictionary. Filtercriteria is key.
     file_objects = {}
     for criteria in arg.filter:
         file_objects[criteria] = open(args.outout + criteria + ".csv", 'a')
