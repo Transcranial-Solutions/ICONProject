@@ -7,8 +7,12 @@ import signal
 import time
 from threading import Timer, Thread
 import datetime
+import os
+import sys
 
-        
+
+COLUMNS = []
+INTERVAL = 30    
 
 def main():
     
@@ -58,6 +62,8 @@ def main():
 
     parser_extract.add_argument('--output', metavar = 'path', type = str, nargs = 1, default = df_args['output'],
                                  help = 'Output folder')
+    
+    parser_extract.set_defaults(func = extract)
 
     
     
@@ -91,62 +97,188 @@ def main():
     args = parser.parse_args()
 
 
-    if args.extract:
-        
     
+def extract(args):
+
+    # Open local node database.
+    plyveldb = plyvel.DB(args.leveldb, create_if_missing = False)
+
+
     # Thread to keep track of and report progress. Will report progress every 60 seconds. Exits when program exits.
-    progress_tracker = ProgressTracker(args.first-block, args.last-block, interval = 30)
+    progress_tracker = ProgressTracker(args.blocks[0], args.blocks[1], interval = INTERVAL)
     progress_tracker.daemon = True
-    progress_tracker.start()
-    
-    
-    # Keyword arguments to be passed to filtermethod in blockclass.
-    filter_criteria = {}
-    for criteria in args.filter:
-        filter_criteria[criteria] = True
-   
-   
-    # Create csv files. Store open fileobjects as values in a dictionary. Filtercriteria is key.
-    file_objects = {}
-    for criteria in arg.filter:
-        file_objects[criteria] = open(args.outout + criteria + ".csv", 'a')
-        writer = csv.writer(file_objects['citeria'])
-        writer.writerow("[columns]")
 
 
+    if args.output-type == "csv":
 
-    # Loop through all blocks and extract transactions according to filter criteria
-    blocks = range(args.first-block, args.last-block + 1)
-    for block in blocks:
-        block = Block(block)
-        filtered_transactions = block.filter_transactions(block.transaction_list, **filter_criteria)
+        if not args.filter:
+            
+            # Check if file exists --> handle it.
+            print("Making sure file does not exist...")
+            file = output + "all_transactions.csv"
 
-        # Write transactions to csv files.
-        for key, val in filtered_transactions:
-            if val:
-                writer = csv.writer(fileobjects[key])
-                for transaction in val:
+            if os.path.exists(file):
+                
+                while True:
+                    reponse = input("File {file} already exists. Overwrite? (Y/n)")
+
+                    if response in ["Y", "y"]:
+                        os.remove(file)
+                        break
+
+                    elif reponse in ["N", "n"]:
+                        print("Aborting program..")
+                        sys.exit(1)
+
+                    else:
+                        continue
+
+
+        
+            # Open file
+            all_transactions = open(file, 'a')
+            writer = csv.writer(all_transactions)
+            writer.writerow(COLUMNS)
+
+
+            # Print summary before start of extraction
+            print("\n")
+            print(f"Blocks: {args.blocks[0]} {args.blocks[0]}")
+            print(f"All transactions --> {file}")
+            print("\n")
+            
+            while True:
+
+                response = input("::Proocced with extraction ([y]/n)?")
+                
+                if response in ["Y", "y", ""]:
+                    print("Starting extraction...")
+                    break
+                
+                if response in ["N", "n"]:
+                    sys.exit(2)
+
+
+            # Start progresstrackerthread
+            progress_tracker.start()
+
+
+            # Extract transactions
+            blocks = range(args.blocks[0], args.blocks[1] + 1)
+            for block in blocks:  
+                block = Block(block, plyveldb)
+                transactions = block.extract_all_transactions(block.transaction_list)
+                
+                # Write transactions to csv files.
+                for transaction in transactions:
                     writer.writerow(transaction)
                     progress_tracker.transaction_counter += 1        
-            else:
-                continue
-        
-        progress_tracker.block_counter += 1
 
+                progress_tracker.block_counter += 1
+                #Implement break here if ctrl-c pressed.
+
+            # Close file
+            all_transactions.close()
+
+        
+        # If filter specified
+        if args.filter:
+
+
+            # Handle case where files already exists.
+            print("Making sure files does not exist...")
+
+            for filename in args.filter:
+                file = args.output + filename + ".csv"
+                
+                if os.path.exists(file):
+
+                    while True:
+                        response = input(f"File {file} already exists. Overwrite? (Y/n)")
+
+                        if response in ["Y", "y"]:
+                            os.remove(file)
+                            break
+
+                        elif reponse in ["N", "n"]:
+                            print("Aborting program...")
+                            sys.exit(1)
+
+                        else:
+                            continue
+
+
+            # Keyword arguments to be passed to filtermethod in blockclass.
+            filter_criteria = {}
+            for criteria in args.filter:
+                filter_criteria[criteria] = True
+
+
+            # Create csv files. Store open fileobjects as values in a dictionary. Filtercriteria is key.
+            file_objects = {}
+            for criteria in args.filter:
+                file_objects[criteria] = open(args.outout + criteria + ".csv", 'a')
+                writer = csv.writer(file_objects['citeria'])
+                writer.writerow(COLUMNS)
+
+
+            # Print summary before start of extraction
+            print("\n")
+            print(f"Blocks: {args.blocks[0]} {args.blocks[0]}")
+            
+            for key, val in file_objects:
+                print(f"{key} --> {val.name}") 
+            print("\n")
+            
+            while True:
+                response = input("::Proocced with extraction ([y]/n)?")
+                if response in ["Y", "y", ""]:
+                    print("Starting extraction...")
+                    break
+                if response in ["N", "n"]:
+                    sys.exit(2)
+
+
+            # Progress thread.
+            progress_tracker.start()
+
+
+            # Loop through all blocks and extract transactions according to filter criteria
+            blocks = range(args.blocks[0], args.blocks[1] + 1)
+            for block in blocks:
+                block = Block(block, plyveldb)
+                filtered_transactions = block.filter_transactions(block.transaction_list, **filter_criteria)
+
+
+                # Write transactions to csv files.
+                for key, val in filtered_transactions:
+                    if val:
+                        writer = csv.writer(fileobjects[key])
+                        for transaction in val:
+                            writer.writerow(transaction)
+                            progress_tracker.transaction_counter += 1        
+                    else:
+                        continue
+                progress_tracker.block_counter += 1
+                #Implement break here if ctrl-c pressed.
+
+
+            # Close files
+            for fileobject in file_objects.values():
+                fileobject.close()
     
-    # Close all fileobjects
-    for val in fileobjects.values():
-        val.close()
-        
+    
+
+def update():
+    ## TODO
 
 
-def write_to_csv():
+def syncronize():
     ## TODO
     pass
 
 
-
-def syncronize():
+def status():
     ## TODO
     pass
 
@@ -205,7 +337,61 @@ class ProgressTracker(Thread):
         return datetime.timedelta(seconds(args.last-block - self.block_counter) / self.speed())
 
 
+"""Psuedocode extract function
 
+Perhaps have "if not filter" and "if filter" as outermost if instead of "if csv option" when implemeting sqlite3.
+This would result in less repeat of code.
+
+if csv option:
+    If not filter:
+        1. Check if file exists --> handle.
+        2. Create file.
+        3. Write column.
+        4. Repeat until last block:
+              1. getblock.
+              2. extract transaction.
+              3. write transaction to file.
+        5. close file.
+        6. Write to config file last block processed for all files.
+        7. Endreport.
+
+    if filter:
+        1. Check if files exists --> handle
+        2. Create files.
+        3. Write columns.
+        4. Repeat until last block:
+              1. getblock.
+              2. extract transactions according to filter.
+              3. write transaction to file.
+        5. close files.
+        6. Write to config file last block processed for all files.
+        7. Endreport.
+
+if sqlite3 option:
+    If not filter:
+        1. Check if file exists --> handle.
+        2. Create file.
+        3. Write column.
+        4. Repeat until last block:
+              1. getblock.
+              2. extract transaction.
+              3. write transaction to file.
+        5. close file.
+        6. Write to config file last block processed for all files.
+        7. Endreport.
+
+    if filter:
+        1. Check if files exists --> handle
+        2. Create files.
+        3. Write columns.
+        4. Repeat until last block:
+              1. getblock.
+              2. extract transactions according to filter.
+              3. write transaction to file.
+        5. close files.
+        6. Write to config file last block processed for all files.
+        7. Endreport.
+"""
 
 
 if __name__ == '__main__':
