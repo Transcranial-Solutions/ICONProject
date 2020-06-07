@@ -16,7 +16,6 @@ INTERVAL = 30
 
 def main():
     
-
     #Get default arguments from file.
     config = configparser.ConfigParser()
     config.read('itx.ini')
@@ -66,7 +65,6 @@ def main():
     parser_extract.set_defaults(func = extract)
 
     
-    
     # Create parser for update command.
     parser_update = subparsers.add_parser('update', 
     									   usage = "python3 itx update [options] file/s",
@@ -97,7 +95,6 @@ def main():
     args = parser.parse_args()
 
 
-    
 def extract(args):
 
     # Open local node database.
@@ -134,7 +131,6 @@ def extract(args):
                         continue
 
 
-        
             # Open file
             all_transactions = open(file, 'a')
             writer = csv.writer(all_transactions)
@@ -148,7 +144,6 @@ def extract(args):
             print("\n")
             
             while True:
-
                 response = input("::Proocced with extraction ([y]/n)?")
                 
                 if response in ["Y", "y", ""]:
