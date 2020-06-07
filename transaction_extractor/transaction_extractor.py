@@ -25,11 +25,11 @@ def main():
     # Create parser object.
     parser = argparse.ArgumentParser(prog = "itx",
                                      usage = "python3 itx <operation> [options] [target]",
-    								 description = "Tool for extracting transactions from " 
+                                     description = "Tool for extracting transactions from " 
                                                    "ICON blockchain using filter criterias. "
                                                    "Transactions of different filtercriteria will "
                                                    "be written to seperate .csv files.",
-    								 add_help = True)
+                                     add_help = True)
 
     parser.add_argument('--help', '-h', action = "store_true")
     
