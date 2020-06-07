@@ -11,34 +11,88 @@ import datetime
         
 
 def main():
+    
+
     #Get default arguments from file.
     config = configparser.ConfigParser()
     config.read('itx.ini')
     df_args = dict(config['defaults'])
 
 
-    # Handle command line arguments.
-    parser = argparse.ArgumentParser(description="Tool for extracting transactions from " 
-                                                  "ICON blockchain using filter criterias. "
-                                                  "Transactions of different filtercriteria will "
-                                                  "be written to seperate .csv files.")
+    # Create parser object.
+    parser = argparse.ArgumentParser(prog = "itx",
+    								 usage = "python3 itx <operation> [options] [target]",
+    								 description = "Tool for extracting transactions from " 
+                                                   "ICON blockchain using filter criterias. "
+                                                   "Transactions of different filtercriteria will "
+                                                   "be written to seperate .csv files.",
+    								 add_help = True)
+
+    parser.add_argument('--help', '-h', action = "store_true")
     
-    parser.add_argument('--blocks', metavar = '<start> <end>', type = int, nargs = 2,
-                        help = "Blocks to extract transactions from")
-    parser.add_argument('--source', choices = ["leveldb", "rpc"], type = str, default = df_args['source'])
-    parser.add_argument('--leveldb', metavar = 'path', type = str, nargs = 1, default = df_args['leveldb'],
-                        help='Path to your local node\'s leveldb.')
-    parser.add_argument('--rpc', metavar = '<endpoints>', type = str, nargs = '+', default = df_args['rpc'])
-    parser.add_argument('--output-type', choices = ["csv", "sqlite3"], type = str, default = df_args['output-type'])
-    parser.add_argument('--output', metavar = 'path', type = str, nargs = 1, default = df_args['output'],
-                        help = 'Output folder')
-    parser.add_argument('--filter', choices = ["delegation", "claimiscore", "staking", 'iconbet'], type=str, 
-                        nargs = '+', help='Transactions to extract from the blockchain', default = None)
+
+    # Add subparser to main parser object.
+    subparsers = parser.add_subparsers(title = "operations",
+    								   description = "BESKRIVNING AV OPERATORS",
+    								   prog = "python3",
+    								   metavar = "operations available",
+                                       add_help = True)
+
+
+    # Create parser for extract.
+    parser_extract = subparsers.add_parser('extract',
+    									    usage = 'python3 itx.py extract [options]',
+    										help = 'Extract transactions.',
+    										add_help = True)
     
-    parser.add_argument('--syncronize', action = 'store_true',
-                        help = "Syncronize previously written csv files up to current block height")
+    parser_extract.add_argument('--blocks', metavar = '<start> <end>', type = int, nargs = 2,
+                                help = "Blocks to extract transactions from"))
+
+    parser_extract.add_argument('--leveldb', metavar = '<path>', type = str, nargs = 1,
+                                help = "Blocks to extract transactions from"))
+    
+    parser_extract.add_argument('--filter', choices = ["delegation", "claimiscore", "staking", 'iconbet'], type=str, 
+                                nargs = '+', help='Transactions to extract from the blockchain', default = None)
+    
+    parser_extract.add_argument('--output-type', choices = ["csv", "sqlite3"], type = str, default = df_args['output-type']
+
+    parser_extract.add_argument('--output', metavar = 'path', type = str, nargs = 1, default = df_args['output'],
+                                 help = 'Output folder')
+
+    
+    
+    # Create parser for update command.
+    parser_update = subparsers.add_parser('update', 
+    									   usage = "python3 itx update [options] file/s",
+    									   help = 'Update files to specified block',
+                                           add_help = True)
+
+
+    # Create parser for syncronize command.
+    parser_syncronize = subparsers.add_parser('syncronize',
+    									       usage='python3 itx.py extract [options]',
+    										   help='Keep files syncronized via RPC',
+    										   add_help=True)
+
+
+    # Create parser for status command.
+    parser_status = subparsers.add_parser('status',
+    		    						   usage='python3 itx.py status',
+    									   help='Check status for all tracked files.',
+    									   add_help=True)
+
+    
+    # Custom helpfile
+    #if namespace.help:
+    #	with open('help_file.txt', 'r') as f:
+    #		content = f.read()
+    #       print(content)
+
     args = parser.parse_args()
 
+
+    if args.extract:
+        
     
     # Thread to keep track of and report progress. Will report progress every 60 seconds. Exits when program exits.
     progress_tracker = ProgressTracker(args.first-block, args.last-block, interval = 30)
