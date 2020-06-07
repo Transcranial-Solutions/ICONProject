@@ -36,17 +36,17 @@ def main():
 
     # Add subparser to main parser object.
     subparsers = parser.add_subparsers(title = "operations",
-    								   description = "BESKRIVNING AV OPERATORS",
-    								   prog = "python3",
-    								   metavar = "operations available",
+                                       description = "BESKRIVNING AV OPERATORS",
+                                       prog = "python3",
+                                       metavar = "operations available",
                                        add_help = True)
 
 
     # Create parser for extract.
     parser_extract = subparsers.add_parser('extract',
-    									    usage = 'python3 itx.py extract [options]',
-    										help = 'Extract transactions.',
-    										add_help = True)
+                                            usage = 'python3 itx.py extract [options]',
+                                            help = 'Extract transactions.',
+                                            add_help = True)
     
     parser_extract.add_argument('--blocks', metavar = '<start> <end>', type = int, nargs = 2,
                                 help = "Blocks to extract transactions from"))
@@ -67,23 +67,23 @@ def main():
     
     # Create parser for update command.
     parser_update = subparsers.add_parser('update', 
-    									   usage = "python3 itx update [options] file/s",
-    									   help = 'Update files to specified block',
-                                           add_help = True)
+                                          usage = "python3 itx update [options] file/s",
+                                          help = 'Update files to specified block',
+                                          add_help = True)
 
 
     # Create parser for syncronize command.
     parser_syncronize = subparsers.add_parser('syncronize',
-    									       usage='python3 itx.py extract [options]',
-    										   help='Keep files syncronized via RPC',
-    										   add_help=True)
+                                              usage='python3 itx.py extract [options]',
+                                              help='Keep files syncronized via RPC',
+                                              add_help=True)
 
 
     # Create parser for status command.
     parser_status = subparsers.add_parser('status',
-    		    						   usage='python3 itx.py status',
-    									   help='Check status for all tracked files.',
-    									   add_help=True)
+                                          usage='python3 itx.py status',
+                                          help='Check status for all tracked files.',
+                                          add_help=True)
 
     
     # Custom helpfile
