@@ -24,7 +24,7 @@ def main():
 
     # Create parser object.
     parser = argparse.ArgumentParser(prog = "itx",
-    								 usage = "python3 itx <operation> [options] [target]",
+                                     usage = "python3 itx <operation> [options] [target]",
     								 description = "Tool for extracting transactions from " 
                                                    "ICON blockchain using filter criterias. "
                                                    "Transactions of different filtercriteria will "
