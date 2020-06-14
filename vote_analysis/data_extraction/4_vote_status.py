@@ -67,12 +67,15 @@ votes_cumsum_longer = votes_cumsum_longer.assign(vote_status=['unvoted' if cum_v
 
 # more logic for vote status -- vote stayed vs vote changed (up down)
 votes_unchanged = votes_cumsum_longer['cum_votes'] == votes_cumsum_longer['prev_cum_votes']
-votes_up = (votes_cumsum_longer['cum_votes'] > votes_cumsum_longer['prev_cum_votes']) & (votes_cumsum_longer['cum_votes'] >= 1e-6)
+votes_up = (votes_cumsum_longer['cum_votes'] > votes_cumsum_longer['prev_cum_votes']) & \
+           (votes_cumsum_longer['cum_votes'] >= 1e-6)
 votes_down = (votes_cumsum_longer['cum_votes'] < votes_cumsum_longer['prev_cum_votes']) & (votes_cumsum_longer['cum_votes'] >= 1e-6)
+voted = (votes_cumsum_longer['vote_status'].shift() == 'unvoted') & (votes_cumsum_longer['prev_cum_votes'] <= 1e-6)
 
 votes_cumsum_longer.loc[votes_unchanged, 'vote_status'] = 'unchanged'
 votes_cumsum_longer.loc[votes_up, 'vote_status'] = 'up'
 votes_cumsum_longer.loc[votes_down, 'vote_status'] = 'down'
+votes_cumsum_longer.loc[voted, 'vote_status'] = 'voted'  # this was added for voted and unvoted if same p-rep over time
 
 # dropping previous cumulative votes
 votes_cumsum_longer = votes_cumsum_longer.drop(['prev_cum_votes'], axis=1)
