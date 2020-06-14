@@ -67,7 +67,8 @@ votes_cumsum_longer = votes_cumsum_longer.assign(vote_status=['unvoted' if cum_v
 
 # more logic for vote status -- vote stayed vs vote changed (up down)
 votes_unchanged = votes_cumsum_longer['cum_votes'] == votes_cumsum_longer['prev_cum_votes']
-votes_up = (votes_cumsum_longer['cum_votes'] > votes_cumsum_longer['prev_cum_votes']) & (votes_cumsum_longer['cum_votes'] >= 1e-6)
+votes_up = (votes_cumsum_longer['cum_votes'] > votes_cumsum_longer['prev_cum_votes']) & \
+           (votes_cumsum_longer['cum_votes'] >= 1e-6)
 votes_down = (votes_cumsum_longer['cum_votes'] < votes_cumsum_longer['prev_cum_votes']) & (votes_cumsum_longer['cum_votes'] >= 1e-6)
 voted = (votes_cumsum_longer['vote_status'].shift() == 'unvoted') & (votes_cumsum_longer['prev_cum_votes'] <= 1e-6)
 
@@ -81,11 +82,6 @@ votes_cumsum_longer = votes_cumsum_longer.drop(['prev_cum_votes'], axis=1)
 
 # saving vote status file -- very large
 votes_cumsum_longer.to_csv(os.path.join(inPath, 'vote_status_per_day.csv'), index=False)
-
-
-
-
-
 
 
 
