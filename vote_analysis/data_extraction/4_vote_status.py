@@ -64,6 +64,7 @@ votes_cumsum_longer = votes_cumsum_longer[keep_these]
 
 # add unvoted / voted indicator
 votes_cumsum_longer = votes_cumsum_longer.assign(vote_status=['unvoted' if cum_votes <= 1e-6 else 'voted' for cum_votes in votes_cumsum_longer['cum_votes']])
+votes_cumsum_longer['vote_status_raw'] = votes_cumsum_longer['vote_status']
 
 # more logic for vote status -- vote stayed vs vote changed (up down)
 votes_unchanged = votes_cumsum_longer['cum_votes'] == votes_cumsum_longer['prev_cum_votes']
