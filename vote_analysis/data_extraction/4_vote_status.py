@@ -85,8 +85,3 @@ votes_cumsum_longer.to_csv(os.path.join(inPath, 'vote_status_per_day.csv'), inde
 
 
 
-
-
-
-
-
