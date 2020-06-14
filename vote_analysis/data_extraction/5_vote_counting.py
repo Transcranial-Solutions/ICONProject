@@ -50,7 +50,7 @@ count_voted_prep_per_day = count_voted_prep_per_day.sort_values(['date'])
 
 #----------------------------------------------------------------------------------------------------------------#
 # getting unique voters per day/week/month (wallet - including unchanged votes)
-unique_voters_per_day = votes_cumsum_longer
+unique_voters_per_day = votes_cumsum_longer.copy()
 unique_voters_per_day['week'] = pd.to_datetime(unique_voters_per_day['date']).dt.strftime("%Y-%m-%U")
 unique_voters_per_day['month'] = pd.to_datetime(unique_voters_per_day['date']).dt.strftime("%Y-%m")
 

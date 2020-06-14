@@ -96,7 +96,7 @@ for i in range(len(prep_df.address)):
     votes_df = pd.read_csv(os.path.join(votesPath, prep_df.address[i] + '.csv'))
 
     # changing dates
-    rewards_df['date'] = pd.to_datetime(votes_df['datetime']).dt.strftime("%Y-%m-%d")
+    rewards_df['date'] = pd.to_datetime(rewards_df['datetime']).dt.strftime("%Y-%m-%d")
     votes_df['date'] = pd.to_datetime(votes_df['datetime']).dt.strftime("%Y-%m-%d")
 
     # appending
