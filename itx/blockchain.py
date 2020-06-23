@@ -30,10 +30,21 @@ class Block:
     def get_block(self, height, db):
         heightkey = self.BLOCK_HEIGHT_KEY + height.to_bytes(self.BLOCK_HEIGHT_BYTES_LEN, byteorder='big')
         blockhash = db.get(heightkey)
-        if not blockhash:
-            pass # What happends when block not present? 
         block = json.loads(db.get(blockhash))  # --> TypeError: Argument 'key' has incorrect type (expected bytes, got NoneType)
         return block
+
+    def find_last_block(self) -> int:
+        increment = 1000000
+        lastblock = 0
+        while True:
+            try:
+                self.get_block(lastblock + increment, self.db)
+            except TypeError:
+                if increment == 1:
+                    return lastblock
+                increment = increment // 10
+                continue
+            lastblock = lastblock + increment
 
 
 class Transaction:
