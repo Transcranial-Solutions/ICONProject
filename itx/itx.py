@@ -211,9 +211,15 @@ def extract(args):
     #    sys.exit(2)
 
     # Extract all transactions form each block.
+    loop_broken = False
     counter = -1
     for block in tqdm(range(args.blocks[0], args.blocks[1] + 1), mininterval = 1, unit = "blocks"):
-        block = Block(block, plyveldb)
+        try:
+            block = Block(block, plyveldb)
+        except TypeError:
+            time.sleep(1)
+            loop_broken = True
+            break
         transactions = block.transactions
         
         # Test each transaction against rules.
@@ -229,6 +235,9 @@ def extract(args):
                 txfile.csvwriter.writerow(assemble_row(txfile.columns, transaction.get_transaction()))
                 txfile.transactions += 1
         counter += 1
+
+    if loop_broken:
+        print(f"Block {block} not found in database. Ending extraction ...")
 
     # Update config and close files 
     for txfile in txfiles:
@@ -521,7 +530,23 @@ def save_lastblock(filename: str, block: int) -> None:
     config[filename]['last_processed_block'] = str(block)
     with open(CONFIG, 'w') as configfile:
         config.write(configfile)
-    
+
+
+def find_last_block(db):
+    increment = 1000000
+    latestblock = 0
+    while True:
+        try:
+            block = Block(lastestblock, db)
+        except:
+            TypeError
+            increment = increment / 10
+            if increment == 1:
+                return latestblock
+            continue
+        latestblock += increment
+
+
 
 class GracefulExiter():
 
