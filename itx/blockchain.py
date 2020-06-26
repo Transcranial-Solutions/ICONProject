@@ -33,6 +33,7 @@ class Block:
         block = json.loads(db.get(blockhash))  # --> TypeError: Argument 'key' has incorrect type (expected bytes, got NoneType)
         return block
 
+
     def find_last_block(self) -> int:
         increment = 1000000
         lastblock = 0

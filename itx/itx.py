@@ -332,8 +332,8 @@ class TxFile:
     def __init__(self, inifile: str, file: str):
         self.inifile = inifile
         self.name = file
-        self.fileobj = None
-        self.csvwriter = None
+        self.__fileobj = None
+        self.__csvwriter = None
         self.from_ = None
         self.to = None
         self.datatypes = None
@@ -423,14 +423,46 @@ class TxFile:
         """
         Set fileobj attribute.
         """
-    
-        self.fileobj = open(OUTPUT + self.name, mode)
+        if mode != 'w' or mode != 'a':
+            raise NotImplementedError("Only append and write mode are supported.")
 
-    def set_csvwriter(self) -> None:
+        self.__fileobj = open(OUTPUT + self.name, mode)
+        self.__csvwriter()
+    
+    def close(self) -> None:
         """
-        Set csvwriter attribute.
+        Close txfile
         """
-        self.csvwriter = csv.writer(self.fileobj)
+        self.__fileobj.close()
+
+    
+    def write_transaction(self, tx: list) -> None:
+        """
+        Write specified transaction to the file.
+        Input:
+           tx (list) - Row to be written to file.
+        Output:
+           None
+        """
+        self.__csvwriter.writerow(tx)
+
+
+    def write_column_row(self) -> None:
+        """
+        Write the first row of the csv file.
+        """
+        self.__csvwriter.writerow(self.columns)
+
+
+    def clear_all_transactions(self):
+        """
+        Clears all transactions from the file.
+        """
+        if self.__fileobj:
+            raise Exception("The file is already open. Close the file and try again.")
+        
+        open(OUTPUT + self.name, 'w').close()
+
 
 def assemble_row(columns: list, tx_features: dict) -> list:
     """
