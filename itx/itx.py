@@ -146,6 +146,7 @@ def main():
     args.func(args)
 
 def initialize(args):
+
     # Check if filetype specified.
     if not args.file.endswith(".csv"):
         print("Did you forget to specify filetype? Only .csv files are supported.")
@@ -167,12 +168,12 @@ def initialize(args):
             else:
                 continue
     
-
+    ## Add above code to class?
+    # Initialize TxFile obj.
     txfile = TxFile(args.file, CONFIG)
    
-    # Remove previous settings.
-    txfile.delete_config_section()
-    txfile.add_config_section()
+    # Remove previous configuration.
+    txfile.delete_config()
 
     # Set attributes from command line.
     txfile.from_ = args.from_
@@ -384,6 +385,9 @@ class TxFile:
         config = configparser.ConfigParser()
         config.read(self.inifile)
 
+        if not config.has_section(self.name):
+            config.add_section(self.name)
+
         # Save rules.
         if self.from_: 
             config[self.name]['from'] = json.dumps(self.from_)
@@ -412,18 +416,10 @@ class TxFile:
         with open(self.inifile, 'w') as configfile:
             config.write(configfile)
 
-    def delete_config_section(self):
+    def delete_config(self):
         config = configparser.ConfigParser()
         config.read(self.inifile)
         config.remove_section(self.name)
-
-        with open(self.inifile, 'w') as configfile:
-            config.write(configfile)
-
-    def add_config_section(self):
-        config = configparser.ConfigParser()
-        config.read(self.inifile)
-        config.add_section(self.name)
 
         with open(self.inifile, 'w') as configfile:
             config.write(configfile)
