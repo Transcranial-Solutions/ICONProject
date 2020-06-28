@@ -166,22 +166,29 @@ def initialize(args):
             
             else:
                 continue
-
-    # Overwrite settings.
-    config = configparser.ConfigParser()
-    config.read(CONFIG)
-    config.remove_section(args.file)
-    config.add_section(args.file)
     
-    with open(CONFIG, 'w') as configfile:
-        config.write(configfile)
 
-    # Create and write columns to csv file.
-    write_columns(filepath, args.columns)
+    txfile = TxFile(args.file, CONFIG)
+   
+    # Remove previous settings.
+    txfile.delete_config_section()
+    txfile.add_config_section()
 
-    # Write to configuration file. Use TxFile obj here?
-    save_rules(args.file, args.from_, args.to, args.datatypes, args.methods, args.params)
-    save_columns(args.file, args.columns)
+    # Set attributes from command line.
+    txfile.from_ = args.from_
+    txfile.to = args.to
+    txfile.datatypes = args.datatypes
+    txfile.methods = args.methods
+    txfile.params = args.params
+    txfile.columns = args.columns
+
+    # Save to .ini file.
+    txfile.save_config()
+
+    # Create file in output folder and write header row.
+    txfile.open('w')
+    txfile.write_column_row()
+    txfile.close()
 
 def extract(args):
     plyveldb = plyvel.DB(LEVELDB, create_if_missing = False)
@@ -194,12 +201,11 @@ def extract(args):
     # Prepare list of TxFile objects.
     txfiles = []
     for file in args.files:
-        txfile = TxFile(CONFIG, file)
+        txfile = TxFile(file, inifile = CONFIG)
         txfile.load_config()
         txfile.firstblock = args.blocks[0]
         txfile.set_rules()
         txfile.open('a')
-        txfile.set_csvwriter()
         txfiles.append(txfile)
 
     print("Extracting transactions...")
@@ -217,7 +223,6 @@ def extract(args):
         try:
             block = Block(block, plyveldb)
         except TypeError:
-            time.sleep(1)
             loop_broken = True
             break
         transactions = block.transactions
@@ -232,7 +237,7 @@ def extract(args):
                     continue
 
                 # Write to file if all tests passed
-                txfile.csvwriter.writerow(assemble_row(txfile.columns, transaction.get_transaction()))
+                txfile.append_transaction(transaction.get_transaction())
                 txfile.transactions += 1
         counter += 1
 
@@ -243,13 +248,11 @@ def extract(args):
     for txfile in txfiles:
         txfile.lastblock = txfile.firstblock + counter
         txfile.save_config()
-        txfile.fileobj.close() 
+        txfile.close() 
     plyveldb.close()
     
     # Endreport
     # endreport()
-
-# Return 
 
 def update():
     ## TODO
@@ -266,9 +269,11 @@ def remove(args) -> None:
         files = os.listdir(OUTPUT)
         for file in files:
             os.remove(OUTPUT + file)
+        for file in config.sections():
             config.remove_section(file)
+
     else:
-        for file in args.file:
+        for file in args.files:
             os.remove(OUTPUT + file)
             config.remove_section(file)
     
@@ -292,7 +297,7 @@ def status(args) -> None:
     sep = " "
 
     for file in files: 
-        file = TxFile(CONFIG, file)
+        file = TxFile(file, CONFIG)
         file.load_config()
         print(f"Name        : {file.name}")
         if file.from_:
@@ -329,7 +334,9 @@ def status(args) -> None:
         print("")
 
 class TxFile:
-    def __init__(self, inifile: str, file: str):
+    def __init__(self, file: str, inifile = None):
+        
+
         self.inifile = inifile
         self.name = file
         self.__fileobj = None
@@ -404,39 +411,56 @@ class TxFile:
         # Write to file.
         with open(self.inifile, 'w') as configfile:
             config.write(configfile)
+
+    def delete_config_section(self):
+        config = configparser.ConfigParser()
+        config.read(self.inifile)
+        config.remove_section(self.name)
+
+        with open(self.inifile, 'w') as configfile:
+            config.write(configfile)
+
+    def add_config_section(self):
+        config = configparser.ConfigParser()
+        config.read(self.inifile)
+        config.add_section(self.name)
+
+        with open(self.inifile, 'w') as configfile:
+            config.write(configfile)
         
     def set_rules(self) -> None:
         """
         Set rules attribute.
         """
-        config = {}
+        rules = {}
         parser = configparser.ConfigParser()
         parser.read(self.inifile)
-        config['from_'] = set(json.loads(parser.get(self.name, 'from')))
-        config['to'] = set(json.loads(parser.get(self.name, 'to')))
-        config['datatypes'] = set(json.loads(parser.get(self.name, 'datatypes')))
-        config['methods'] = set(json.loads(parser.get(self.name, 'methods')))
-        config['params'] = set(json.loads(parser.get(self.name, 'params')))
-        self.rules = config
+        rules['from_'] = set(json.loads(parser.get(self.name, 'from')))
+        rules['to'] = set(json.loads(parser.get(self.name, 'to')))
+        rules['datatypes'] = set(json.loads(parser.get(self.name, 'datatypes')))
+        rules['methods'] = set(json.loads(parser.get(self.name, 'methods')))
+        rules['params'] = set(json.loads(parser.get(self.name, 'params')))
+        self.rules = rules
 
     def open(self, mode: str) -> None:
         """
         Set fileobj attribute.
         """
-        if mode != 'w' or mode != 'a':
+        if mode not in ['w', 'a']:
             raise NotImplementedError("Only append and write mode are supported.")
 
         self.__fileobj = open(OUTPUT + self.name, mode)
-        self.__csvwriter()
+        self.__csvwriter = csv.writer(self.__fileobj)
     
     def close(self) -> None:
         """
         Close txfile
         """
         self.__fileobj.close()
+        self.__fileobj = None
 
     
-    def write_transaction(self, tx: list) -> None:
+    def append_transaction(self, tx: list) -> None:
         """
         Write specified transaction to the file.
         Input:
@@ -444,6 +468,7 @@ class TxFile:
         Output:
            None
         """
+        tx = [tx[column] for column in self.columns]
         self.__csvwriter.writerow(tx)
 
 
