@@ -12,12 +12,13 @@ import datetime
 import os
 import sys
 from tqdm import tqdm
-import textwrap
+from txfile import TxFile
 
 
 COLUMNS = ["block", "from", "to", "value", "datatype", "data", "txhash", "blocktimestamp"]
 INTERVAL = 30
 CONFIG = "./data/itx.ini"
+
 
 #Get default arguments from file.
 config = configparser.ConfigParser()
@@ -29,12 +30,6 @@ LEVELDB = df_args['leveldb']
 
 def main():
     
-    #Get default arguments from file.
-    config = configparser.ConfigParser()
-    config.read(CONFIG)
-    df_args = dict(config['DEFAULT'])
-
-
     # Create parser object.
     parser = argparse.ArgumentParser(prog = "itx",
                                      usage = "python3 itx <operation> [options] <target>",
@@ -133,7 +128,8 @@ def main():
                                           help='Check status for all tracked files.',
                                           add_help=True)
 
-    #parser_status.add_argument('--file', type = str, help = "File for status check")
+    parser_status.add_argument('--files', type = str, nargs = "+", help = "File for status check.")
+    parser_status.add_argument('--all', action = 'store_true', help = "Check status for all files.")
 
     parser_status.set_defaults(func = status)
     # Custom helpfile
@@ -289,50 +285,20 @@ def syncronize():
 
 def status(args) -> None:
     """
-    Print status of all tracked files.
+    Print status of transaction files.
     """
-    config = configparser.ConfigParser()
-    config.read(CONFIG)
-    files = config.sections()
-    wrapper = textwrap.TextWrapper(width = 120, subsequent_indent=" " * 12)
-    sep = " "
+    if args.all:
+        config = configparser.ConfigParser()
+        config.read(CONFIG)
+        txfiles = config.sections()
 
-    for file in files: 
-        file = TxFile(file, CONFIG)
-        file.load_config()
-        print(f"Name        : {file.name}")
-        if file.from_:
-            text = f"From        : {sep.join(file.from_)}"
-            text = wrapper.wrap(text)
-            for line in text:
-                print(line)
-        else:
-            print(f"From        : No filter")
-        if file.to:
-            text = f"To          : {sep.join(file.to)}"
-            text = wrapper.wrap(text)
-            for line in text:
-                print(line)
-        else:
-            print(f"To          : No filter")
-        if file.datatypes:
-            print(f"Datatypes   : {sep.join(file.datatypes)}")
-        else:
-            print(f"Datatypes   : No filter")
-        if file.methods:
-            print(f"Methods     : {sep.join(file.methods)}")
-        else:
-            print(f"Methods     : No filter")
-        if file.params:
-            print(f"Params      : {sep.join(file.params)}")
-        else:
-            print(f"Params      : No filter")
-        if file.columns:
-            print(f"Columns     : {sep.join(file.columns)}")
-        print(f"Firstblock  : {file.firstblock}")
-        print(f"Lastblock   : {file.lastblock}")
-        print(f"Transactions: {file.transactions}")
-        print("")
+    if not args.all and args.files:
+        txfiles = args.files
+
+    for txfile in txfiles:
+        txfile = TxFile(txfile, CONFIG)
+        txfile.load_config()
+        txfile.print_status()
 
 
 def proceed() -> bool:
