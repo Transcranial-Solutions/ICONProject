@@ -1,4 +1,6 @@
 import configparser
+import textwrap
+import json
 
 
 class TxFile:
@@ -159,3 +161,42 @@ class TxFile:
             raise Exception("The file is already open. Close the file and try again.")
         
         open(OUTPUT + self.name, 'w').close()
+
+    def print_status(self):
+    
+        wrapper = textwrap.TextWrapper(width = 120, subsequent_indent=" " * 12)
+        sep = " "
+        
+        print("")
+        print(f"Name        : {self.name}")
+        if self.from_:
+            text = f"From        : {sep.join(self.from_)}"
+            text = wrapper.wrap(text)
+            for line in text:
+                print(line)
+        else:
+            print(f"From        : No filter")
+        if self.to:
+            text = f"To          : {sep.join(self.to)}"
+            text = wrapper.wrap(text)
+            for line in text:
+                print(line)
+        else:
+            print(f"To          : No filter")
+        if self.datatypes:
+            print(f"Datatypes   : {sep.join(self.datatypes)}")
+        else:
+            print(f"Datatypes   : No filter")
+        if self.methods:
+            print(f"Methods     : {sep.join(self.methods)}")
+        else:
+            print(f"Methods     : No filter")
+        if self.params:
+            print(f"Params      : {sep.join(self.params)}")
+        else:
+            print(f"Params      : No filter")
+        if self.columns:
+            print(f"Columns     : {sep.join(self.columns)}")
+        print(f"Firstblock  : {self.firstblock}")
+        print(f"Lastblock   : {self.lastblock}")
+        print(f"Transactions: {self.transactions}")
