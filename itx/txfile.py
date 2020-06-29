@@ -163,7 +163,9 @@ class TxFile:
         open(OUTPUT + self.name, 'w').close()
 
     def print_status(self):
-    
+        """
+        Print status of this transaction file.
+        """
         wrapper = textwrap.TextWrapper(width = 120, subsequent_indent=" " * 12)
         sep = " "
         
