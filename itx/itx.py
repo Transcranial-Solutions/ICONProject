@@ -168,7 +168,7 @@ def initialize(args):
             else:
                 continue
     
-    ## Add above code to class?
+    ## Add above code to class??
     # Initialize TxFile obj.
     txfile = TxFile(args.file, CONFIG)
    
