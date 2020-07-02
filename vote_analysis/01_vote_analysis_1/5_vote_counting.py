@@ -13,8 +13,8 @@
 # Vote distribution / counting / plotting
 
 import pandas as pd
-import scipy.stats as sp # for calculating standard error
-import matplotlib.pyplot as plt # for improving our visualizations
+import scipy.stats as sp
+import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import matplotlib.ticker as ticker
 import seaborn as sns
@@ -31,6 +31,9 @@ votesPath = os.path.join(inPath, "votes")
 resultsPath = os.path.join(inPath, "results")
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
+resultsPath_2 = os.path.join(resultsPath, "part_1")
+if not os.path.exists(resultsPath_2):
+    os.mkdir(resultsPath_2)
 
 # read data
 prep_df = pd.read_csv(os.path.join(inPath, 'final_prep_details.csv'))
@@ -152,7 +155,7 @@ plt.legend(handles=[red_line], loc='lower right', fontsize='medium')
 plt.tight_layout()
 
 # save figure
-ax2.figure.savefig(os.path.join(resultsPath, "total_n_votes_by_prep.png"))
+ax2.figure.savefig(os.path.join(resultsPath_2, "total_n_votes_by_prep.png"))
 
 
 # Current Number of Voters by P-Reps ~~~~~~~~~~~~~~~~~~~~~~~#
@@ -164,8 +167,8 @@ color = 'tab:red'
 ax2 = sns.barplot(x='n_voters', y='validator_name',
                   data=votes_and_voters_per_prep_outlier_removed, color=color, edgecolor="black")
 ax2.tick_params(axis='y', color=color)
-ax2.set_xlabel('Voters',fontsize=13)
-ax2.set_ylabel('P-Reps',fontsize=13)
+ax2.set_xlabel('Voters', fontsize=13)
+ax2.set_ylabel('P-Reps', fontsize=13)
 ax2.set_title('Total Number of Voters by P-Rep \n(in total vote ranking order)', fontsize=14, weight='bold')
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=5.5)
@@ -174,7 +177,7 @@ plt.legend(handles=[red_line], loc='lower right', fontsize='medium')
 plt.tight_layout()
 
 # save figure
-ax2.figure.savefig(os.path.join(resultsPath, "total_n_voters_by_prep.png"))
+ax2.figure.savefig(os.path.join(resultsPath_2, "total_n_voters_by_prep.png"))
 
 
 # Average Number of Votes per Voter by P-Reps ~~~~~~~~~~~~~~~~~~~~~~~#
@@ -197,7 +200,7 @@ plt.legend(handles=[red_line], loc='lower right', fontsize='medium')
 plt.tight_layout()
 
 # save figure
-ax2.figure.savefig(os.path.join(resultsPath, "mean_n_votes_per_voter_by_prep.png"))
+ax2.figure.savefig(os.path.join(resultsPath_2, "mean_n_votes_per_voter_by_prep.png"))
 
 # Median Votes by P-Reps ~~~~~~~~~~~~~~~~~~~~~~~#
 # sns.set(style="whitegrid")
@@ -234,7 +237,7 @@ plt.xticks(fontsize=10)
 plt.yticks(fontsize=8)
 plt.tight_layout()
 # save figure
-ax.figure.savefig(os.path.join(resultsPath, "prep_count_per_country.png"))
+ax.figure.savefig(os.path.join(resultsPath_2, "prep_count_per_country.png"))
 
 
 # World Map ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -265,7 +268,7 @@ fig.update_layout(autosize=False, width=1200, height=800,
 fig.show()
 
 # save figure
-fig.write_image(os.path.join(resultsPath, "total_n_voters_map.png"))
+fig.write_image(os.path.join(resultsPath_2, "total_n_voters_map.png"))
 
 
 
@@ -283,7 +286,7 @@ plt.xticks(fontsize=10)
 plt.yticks(fontsize=10)
 plt.tight_layout()
 #save
-ax.figure.savefig(os.path.join(resultsPath, "n_voters_over_time.png"))
+ax.figure.savefig(os.path.join(resultsPath_2, "n_voters_over_time.png"))
 
 
 # joint (voters vs votes correlation - weeks)
@@ -298,6 +301,6 @@ g.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. forma
 g.set_title('Votes vs Voters', fontsize=12, weight='bold')
 plt.tight_layout()
 # save
-g.figure.savefig(os.path.join(resultsPath, "votes_vs_voters_corr.png"))
+g.figure.savefig(os.path.join(resultsPath_2, "votes_vs_voters_corr.png"))
 
 
