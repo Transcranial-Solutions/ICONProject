@@ -11,22 +11,22 @@
 #########################################################################
 
 
-# webscraping icon.community and
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# webscraping icon.community and save into csv
+
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import os
 from datetime import date
 
-
+# path to save
 currPath = os.getcwd()
 inPath = os.path.join(currPath, "output")
 outDataPath = os.path.join(inPath, "icon_community")
 if not os.path.exists(outDataPath):
     os.mkdir(outDataPath)
 
-
+# URL to be scraped
 URL = 'https://icon.community'
 page = requests.get(URL)
 soup = BeautifulSoup(page.content, 'html.parser')
