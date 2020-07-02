@@ -109,3 +109,5 @@ day1 = today.strftime("%d_%m_%Y")
 tx_df.to_csv(os.path.join(outDataPath, 'tx_df_' + day1 + '.csv'), index=False)
 wallet_and_reward_df.to_csv(os.path.join(outDataPath, 'wallet_and_reward_df_' + day1 + '.csv'), index=False)
 basic_icx_stat.to_csv(os.path.join(outDataPath, 'basic_icx_stat_df_' + day1 + '.csv'), index=False)
+
+
