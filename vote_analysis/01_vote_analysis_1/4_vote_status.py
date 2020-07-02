@@ -27,6 +27,9 @@ votesPath = os.path.join(inPath, "votes")
 resultsPath = os.path.join(inPath, "results")
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
+resultsPath_2 = os.path.join(resultsPath, "part_1")
+if not os.path.exists(resultsPath_2):
+    os.mkdir(resultsPath_2)
 
 # read data
 prep_df = pd.read_csv(os.path.join(inPath, 'final_prep_details.csv'))
