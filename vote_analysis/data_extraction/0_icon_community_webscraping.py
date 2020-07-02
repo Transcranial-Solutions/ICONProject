@@ -61,21 +61,27 @@ def get_data_from_div(corresponding_number):
     df = df.rename(columns=df.iloc[0]).drop(df.index[0]).reset_index(drop=True)
     return (df)
 
-#
+
+## dataframes
+
+# transactions
 dates_tx = get_data_from_script(1)
 data_tx = get_data_from_script(2)
-#
+
+# balace and reward
 these_dates = get_data_from_script(4)
 balance_wallet = get_data_from_script(5)
 total_wallet = get_data_from_script(6)
 annual_real_yield = get_data_from_script(7)
 annual_reward = get_data_from_script(8)
 annual_inflation = get_data_from_script(9)
-#
+
+# staked
 total_staked_ICX = get_data_from_script(11)
 total_staked_ICX = total_staked_ICX.rename(columns={'total_staked': 'total_staked_ICX'})
 total_staked_ICX['total_staked_ICX'] = total_staked_ICX['total_staked_ICX'].astype(int).map('{:,}'.format)
 
+# regular ICX stats
 market_cap = get_data_from_div(3)
 circulating_supply = get_data_from_div(4)
 total_supply = get_data_from_div(5)
@@ -84,6 +90,7 @@ circulation_staked = get_data_from_div(7)
 total_staked = get_data_from_div(8)
 total_voted = get_data_from_div(9)
 
+# merge dataframes
 tx_df = pd.concat([dates_tx, data_tx], axis=1, sort=False)
 
 wallet_and_reward_df = pd.concat([these_dates, balance_wallet, total_wallet,
@@ -94,9 +101,11 @@ basic_icx_stat = pd.concat([market_cap, circulating_supply,
                    total_staked_ICX, total_staked,
                    circulation_staked, total_voted], axis=1, sort=False)
 
+# today date
 today = date.today()
 day1 = today.strftime("%d_%m_%Y")
 
+# save as csv
 tx_df.to_csv(os.path.join(outDataPath, 'tx_df_' + day1 + '.csv'), index=False)
 wallet_and_reward_df.to_csv(os.path.join(outDataPath, 'wallet_and_reward_df_' + day1 + '.csv'), index=False)
 basic_icx_stat.to_csv(os.path.join(outDataPath, 'basic_icx_stat_df_' + day1 + '.csv'), index=False)
