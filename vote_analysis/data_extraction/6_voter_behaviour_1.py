@@ -30,6 +30,9 @@ votesPath = os.path.join(inPath, "votes")
 resultsPath = os.path.join(inPath, "results")
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
+resultsPath_2 = os.path.join(resultsPath, "part_1")
+if not os.path.exists(resultsPath_2):
+    os.mkdir(resultsPath_2)
 
 # read data
 prep_df = pd.read_csv(os.path.join(inPath, 'final_prep_details.csv'))
@@ -141,7 +144,7 @@ ax = sns.distplot(mean_by_all['counts'], vertical=True,
 plt.title('Distribution of Average Number of P-Reps Voted Per Voter', fontsize=12, weight='bold')
 plt.tight_layout()
 # save
-plt.savefig(os.path.join(resultsPath, "n_prep_voted_per_voter_to_date.png"))
+plt.savefig(os.path.join(resultsPath_2, "n_prep_voted_per_voter_to_date.png"))
 
 # violin plot by month ~~~~~~~~~~~~~~~~~#
 plt.rcParams["axes.labelsize"] = 14
@@ -154,7 +157,7 @@ ax = sns.violinplot(x="month", y="counts", data=mean_by_month, linewidth=1.75)\
 plt.title('Spread of Vote Allocation Over Time (Violin plot)', fontsize=14, weight='bold')
 plt.tight_layout()
 # save
-plt.savefig(os.path.join(resultsPath, "n_prep_voted_per_voter_per_month.png"))
+plt.savefig(os.path.join(resultsPath_2, "n_prep_voted_per_voter_per_month.png"))
 
 # heatmap
 pivot_table_month = pivot_table_month.sort_index(ascending=False)
@@ -169,7 +172,7 @@ ax.set_yticklabels(ax.get_yticklabels(), rotation=0, ha="right")
 plt.title('Spread of Vote Allocation Over Time (Table)', fontsize=14, weight='bold')
 plt.tight_layout()
 # save
-plt.savefig(os.path.join(resultsPath, "n_prep_voted_per_voter_per_month_table.png"))
+plt.savefig(os.path.join(resultsPath_2, "n_prep_voted_per_voter_per_month_table.png"))
 
 # Most popular by 1~2 prep voters (not unique per voter (multiple pairing) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # barplot
@@ -185,7 +188,7 @@ plt.xticks(fontsize=10)
 plt.yticks(fontsize=10)
 plt.tight_layout()
 #save
-ax.figure.savefig(os.path.join(resultsPath, "popular_prep_by_1_2_voters.png"))
+ax.figure.savefig(os.path.join(resultsPath_2, "popular_prep_by_1_2_voters.png"))
 
 # stacked barplot
 indexing_cols = one_prep_voter_count_all['Category'][0:6].tolist()
@@ -214,5 +217,5 @@ red_line = mlines.Line2D([], [], color=color, label='Red line represents voter c
 plt.legend(handles=[red_line], loc='upper left', fontsize='small', bbox_to_anchor=(0.67, -0.09), frameon=False)
 plt.tight_layout(rect=[0,0,1,1])
 
-plt.savefig(os.path.join(resultsPath, "popular_prep_by_1_2_voters_per_month.png"))
+plt.savefig(os.path.join(resultsPath_2, "popular_prep_by_1_2_voters_per_month.png"))
 
