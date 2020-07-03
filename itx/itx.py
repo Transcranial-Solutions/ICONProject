@@ -102,6 +102,13 @@ def main():
                                                  'specified when the file was initialized.',
                                           add_help = True)
 
+    parser_update.add_argument('--files', type = str, required = True, nargs = "+",
+                                help = "File to store extracted transactions in.")
+
+    parser_update.add_argument('--endblock', type = int, metavar = "block",
+                                help = 'Update files up to this block.')    
+
+    parser_update.set_defaults(func = update)
 
     # Create parser for syncronize command.
     parser_syncronize = subparsers.add_parser('syncronize',
@@ -110,7 +117,7 @@ def main():
                                               add_help=True)
 
 
-    # Create parser for syncronize command.
+    # Create parser for remove command.
     parser_remove = subparsers.add_parser('remove',
                                            usage = 'python3 itx.py remove [options] <file/s>',
                                            help = 'Remove specified files and their configuration.',
@@ -240,9 +247,72 @@ def extract(args):
     # Endreport
     # endreport()
 
-def update():
-    ## TODO
-    pass
+def update(args):
+
+    # Open local leveldb blockchain database.
+    plyveldb = plyvel.DB(LEVELDB, create_if_missing = False)
+
+    # Prepare list of TxFile objects.
+    txfiles = []
+    for file in args.files:
+        txfile = TxFile(name = file, inifile = CONFIG)
+        txfile.load_config()
+        txfile.set_rules()
+        txfile.open('a')
+        txfiles.append(txfile)
+
+    # Find lowest blockheight among txfiles.
+    block_heights = []
+    for txfile in txfiles:
+        block_heights.append(txfile.lastblock)
+    lowest_blockheight = min(block_heights)
+
+    # Starting block for extraction.
+    startblock = lowest_blockheight + 1
+
+    # If not endblock specified -> find latest blockheight available in blockchain database.
+    if not args.endblock:
+        block = Block(2, plyveldb)
+        endblock = block.find_last_block()
+    else:
+        endblock = args.endblock
+
+    # Extract transactions.
+    print("Updating files with new transactions...")
+    for block in tqdm(range(startblock, endblock + 1), mininterval = 1, unit = "blocks"):
+        block = Block(block, plyveldb)
+        transactions = block.transactions
+
+        for transaction in transactions:
+            transaction = Transaction(transaction, plyveldb, blockheight = block.height, blocktimestamp = block.timestamp)
+            
+            # ===Inefficiency here===
+            for txfile in txfiles:
+                if txfile.lastblock != lowest_blockheight:
+                    continue
+                if not transaction.fulfills_criteria(**txfile.rules):
+                    continue
+                if not transaction.was_successful():
+                    continue
+                
+                txfile.append_transaction(transaction.get_transaction())
+                txfile.transactions += 1
+        
+        # Update blockheights of txfiles.
+        for txfile in txfiles:
+            if txfile.lastblock == lowest_blockheight:
+                txfile.lastblock +=1
+        
+        # New lowest blockheight among txfiles.
+        lowest_blockheight += 1
+    
+    # Update config and close files.
+    for txfile in txfiles:
+        txfile.lastblock = lowest_blockheight
+        txfile.save_config()
+        txfile.close() 
+    plyveldb.close()
+
 
 def remove(args) -> None:
     """
