@@ -11,7 +11,7 @@ Medium article: https://medium.com/@transcranial.solutions/icon-network-p-rep-vo
 
 ## icon_in_numbers
 This is for weekly report for the status of voting in ICON network.
-Webscrapes data, manipulates, decodes, calculates and produces images -- does not save data but there is an option to do so.
+Webscrapes data, manipulates, re-codes, calculates and produces images -- does not save data but there is an option to do so.
 
 If you have any question or feedback, please e-mail at transcranial.solutions@gmail.com.
 
