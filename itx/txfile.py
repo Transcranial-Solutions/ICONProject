@@ -100,9 +100,9 @@ class TxFile:
         if config.has_option(self.name, "firstblock"):
             self.firstblock = int(config[self.name]['firstblock'])
         if config.has_option(self.name, "lastblock"):
-            self.lastblock = json.loads(config[self.name]['lastblock'])
+            self.lastblock = int(config[self.name]['lastblock'])
         if config.has_option(self.name, "transactions"):
-            self.transactions = json.loads(config[self.name]['transactions'])
+            self.transactions = int(config[self.name]['transactions'])
 
     def save_config(self) -> None:
         """
@@ -199,12 +199,12 @@ class TxFile:
         self.__fileobj = None
 
     
-    def append_transaction(self, tx: list) -> None:
+    def append_transaction(self, tx: dict) -> None:
         """
         Extracts features from a transaction according to the 
         columns attribute and appends the resulting transaction to the file.
         Input:
-           tx (list) - transaction with all features.
+           tx (dict) - transaction with all features.
         Output:
            None
         """
