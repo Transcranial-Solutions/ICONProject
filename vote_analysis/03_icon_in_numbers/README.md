@@ -11,6 +11,9 @@ This is a repository for codes used for weekly report on ICON Ecosystem.
 
 This also requires two data points for comparison - e.g) 2020-20 vs 2020-21 (weekly comparison)
 
+'1_icon_community_webscraping.py' is not included in the one-click graph generator, so this will need to be done separately, 
+but this is available for anyone to see at icon.community website
+
 Please feel free to ask questions if you have any.
 
 email: transcranial.solutions@gmail.com
