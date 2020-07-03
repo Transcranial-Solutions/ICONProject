@@ -86,7 +86,7 @@ def main():
     parser_extract.add_argument('--files', type = str, required = True, nargs = "+",
                                 help = "File to store extracted transactions in.")
     
-    parser_extract.add_argument('--blocks', type = int, metavar = "block", nargs = 2,
+    parser_extract.add_argument('--blocks', type = int, metavar = "block", nargs = 2, required = True,
                                 help = 'Block interval to extract transactions from.')
     
     parser_extract.set_defaults(func = extract)
@@ -128,7 +128,7 @@ def main():
                                           help='Check status for all tracked files.',
                                           add_help=True)
 
-    parser_status.add_argument('--files', type = str, nargs = "+", help = "File for status check.")
+    parser_status.add_argument('--files', type = str, nargs = "+", help = "File(s) for status check.")
     parser_status.add_argument('--all', action = 'store_true', help = "Check status for all files.")
 
     parser_status.set_defaults(func = status)
@@ -164,41 +164,30 @@ def initialize(args):
             else:
                 continue
     
-    ## Add above code to class??
-    # Initialize TxFile obj.
-    txfile = TxFile(args.file, CONFIG)
+    # Initialize txfile with its extraction settings.
+    txfile = TxFile(name = args.file, folder = OUTPUT, inifile = CONFIG, from_ = args.from_,
+                    to = args.to, datatypes = args.datatypes, methods = args.methods, params = args.params,
+                    columns = args.columns)
    
-    # Remove previous configuration.
+    # Save settings to configuration file.
     txfile.delete_config()
-
-    # Set attributes from command line.
-    txfile.from_ = args.from_
-    txfile.to = args.to
-    txfile.datatypes = args.datatypes
-    txfile.methods = args.methods
-    txfile.params = args.params
-    txfile.columns = args.columns
-
-    # Save to .ini file.
     txfile.save_config()
 
-    # Create file in output folder and write header row.
+    # Create file and write header row to file.
+    txfile.create_file()
     txfile.open('w')
     txfile.write_header_row()
     txfile.close()
 
 def extract(args):
-    plyveldb = plyvel.DB(LEVELDB, create_if_missing = False)
 
-    # Check if all files exists.
-    for file in args.files:
-        if not os.path.exists(OUTPUT + file):
-            raise FileNotFoundError(f"{file} does not exist.")
+    # Open local blockchaindb.
+    plyveldb = plyvel.DB(LEVELDB, create_if_missing = False)
     
     # Prepare list of TxFile objects.
     txfiles = []
     for file in args.files:
-        txfile = TxFile(file, inifile = CONFIG)
+        txfile = TxFile(name = file, inifile = CONFIG)
         txfile.load_config()
         txfile.firstblock = args.blocks[0]
         txfile.set_rules()
@@ -261,22 +250,18 @@ def remove(args) -> None:
     """
     config = configparser.ConfigParser()
     config.read(CONFIG)
-
+    
     if args.all:
-        files = os.listdir(OUTPUT)
-        for file in files:
-            os.remove(OUTPUT + file)
-        for file in config.sections():
-            config.remove_section(file)
+        txfiles = config.sections()
 
     else:
-        for file in args.files:
-            os.remove(OUTPUT + file)
-            config.remove_section(file)
-    
-    with open(CONFIG, 'w') as f:
-        config.write(f)
+        txfiles = args.files
 
+    for txfile in txfiles:
+        txfile = TxFile(name = txfile, inifile = CONFIG)
+        txfile.load_config()
+        txfile.delete_file()
+        txfile.delete_config()
 
 def syncronize():
     ## TODO
@@ -287,16 +272,15 @@ def status(args) -> None:
     """
     Print status of transaction files.
     """
-    if args.all:
+    if  args.files:
+        txfiles = args.files
+    else:
         config = configparser.ConfigParser()
         config.read(CONFIG)
         txfiles = config.sections()
 
-    if not args.all and args.files:
-        txfiles = args.files
-
     for txfile in txfiles:
-        txfile = TxFile(txfile, CONFIG)
+        txfile = TxFile(name = txfile, inifile = CONFIG)
         txfile.load_config()
         txfile.print_status()
 

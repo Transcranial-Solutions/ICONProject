@@ -1,6 +1,8 @@
 import configparser
 import textwrap
 import json
+import csv
+import os
 
 
 class TxFile:
@@ -10,28 +12,73 @@ class TxFile:
     load the file settigs, removing a file etc.
     """
 
-    def __init__(self, filename: str, inifile = None):
+    def __init__(self, name = None, folder = None, inifile = None, from_ = [], to = [],
+                 datatypes = [], methods = [], params = [], columns = None, firstblock = None,
+                 lastblock = None, transactions= 0):
+        self.name = name
+        self.folder = folder
         self.inifile = inifile
-        self.name = filename
+        self.from_ = from_
+        self.to = to
+        self.datatypes = datatypes
+        self.methods = methods
+        self.params = params
+        self.columns = columns
+        self.firstblock = firstblock
+        self.lastblock = lastblock
+        self.transactions = 0
+
+        self.rules = None
+
         self.__fileobj = None
         self.__csvwriter = None
-        self.from_ = []
-        self.to = []
-        self.datatypes = []
-        self.methods = []
-        self.params = []
-        self.columns = None
-        self.rules = None  
-        self.firstblock = None
-        self.lastblock = None 
-        self.transactions = 0
+
+        self.name
+
+    def exists_in_config(self) -> bool:
+        """
+        Test if a file exists in configuration file.
+        Return:
+            bool  -  true if exists and false of not.
+        """
+    
+        config = configparser.ConfigParser()
+        config.read(self.inifile)
+        sections = config.sections()
+
+        if self.name in sections:
+            return True
+        else:
+            return False
+
+    def exists_in_output(self) -> bool:
+        """
+        Test if file exists in its location specified in the configuration file.
+        Return:
+            bool  -  true if exists and false if not.
+        """
+        config = configparser.ConfigParser()
+        config.read(self.inifile)
+        
+        if os.path.exists(self.folder + self.name):
+            return True
+        else:
+            return False
 
     def load_config(self) -> None:
         """
         Load file settings from inifile.
         """
+
+        if not self.exists_in_config():
+            raise FileNotFoundError("File does not exist in configuration file.")
+        
         config = configparser.ConfigParser()
         config.read(self.inifile)
+
+        # Load folder
+        if config.has_option(self.name, "folder"):
+            self.folder = config[self.name]["folder"]
 
         # Load rules.
         if config.has_option(self.name, "from"):
@@ -67,6 +114,9 @@ class TxFile:
         if not config.has_section(self.name):
             config.add_section(self.name)
 
+        # Save folder
+        config[self.name]["folder"] = self.folder
+
         # Save rules.
         config[self.name]['from'] = json.dumps(self.from_)
         config[self.name]['to'] = json.dumps(self.to)
@@ -90,7 +140,7 @@ class TxFile:
         with open(self.inifile, 'w') as configfile:
             config.write(configfile)
 
-    def delete_config(self):
+    def delete_config(self) -> None:
         """
         Delete file settings from inifile.
         """
@@ -100,6 +150,13 @@ class TxFile:
 
         with open(self.inifile, 'w') as configfile:
             config.write(configfile)
+
+    def delete_file(self) -> None:
+        """
+        Delete file.
+        """
+
+        os.remove(self.folder + self.name)
         
     def set_rules(self) -> None:
         """
@@ -115,6 +172,12 @@ class TxFile:
         rules['params'] = set(json.loads(parser.get(self.name, 'params')))
         self.rules = rules
 
+    def create_file(self) -> None:
+        """
+        Create file in specified output folder.
+        """
+        open(self.folder + self.name, 'w').close()
+
     def open(self, mode: str) -> None:
         """
         Opens the file in the output directory. Creates it if it does not exists.
@@ -122,7 +185,10 @@ class TxFile:
         if mode not in ['w', 'a']:
             raise NotImplementedError("Only append and write mode are supported.")
 
-        self.__fileobj = open(OUTPUT + self.name, mode)
+        if not self.exists_in_output():
+            raise FileNotFoundError("File does not exist in output folder specified in configuration file.")
+
+        self.__fileobj = open(self.folder + self.name, mode)
         self.__csvwriter = csv.writer(self.__fileobj)
     
     def close(self) -> None:
@@ -160,17 +226,24 @@ class TxFile:
         if self.__fileobj:
             raise Exception("The file is already open. Close the file and try again.")
         
-        open(OUTPUT + self.name, 'w').close()
+        open(self.outputfolder + self.name, 'w').close()
 
     def print_status(self):
         """
         Print status of this transaction file.
         """
+        #Test if file exists in output directory and config file.
+        if not self.exists_in_config:
+            raise FileNotFoundError("File not found in configuration file.")
+        if not self.exists_in_output:
+            raise FileExistsError("File not found in output folder specified by configuration file.")
+        
         wrapper = textwrap.TextWrapper(width = 120, subsequent_indent=" " * 12)
         sep = " "
         
         print("")
         print(f"Name        : {self.name}")
+        print(f"Folder      : {self.folder}")
         if self.from_:
             text = f"From        : {sep.join(self.from_)}"
             text = wrapper.wrap(text)
@@ -202,3 +275,4 @@ class TxFile:
         print(f"Firstblock  : {self.firstblock}")
         print(f"Lastblock   : {self.lastblock}")
         print(f"Transactions: {self.transactions}")
+        print("")
