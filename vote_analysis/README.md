@@ -7,6 +7,7 @@ ICON Foundation websites (https://tracker.icon.foundation/governance).
 ## vote_analysis_1
 This is for the analysis of voting in ICON network. It is first of its kind and more will be added over time.
 Webscrapes the data, saves into csv, manipulates & calculates, produces images.
+Medium article: https://medium.com/@transcranial.solutions/icon-network-p-rep-vote-distribution-and-voter-behaviour-5bd3e7771922
 
 ## icon_in_numbers
 This is for weekly report for the status of voting in ICON network.
