@@ -10,7 +10,13 @@
 ## GNU General Public License for more details.                        ##
 #########################################################################
 
-# Vote information
+# This is for 'ICON in Numbers' weekly series.
+# It is an automated figure generator based on the time of your choosing (mainly tailored for weekly).
+# Terms will require the timeframe to have finished (e.g. this may not work as intended if week 25 is still on-going).
+# This will webscrape iconvotemonitor.com by Everstake and also P-Rep information from ICON Foundation site.
+# It will then do data manipulation, recoding, calculation, aggregation and generate multiple figures.
+# Please note that depending on the amount of vote change, the scale may be off, and needs to be manually modified (ylim mostly).
+
 
 # import json library
 from urllib.request import Request, urlopen
@@ -33,7 +39,7 @@ pd.set_option('display.max_columns',10)
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
 
-terms = ['2020-25', '2020-24']
+terms = ['2020-26', '2020-25']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -164,6 +170,8 @@ df = df.sort_values(by=['validator_name', 'delegator', measuring_interval]).rese
 df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
 df.loc[df['validator_name'] == 'Piconbello { You Pick We Build }', 'validator_name'] = 'Piconbello'
 df.loc[df['validator_name'] == 'UNBLOCK {ICX GROWTH INCUBATOR}', 'validator_name'] = 'UNBLOCK'
+df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital'
+
 
 # pivot wider & longer to get all the longitudinal data
 df_wider = df.pivot_table(index=['validator_name', 'delegator'],
