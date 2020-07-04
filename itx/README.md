@@ -18,10 +18,10 @@ The first version will require a local copy of the blockchain database. This can
 ## Accuire a local copy of the blockchain database.
 Here you have two options. Either set up a local citizen node or download a snapshot of the blockchain.
 
-### Option 1 - run local citizen node
+#### Option 1 - run local citizen node
 Follow the instruction on https://www.icondev.io/docs/quickstart. Note that a citizen node does not requirem P-rep registartion.
 
-### Option 2 - download a snapshot
+#### Option 2 - download a snapshot
 1. Copy the latest snapshot from this list of snapshots: https://s3.ap-northeast-2.amazonaws.com/icon-leveldb-backup/MainctzNet/backup_list
 
 2. Replace "backup_list" in the previous url with the snapshot you copied.
@@ -35,5 +35,5 @@ Follow the instruction on https://www.icondev.io/docs/quickstart. Note that a ci
 Open./data/itx.ini and edit the file.
 
 [DEFAULT]
-leveldb = <enter path to blockchain database here>
-output = <default output path for your files>
+leveldb = enter path to blockchain database here
+output = default output path for your files
