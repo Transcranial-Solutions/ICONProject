@@ -16,7 +16,6 @@ The first version will require a local copy of the blockchain database. This can
 
 
 ## Accuire a local copy of the blockchain database.
-
 Here you have two options. Either set up a local citizen node or download a snapshot of the blockchain.
 
 ### Option 1 - run local citizen node
@@ -28,3 +27,13 @@ Follow the instruction on https://www.icondev.io/docs/quickstart. Note that a ci
 2. Replace "backup_list" in the previous url with the snapshot you copied.
 
 3. Paste the url into your browser or use a tool such as wget to download.
+
+4. Unpack the database.
+
+
+## Configuration
+Open./data/itx.ini and edit the file.
+
+[DEFAULT]
+leveldb = <enter path to blockchain database here>
+output = <default output path for your files>
