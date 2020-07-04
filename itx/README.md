@@ -32,6 +32,10 @@ Follow the instruction on https://www.icondev.io/docs/quickstart. Note that a ci
 
 
 ## Configuration
-Open data/itx.ini and edit the file. Specify the leveldb option under the DEFAULT section:
+Open data/itx.ini and specify the leveldb option. Optionally you can specify another output path for your files.
 
+"""
+[DEFAULT]
 leveldb = enter_path_to_blockchain_database_here
+output = data/output
+"""
