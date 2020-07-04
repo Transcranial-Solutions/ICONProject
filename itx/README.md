@@ -36,6 +36,6 @@ Open data/itx.ini and specify the leveldb option. Optionally you can specify ano
 
 ```
 [DEFAULT]
-leveldb = enter_path_to_blockchain_database_here
+leveldb = <enter_path_to_blockchain_database_here>
 output = data/output
 ```
