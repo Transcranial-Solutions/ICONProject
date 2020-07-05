@@ -984,8 +984,43 @@ plt.savefig(os.path.join(resultsPath_interval, '04_' + measuring_interval + "_nu
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Vote Stagnancy -- just by having voted or not for that week
+
+## logic to get if previous interval data is same (0) or different (1)
+diff_logic = df_longer.copy()
+diff_logic = diff_logic[['delegator', measuring_interval, 'validator_name', 'cum_votes', 'how_many_prep_voted']]
+diff_logic = diff_logic.sort_values(by=['delegator', 'validator_name', measuring_interval])
+
+## concatenating prep/votes/how many prep voted and comparing between time interval
+diff_logic['how_many_prep_voted'] = diff_logic['how_many_prep_voted'].astype(str)
+diff_logic['cum_votes'] = diff_logic['cum_votes'].astype(str)
+diff_logic['period'] = diff_logic[['validator_name', 'cum_votes', 'how_many_prep_voted']].apply('/'.join, axis=1)
+diff_logic = diff_logic[['delegator', measuring_interval, 'validator_name',  'how_many_prep_voted', 'period']]
+diff_logic['lag_period'] = diff_logic['period'].shift()
+diff_logic['same_as_lag'] = np.where(diff_logic['lag_period'] == diff_logic['period'], 1, 0)
+diff_logic = diff_logic[['delegator', 'validator_name', measuring_interval,  'how_many_prep_voted', 'same_as_lag']]
+diff_logic = diff_logic.groupby(['delegator', measuring_interval, 'how_many_prep_voted']).agg('sum').reset_index()
+
+## adding first week logic (as there is no previous data to compare) -- making it different since it's that they voted
+first_logic= diff_logic.groupby(['delegator'])[measuring_interval].first().reset_index()
+first_logic['first'] = '1'
+
+## then comparing that to how many prep, if same then they are same (0), if not, they are different (1)
+diff_logic = pd.merge(diff_logic, first_logic, on=['delegator', measuring_interval], how='left')
+diff_logic['diff_flag'] = np.where(diff_logic['how_many_prep_voted'] == diff_logic['same_as_lag'].astype(str), 0, 1)
+diff_logic['diff_flag'] = np.where(diff_logic['first'] == '0', 0, diff_logic['diff_flag'])
+diff_logic = diff_logic[['delegator', measuring_interval, 'diff_flag']]
+
+
+## vote stagnancy from here ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 vote_stagnancy_count = df_longer.groupby(['delegator', measuring_interval]).agg('sum').reset_index()
-vote_stagnancy_count['Stagnant'] = np.where(vote_stagnancy_count['votes'] == 0, 'No Vote Change', 'Vote Change (Up/Down)')
+## merging with diff_logic
+vote_stagnancy_count = pd.merge(vote_stagnancy_count, diff_logic, on=['delegator', measuring_interval], how='left')
+
+# applying two logics -- votes must be 0 (meaning they did not change votes) and also 'diff_flag' which also includes
+# those that may not have up/down votes but same votes among different p-reps
+vote_stagnancy_count['Stagnant'] = np.where((vote_stagnancy_count['votes'] == 0) &
+                                            (vote_stagnancy_count['diff_flag'] == 0), 'No Vote Change', 'Vote Change (Up/Down)')
 
 vote_stagnancy = vote_stagnancy_count.groupby([measuring_interval, 'Stagnant'])['cum_votes'].agg(['sum', 'count']).reset_index()
 vote_stagnancy = vote_stagnancy.rename(columns = {'sum': 'votes', 'count': 'voters'})
