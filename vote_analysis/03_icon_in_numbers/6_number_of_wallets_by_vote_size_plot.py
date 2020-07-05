@@ -20,7 +20,7 @@
 # import json
 import pandas as pd
 import numpy as np
-# import os
+import os
 import matplotlib.pyplot as plt
 # import matplotlib.ticker as ticker
 # import seaborn as sns
@@ -101,3 +101,8 @@ p.gca().add_artist(my_circle)
 plt.axis('equal')
 plt.show()
 plt.tight_layout()
+
+
+
+# saving
+plt.savefig(os.path.join(resultsPath, measuring_interval + "_count_wallet_by_vote_size.png"))
