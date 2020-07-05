@@ -32,13 +32,17 @@ pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
 
 # making path for saving
-# currPath = os.getcwd()
-# outPath = os.path.join(currPath, "output")
-# if not os.path.exists(outPath):
-#     os.mkdir(outPath)
+currPath = os.getcwd()
+outPath = os.path.join(currPath, "03_icon_in_numbers")
+if not os.path.exists(outPath):
+    os.mkdir(outPath)
+resultsPath = os.path.join(outPath, "results")
+if not os.path.exists(resultsPath):
+    os.mkdir(resultsPath)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-
 terms = ['2020-26', '2020-25']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
@@ -47,6 +51,12 @@ terms = ['2020-26', '2020-25']
 this_term = terms[0]
 # this_week = weeks[0]
 # this_month = months[0]
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+resultsPath_interval = os.path.join(resultsPath, this_term)
+if not os.path.exists(resultsPath_interval):
+    os.mkdir(resultsPath_interval)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 ## value extraction function
 def extract_values(obj, key):
@@ -482,110 +492,139 @@ def insert_week(string, index):
     return string[:index] + ' week' + string[index:]
 
 # plotting
-sns.set(style="ticks")
-plt.style.use(['dark_background'])
-f, ax = plt.subplots(figsize=(10, 8))
-sns.barplot(x=temp_this_term_change['validator_name'],
-            y=temp_this_term_change['votes'], palette="RdYlGn_r", ax=ax,
-                  edgecolor="grey")
-ax.axhline(0, color="w", clip_on=False)
-ax.set_xlabel('P-Reps', fontsize=14, weight='bold')
-ax.set_ylabel('Δ votes', fontsize=14, weight='bold')
-ax.set_title('Weekly Vote Change - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')', fontsize=14, weight='bold')
-# plt.yscale('symlog')
-xmin, xmax = ax.get_xlim()
-ymin, ymax = ax.get_ylim()
-ymin_set = ymin*1.4
-ymax_set = ymax*1.1
-ax.set_ylim([ymin_set,ymax_set])
-sns.despine(offset=10, trim=True)
-plt.tight_layout()
-ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
-ax.grid(False)
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
+def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
+                    ymin_val=-800000, ymax_val=700000, ytick_scale=200000,
+                    voter_mult=0.9, voter_diff_mult=1.01,
+                    top10_1_mult=0.9, top10_2_mult=0.8,
+                    topF_1_mult=0.48, topF_2_mult=0.38):
 
-# adding voter count (plus minus)
-voter_diff = temp_this_term_change['Voter_diff']
-voter_diff_text = temp_this_term_change['Voter_diff'].apply(lambda x: "+" + str(x) if x>0 else x)
-# voted_count = '+ ' + temp_this_term_change_votes['Voted'].astype(str)
-# unvoted_count = '- ' + temp_this_term_change_votes['Unvoted'].astype(str)
-# voter_count = voted_count.str.cat(unvoted_count, join='left', sep='\n')
+    # plotting
+    sns.set(style="ticks")
+    plt.style.use(['dark_background'])
+    f, ax = plt.subplots(figsize=(10, 8))
+    sns.barplot(x=temp_this_term_change['validator_name'],
+                y=temp_this_term_change['votes'], palette="RdYlGn_r", ax=ax,
+                      edgecolor="grey")
+    ax.axhline(0, color="w", clip_on=False)
+    ax.set_xlabel('P-Reps', fontsize=14, weight='bold', labelpad= 10)
+    ax.set_ylabel('Δ votes', fontsize=14, weight='bold', labelpad= 10)
+    ax.set_title('Weekly Vote Change - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')', fontsize=14, weight='bold')
+    # plt.yscale('symlog')
 
-# adjust color based on total change (green: positive, red: negative)
-temp_df = pd.DataFrame(voter_diff)
-temp_df['color'] = np.where(temp_df['Voter_diff'] < 0, 'red', 'green')
-temp_df['color'] = np.where(temp_df['Voter_diff'] == 0, 'white', temp_df['color'])
-font_col = temp_df.iloc[:,1]
+    # manual fix for graphs here
+    ###############################################################
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    ymin_set = ymin*ymin_mult
+    ymax_set = ymax*ymax_mult
+    ax.set_ylim([ymin_set,ymax_set])
+    ax.yaxis.set_ticks(np.arange(ymin_val, ymax_val, ytick_scale))
+    ################################################################
 
-for (p,t,c) in zip(ax.patches,voter_diff_text,font_col):
-    # height = p.get_height()
-    height = ymin*1.35
-    ax.text(p.get_x() + p.get_width() / 2.,
-            height,
-            t,
-            color=c,
-            fontsize=12,
-            weight='bold',
-            ha="center")
+    sns.despine(offset=10, trim=True)
+    plt.tight_layout()
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
+    ax.grid(False)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
 
-ax.text(-0.2, ymin*1.1, '( Δ voters )',
-        color='white', fontsize=10)
+    # adding voter count (plus minus)
+    voter_diff = temp_this_term_change['Voter_diff']
+    voter_diff_text = temp_this_term_change['Voter_diff'].apply(lambda x: "+" + str(x) if x>0 else x)
+    # voted_count = '+ ' + temp_this_term_change_votes['Voted'].astype(str)
+    # unvoted_count = '- ' + temp_this_term_change_votes['Unvoted'].astype(str)
+    # voter_count = voted_count.str.cat(unvoted_count, join='left', sep='\n')
 
-props = dict(boxstyle='round', facecolor='green', alpha=1)
-ax.text(xmax, ymax_set*0.9, total_cum_text + '\n' + total_change,
-        linespacing = 1.5,
-        horizontalalignment='right',
-        verticalalignment='top', bbox=props,
-        color='white', fontsize=12)
+    # adjust color based on total change (green: positive, red: negative)
+    temp_df = pd.DataFrame(voter_diff)
+    temp_df['color'] = np.where(temp_df['Voter_diff'] < 0, 'red', 'green')
+    temp_df['color'] = np.where(temp_df['Voter_diff'] == 0, 'white', temp_df['color'])
+    font_col = temp_df.iloc[:,1]
 
-# longest streak (top 3)
-header_top_10_steak = 'Winning Streak (weeks)'
-top_10_streak = this_term_change_comb.\
-    sort_values(by=['Longest_Top_10_win_votes','cum_votes'], ascending=False)[['validator_name', 'Longest_Top_10_win_votes']].\
-    reset_index(drop=True).\
-    head(3).to_string(index=False, header=False)
+    # change ymin*xx here
+    for (p,t,c) in zip(ax.patches,voter_diff_text,font_col):
+        # height = p.get_height()
+        height = ymin*voter_diff_mult
+        ax.text(p.get_x() + p.get_width() / 2.,
+                height,
+                t,
+                color=c,
+                fontsize=12,
+                weight='bold',
+                ha="center")
 
-ax.text(xmax, ymax*0.76, header_top_10_steak,
-        linespacing = 1.4,
-        horizontalalignment='right',
-        verticalalignment='top',
-        color='green', fontsize=10, weight='bold')
+    ax.text(-0.2, ymin*voter_mult, '( Δ voters )',
+            color='white', fontsize=10)
 
-# change ymax*xx here
-ax.text(xmax, ymax*0.7, top_10_streak,
-        linespacing = 1.4,
-        horizontalalignment='right',
-        verticalalignment='top',
-        color='white', fontsize=10)
+    props = dict(boxstyle='round', facecolor='green', alpha=1)
+    ax.text(xmax, ymax_set*0.9, total_cum_text + '\n' + total_change,
+            linespacing = 1.5,
+            horizontalalignment='right',
+            verticalalignment='top', bbox=props,
+            color='white', fontsize=12)
 
-# 1st place streak
-header_first_streak = '1st Place Winning Streak (weeks)'
-first_streak = this_term_change_comb.\
-    sort_values(by=['Longest_First_Place_votes','cum_votes'], ascending=False)[['validator_name', 'Longest_First_Place_votes']].\
-    reset_index(drop=True).\
-    head(3).to_string(index=False, header=False)
+    # longest streak (top 3)
+    header_top_10_steak = 'Winning Streak (weeks)'
+    top_10_streak = this_term_change_comb.\
+        sort_values(by=['Longest_Top_10_win_votes','cum_votes'], ascending=False)[['validator_name', 'Longest_Top_10_win_votes']].\
+        reset_index(drop=True).\
+        head(3).to_string(index=False, header=False)
 
-# change ymax*xx here
-ax.text(xmax, ymax*0.51, header_first_streak,
-        linespacing = 1.4,
-        horizontalalignment='right',
-        verticalalignment='top',
-        color='green', fontsize=10, weight='bold')
+    ax.text(xmax, ymax*top10_1_mult, header_top_10_steak,
+            linespacing = 1.4,
+            horizontalalignment='right',
+            verticalalignment='top',
+            color='green', fontsize=10, weight='bold')
 
-ax.text(xmax, ymax*0.45, first_streak,
-        linespacing = 1.4,
-        horizontalalignment='right',
-        verticalalignment='top',
-        color='white', fontsize=10)
+    # change ymax*xx here
+    ax.text(xmax, ymax*top10_2_mult, top_10_streak,
+            linespacing = 1.4,
+            horizontalalignment='right',
+            verticalalignment='top',
+            color='white', fontsize=10)
 
-plt.tight_layout()
+    # 1st place streak
+    header_first_streak = '1st Place Winning Streak (weeks)'
+    first_streak = this_term_change_comb.\
+        sort_values(by=['Longest_First_Place_votes','cum_votes'], ascending=False)[['validator_name', 'Longest_First_Place_votes']].\
+        reset_index(drop=True).\
+        head(3).to_string(index=False, header=False)
+
+    # change ymax*xx here
+    ax.text(xmax, ymax*topF_1_mult, header_first_streak,
+            linespacing = 1.4,
+            horizontalalignment='right',
+            verticalalignment='top',
+            color='green', fontsize=10, weight='bold')
+
+    ax.text(xmax, ymax*topF_2_mult, first_streak,
+            linespacing = 1.4,
+            horizontalalignment='right',
+            verticalalignment='top',
+            color='white', fontsize=10)
+
+    plt.tight_layout()
+
+
+# adjust these numbers to get proper plot
+plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
+                ymin_val=-800000, ymax_val=700000, ytick_scale=200000, # these are actual ylims & tick interval
+                voter_mult=0.9, voter_diff_mult=1.01, # voter change multiplier
+                top10_1_mult=0.9, top10_2_mult=0.8, # where top 10 streak locates
+                topF_1_mult=0.48, topF_2_mult=0.38) # where top first locates
+
+# saving
+plt.savefig(os.path.join(resultsPath_interval, '01_' + measuring_interval + "_vote_change.png"))
 
 
 # adding top 10 ranking - voter
 # this_term_change = this_term_change_comb.sort_values(by=['win_rank_Voter'], ascending=True)
 # this_term_change = this_term_change[this_term_change['win_rank_Voter'].between(1,10) \
 #     | this_term_change['loss_rank_Voter'].between(1,10)]
+
+
+
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -639,105 +678,127 @@ temp_this_term_change = this_term_change[this_term_change['win_rank_Voter'].betw
 def insert_week(string, index):
     return string[:index] + ' week' + string[index:]
 
+
 # plotting
-sns.set(style="ticks")
-plt.style.use(['dark_background'])
-f, ax = plt.subplots(figsize=(10, 8))
-sns.barplot(x=temp_this_term_change['validator_name'],
-            y=temp_this_term_change['Voter_diff'], palette="RdYlGn_r", ax=ax,
-                  edgecolor="grey")
-ax.axhline(0, color="w", clip_on=False)
-ax.set_xlabel('P-Reps', fontsize=14, weight='bold')
-ax.set_ylabel('Δ voters', fontsize=14, weight='bold')
-ax.set_title('Weekly Voter Change - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')', fontsize=14, weight='bold')
-# plt.yscale('symlog')
-xmin, xmax = ax.get_xlim()
-ymin, ymax = ax.get_ylim()
-ymin_set = ymin*1.5
-ymax_set = ymax*1.5
-ax.set_ylim([ymin_set,ymax_set])
-sns.despine(offset=10, trim=True)
-plt.tight_layout()
-ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
-ax.grid(False)
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
+def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
+                    ymin_val=-20, ymax_val=35, ytick_scale=5,
+                    first_time_voter_mult=0.97, new_voter_mult=1.1,
+                    top10_1_mult=0.94, top10_2_mult=0.86,
+                    topF_1_mult=0.65, topF_2_mult=0.57):
 
-# adding voter count (plus minus)
-new_voter = temp_this_term_change['new_wallet_Voted']
-new_voter_text = temp_this_term_change['new_wallet_Voted'].apply(lambda x: "+" + str(x) if x>0 else x)
-# voted_count = '+ ' + temp_this_term_change_votes['Voted'].astype(str)
-# unvoted_count = '- ' + temp_this_term_change_votes['Unvoted'].astype(str)
-# voter_count = voted_count.str.cat(unvoted_count, join='left', sep='\n')
+    # plotting
+    sns.set(style="ticks")
+    plt.style.use(['dark_background'])
+    f, ax = plt.subplots(figsize=(10, 8))
+    sns.barplot(x=temp_this_term_change['validator_name'],
+                y=temp_this_term_change['Voter_diff'], palette="RdYlGn_r", ax=ax,
+                      edgecolor="grey")
+    ax.axhline(0, color="w", clip_on=False)
+    ax.set_xlabel('P-Reps', fontsize=14, weight='bold', labelpad= 10)
+    ax.set_ylabel('Δ voters', fontsize=14, weight='bold', labelpad= 10)
+    ax.set_title('Weekly Voter Change - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')', fontsize=14, weight='bold')
+    # plt.yscale('symlog')
 
-# adjust color based on total change (green: positive, red: negative)
-temp_df = pd.DataFrame(new_voter)
-temp_df['color'] = np.where(temp_df['new_wallet_Voted'] < 0, 'red', 'green')
-temp_df['color'] = np.where(temp_df['new_wallet_Voted'] == 0, 'white', temp_df['color'])
-font_col = temp_df.iloc[:,1]
+    # manual fix for graphs here
+    ###############################################################
+    xmin, xmax = ax.get_xlim()
+    ymin, ymax = ax.get_ylim()
+    ymin_set = ymin * ymin_mult
+    ymax_set = ymax * ymax_mult
+    ax.set_ylim([ymin_set, ymax_set])
+    ax.yaxis.set_ticks(np.arange(ymin_val, ymax_val, ytick_scale))
+    ################################################################
 
-for (p,t,c) in zip(ax.patches,new_voter_text,font_col):
-    # height = p.get_height()
-    height = ymin*1.50
-    ax.text(p.get_x() + p.get_width() / 2.,
-            height,
-            t,
-            color=c,
-            fontsize=12,
-            weight='bold',
-            ha="center")
+    sns.despine(offset=10, trim=True)
+    plt.tight_layout()
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
+    ax.grid(False)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
 
-ax.text(-0.2, ymin*1.30, '( First-time Voters )',
-        color='white', fontsize=10)
+    # adding voter count (plus minus)
+    new_voter = temp_this_term_change['new_wallet_Voted']
+    new_voter_text = temp_this_term_change['new_wallet_Voted'].apply(lambda x: "+" + str(x) if x>0 else x)
+    # voted_count = '+ ' + temp_this_term_change_votes['Voted'].astype(str)
+    # unvoted_count = '- ' + temp_this_term_change_votes['Unvoted'].astype(str)
+    # voter_count = voted_count.str.cat(unvoted_count, join='left', sep='\n')
 
-props = dict(boxstyle='round', facecolor='green', alpha=1)
-ax.text(xmax, ymax_set*0.9, total_cum_text + '\n' + total_change,
-        linespacing = 1.5,
-        horizontalalignment='right',
-        verticalalignment='top', bbox=props,
-        color='white', fontsize=12)
+    # adjust color based on total change (green: positive, red: negative)
+    temp_df = pd.DataFrame(new_voter)
+    temp_df['color'] = np.where(temp_df['new_wallet_Voted'] < 0, 'red', 'green')
+    temp_df['color'] = np.where(temp_df['new_wallet_Voted'] == 0, 'white', temp_df['color'])
+    font_col = temp_df.iloc[:,1]
 
-# longest streak (top 3)
-header_top_10_steak = 'Winning Streak (weeks)'
-top_10_streak = this_term_change_comb.\
-    sort_values(by=['Longest_Top_10_win_Voter','cum_n_Voter','cum_Voted'], ascending=False)[['validator_name', 'Longest_Top_10_win_Voter']].\
-    reset_index(drop=True).\
-    head(3).to_string(index=False, header=False)
+    for (p,t,c) in zip(ax.patches,new_voter_text,font_col):
+        # height = p.get_height()
+        height = ymin*new_voter_mult
+        ax.text(p.get_x() + p.get_width() / 2.,
+                height,
+                t,
+                color=c,
+                fontsize=12,
+                weight='bold',
+                ha="center")
 
-ax.text(xmax, ymax, header_top_10_steak,
-        linespacing = 1.4,
-        horizontalalignment='right',
-        verticalalignment='top',
-        color='green', fontsize=10, weight='bold')
+    ax.text(-0.2, ymin*first_time_voter_mult, '( First-time Voters )',
+            color='white', fontsize=10)
 
-ax.text(xmax, ymax*0.9, top_10_streak,
-        linespacing = 1.4,
-        horizontalalignment='right',
-        verticalalignment='top',
-        color='white', fontsize=10)
+    props = dict(boxstyle='round', facecolor='green', alpha=1)
+    ax.text(xmax, ymax_set*0.9, total_cum_text + '\n' + total_change,
+            linespacing = 1.5,
+            horizontalalignment='right',
+            verticalalignment='top', bbox=props,
+            color='white', fontsize=12)
 
-# 1st place streak
-header_first_streak = '1st Place Winning Streak (weeks)'
-first_streak = this_term_change_comb.\
-    sort_values(by=['Longest_First_Place_Voter','cum_n_Voter','cum_Voted'], ascending=False)[['validator_name', 'Longest_First_Place_Voter']].\
-    reset_index(drop=True).\
-    head(3).to_string(index=False, header=False)
+    # longest streak (top 3)
+    header_top_10_steak = 'Winning Streak (weeks)'
+    top_10_streak = this_term_change_comb.\
+        sort_values(by=['Longest_Top_10_win_Voter','cum_n_Voter','cum_Voted'], ascending=False)[['validator_name', 'Longest_Top_10_win_Voter']].\
+        reset_index(drop=True).\
+        head(3).to_string(index=False, header=False)
 
-ax.text(xmax, ymax*0.6, header_first_streak,
-        linespacing = 1.4,
-        horizontalalignment='right',
-        verticalalignment='top',
-        color='green', fontsize=10, weight='bold')
+    ax.text(xmax, ymax*top10_1_mult, header_top_10_steak,
+            linespacing = 1.4,
+            horizontalalignment='right',
+            verticalalignment='top',
+            color='green', fontsize=10, weight='bold')
 
-ax.text(xmax, ymax*0.5, first_streak,
-        linespacing = 1.4,
-        horizontalalignment='right',
-        verticalalignment='top',
-        color='white', fontsize=10)
+    ax.text(xmax, ymax*top10_2_mult, top_10_streak,
+            linespacing = 1.4,
+            horizontalalignment='right',
+            verticalalignment='top',
+            color='white', fontsize=10)
 
-plt.tight_layout()
+    # 1st place streak
+    header_first_streak = '1st Place Winning Streak (weeks)'
+    first_streak = this_term_change_comb.\
+        sort_values(by=['Longest_First_Place_Voter','cum_n_Voter','cum_Voted'], ascending=False)[['validator_name', 'Longest_First_Place_Voter']].\
+        reset_index(drop=True).\
+        head(3).to_string(index=False, header=False)
+
+    ax.text(xmax, ymax*topF_1_mult, header_first_streak,
+            linespacing = 1.4,
+            horizontalalignment='right',
+            verticalalignment='top',
+            color='green', fontsize=10, weight='bold')
+
+    ax.text(xmax, ymax*topF_2_mult, first_streak,
+            linespacing = 1.4,
+            horizontalalignment='right',
+            verticalalignment='top',
+            color='white', fontsize=10)
+
+    plt.tight_layout()
 
 
+
+plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
+                    ymin_val=-20, ymax_val=35, ytick_scale=5,
+                    first_time_voter_mult=0.97, new_voter_mult=1.1,
+                    top10_1_mult=0.94, top10_2_mult=0.86,
+                    topF_1_mult=0.65, topF_2_mult=0.57)
+# saving
+plt.savefig(os.path.join(resultsPath_interval, '02_' + measuring_interval + "_voter_change.png"))
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -817,7 +878,8 @@ plt.tight_layout()
 
 
 
-
+# saving
+plt.savefig(os.path.join(resultsPath_interval, '03_' + measuring_interval + "_count_wallet_by_vote_size.png"))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -914,11 +976,14 @@ plt.axis('equal')
 plt.show()
 plt.tight_layout()
 
+# saving
+plt.savefig(os.path.join(resultsPath_interval, '04_' + measuring_interval + "_number_of_preps_voted_per_wallet.png"))
+
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Vote Stagnancy -- just by having voted or not for that week
-
 vote_stagnancy_count = df_longer.groupby(['delegator', measuring_interval]).agg('sum').reset_index()
 vote_stagnancy_count['Stagnant'] = np.where(vote_stagnancy_count['votes'] == 0, 'No Vote Change', 'Vote Change (Up/Down)')
 
@@ -934,22 +999,8 @@ vote_stagnancy['total_voters'] = vote_stagnancy.groupby(measuring_interval)['vot
 vote_stagnancy['pct_voters'] = vote_stagnancy['voters'] / vote_stagnancy['total_voters']
 
 
-
-# vote_stagnancy['votes'] = vote_stagnancy['votes'].astype(int)
-
 # currPath = os.getcwd()
 # vote_stagnancy.to_csv(os.path.join(currPath, 'test.csv'), index=False)
-
-
-# sns.set(style="ticks")
-# plt.style.use(['dark_background'])
-# f, ax = plt.subplots(figsize=(12, 8))
-# sns.lineplot(x=measuring_interval, y='voters', hue="Stagnant", data=vote_stagnancy)
-# plt.tight_layout()
-# ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
-# plt.tight_layout()
-
-
 
 sns.set(style="ticks", rc={"lines.linewidth": 2})
 plt.style.use(['dark_background'])
@@ -997,4 +1048,5 @@ n = 2  # Keeps every n-th label
 plt.tight_layout()
 
 
-
+# saving
+plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_vote_stagnancy_by_activity_of_wallet.png"))
