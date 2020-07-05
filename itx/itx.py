@@ -212,6 +212,7 @@ def extract(args):
     # Extract all transactions form each block.
     loop_broken = False
     counter = -1
+    flag = GracefulExiter()
     for block in tqdm(range(args.blocks[0], args.blocks[1] + 1), mininterval = 1, unit = "blocks"):
         try:
             block = Block(block, plyveldb)
@@ -234,6 +235,9 @@ def extract(args):
                 txfile.transactions += 1
         counter += 1
 
+        if flag.exit():
+            break
+
     if loop_broken:
         print(f"Block {block} not found in database. Ending extraction ...")
 
@@ -244,6 +248,8 @@ def extract(args):
         txfile.close() 
     plyveldb.close()
     
+    if flag.exit():
+        print("Exited gracefully.")
     # Endreport
     # endreport()
 
@@ -279,6 +285,7 @@ def update(args):
 
     # Extract transactions.
     print("Updating files with new transactions...")
+    flag = GracefulExiter()
     for block in tqdm(range(startblock, endblock + 1), mininterval = 1, unit = "blocks"):
         block = Block(block, plyveldb)
         transactions = block.transactions
@@ -305,13 +312,20 @@ def update(args):
         
         # New lowest blockheight among txfiles.
         lowest_blockheight += 1
-    
+
+        # Break here if ctrl + c.
+        if flag.exit():
+            break
+
     # Update config and close files.
     for txfile in txfiles:
         txfile.lastblock = lowest_blockheight
         txfile.save_config()
         txfile.close() 
     plyveldb.close()
+
+    if flag.exit():
+        print("Exited gracefully.")
 
 
 def remove(args) -> None:
