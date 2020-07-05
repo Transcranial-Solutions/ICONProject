@@ -793,7 +793,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-20, ymax_val=35, ytick_scale=5,
+                    ymin_val=-20, ymax_val=35, ytick_scale=10,
                     first_time_voter_mult=0.97, new_voter_mult=1.1,
                     top10_1_mult=0.94, top10_2_mult=0.86,
                     topF_1_mult=0.65, topF_2_mult=0.57)
