@@ -22,7 +22,7 @@
 # import json
 import pandas as pd
 import numpy as np
-# import os
+import os
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
@@ -32,7 +32,6 @@ pd.set_option('display.max_columns',10)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Vote Stagnancy -- just by having voted or not for that week
-
 vote_stagnancy_count = df_longer.groupby(['delegator', measuring_interval]).agg('sum').reset_index()
 vote_stagnancy_count['Stagnant'] = np.where(vote_stagnancy_count['votes'] == 0, 'No Vote Change', 'Vote Change (Up/Down)')
 
@@ -48,22 +47,8 @@ vote_stagnancy['total_voters'] = vote_stagnancy.groupby(measuring_interval)['vot
 vote_stagnancy['pct_voters'] = vote_stagnancy['voters'] / vote_stagnancy['total_voters']
 
 
-
-# vote_stagnancy['votes'] = vote_stagnancy['votes'].astype(int)
-
 # currPath = os.getcwd()
 # vote_stagnancy.to_csv(os.path.join(currPath, 'test.csv'), index=False)
-
-
-# sns.set(style="ticks")
-# plt.style.use(['dark_background'])
-# f, ax = plt.subplots(figsize=(12, 8))
-# sns.lineplot(x=measuring_interval, y='voters', hue="Stagnant", data=vote_stagnancy)
-# plt.tight_layout()
-# ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
-# plt.tight_layout()
-
-
 
 sns.set(style="ticks", rc={"lines.linewidth": 2})
 plt.style.use(['dark_background'])
@@ -109,3 +94,8 @@ ax.legend(h[1:],l[1:],ncol=1,
 n = 2  # Keeps every n-th label
 [l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
 plt.tight_layout()
+
+
+# saving
+plt.savefig(os.path.join(resultsPath, measuring_interval + "_vote_stagnancy_by_activity_of_wallet.png"))
+
