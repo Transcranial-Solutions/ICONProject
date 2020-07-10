@@ -151,7 +151,10 @@ for k in range(len(prep_address)):
 
      all_df.append(df)
 
-     print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
+    try:
+        print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
+    except:
+        print("An exception occurred - Possibly a new P-Rep without votes")
 
 
 # import os
