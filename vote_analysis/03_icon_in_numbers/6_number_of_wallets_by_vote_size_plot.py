@@ -56,19 +56,31 @@ total_term_change['cum_votes_bin'] = total_term_change.apply(bin_votes, axis=1)
 
 # binning data into categories
 count_vote_bin = total_term_change[total_term_change['cum_votes'] != 0] # remove 0 balance here
+
+vote_pct = count_vote_bin.groupby(['cum_votes_bin', measuring_interval])['cum_votes'].agg('sum').reset_index()
+vote_pct = vote_pct[vote_pct[measuring_interval].isin([this_term])].\
+    drop(columns=[measuring_interval]).reset_index(drop=True)
+vote_pct['sum_votes'] = vote_pct['cum_votes'].sum()
+vote_pct['pct_votes'] = (vote_pct['cum_votes'] / vote_pct['sum_votes']).map("{:.2%}".format)
+vote_pct = vote_pct.set_index(list(vote_pct)[0])
+vote_pct = vote_pct.reindex(['< 1', '1-1000', '1000-10K', '10K-100K', '100K-1M', '1M +']).reset_index()
+# print(vote_pct)
+
+grand_total_votes_text = 'Total Votes: ' + '{:,}'.format(vote_pct['sum_votes'][0].astype(int)) + ' ICX'
+
 count_vote_bin = count_vote_bin.drop(columns=(['votes', 'cum_votes']))
 count_vote_bin = count_vote_bin.groupby(['cum_votes_bin', measuring_interval]).agg('count').reset_index()
 count_vote_bin = count_vote_bin[count_vote_bin[measuring_interval].isin([this_term])].\
     drop(columns=[measuring_interval]).reset_index(drop=True)
 count_vote_bin = count_vote_bin.set_index(list(count_vote_bin)[0])
-count_vote_bin = count_vote_bin.reindex(['< 1', '1-1000', '1000-10K', '10K-100K', '100K-1M', '1M +'])
-count_vote_bin = count_vote_bin.reset_index()
+count_vote_bin = count_vote_bin.reindex(['< 1', '1-1000', '1000-10K', '10K-100K', '100K-1M', '1M +']).reset_index()
 
 porcent = 100.*count_vote_bin['delegator']/count_vote_bin['delegator'].sum() # for plotting (legend)
+porcet_vote = vote_pct['pct_votes'].to_list()
 
 # donut chart.... oh no..
 plt.style.use(['dark_background'])
-fig, ax = plt.subplots(figsize=(8, 6), subplot_kw=dict(aspect="equal"))
+fig, ax = plt.subplots(figsize=(9, 6), subplot_kw=dict(aspect="equal"))
 fig.patch.set_facecolor('black')
 
 cmap = plt.get_cmap("Set3")
@@ -86,13 +98,20 @@ wedges, texts = plt.pie(count_vote_bin['delegator'],
 for text, color in zip(texts, inner_colors):
     text.set_color(color)
 
-labels = ['{0} ({1:1.2f} %)'.format(i,j) for i,j in zip(count_vote_bin['cum_votes_bin'], porcent)]
+labels = ['{0} ({1:1.2f} % || {2})'.format(i,j,k) for i,j,k in zip(count_vote_bin['cum_votes_bin'], porcent, porcet_vote)]
 
 plt.legend(wedges, labels,
-          title="Vote range (ICX)",
+          title="Vote range in ICX (% voters || % votes)",
           loc="center left",
           bbox_to_anchor=(1, 0, 0.5, 1),
-           fontsize=10)
+          fontsize=10)
+
+ax.text(0., 0., grand_total_votes_text,
+        horizontalalignment='center',
+        verticalalignment='center',
+        linespacing = 2,
+        fontsize=12,
+        weight='bold')
 
 ax.set_title('Number of Wallets by Vote Size ('+ insert_week(this_term, 4) +')', fontsize=14, weight='bold', y=1.08)
 
@@ -105,4 +124,4 @@ plt.tight_layout()
 
 
 # saving
-plt.savefig(os.path.join(resultsPath, measuring_interval + "_count_wallet_by_vote_size.png"))
+plt.savefig(os.path.join(resultsPath_interval, '03_' + measuring_interval + "_count_wallet_by_vote_size.png"))
