@@ -45,7 +45,8 @@ vote_stagnancy['pct_votes'] = vote_stagnancy['votes'] / vote_stagnancy['total_vo
 # vote stagnancy % by voters
 vote_stagnancy['total_voters'] = vote_stagnancy.groupby(measuring_interval)['voters'].transform('sum')
 vote_stagnancy['pct_voters'] = vote_stagnancy['voters'] / vote_stagnancy['total_voters']
-
+vote_stagnancy = vote_stagnancy[vote_stagnancy[measuring_interval] != '2019-34'] # for order of the plot
+vote_stagnancy = vote_stagnancy.sort_values(by=['Stagnant', measuring_interval])
 
 # currPath = os.getcwd()
 # vote_stagnancy.to_csv(os.path.join(currPath, 'test.csv'), index=False)
@@ -99,3 +100,5 @@ plt.tight_layout()
 # saving
 plt.savefig(os.path.join(resultsPath, measuring_interval + "_vote_stagnancy_by_activity_of_wallet.png"))
 
+# checking if the range for the data is complete (just by looking at the dates)
+print(unique_date[-1:])
