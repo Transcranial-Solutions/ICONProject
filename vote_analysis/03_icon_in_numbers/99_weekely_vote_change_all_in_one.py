@@ -1050,11 +1050,8 @@ vote_stagnancy['pct_votes'] = vote_stagnancy['votes'] / vote_stagnancy['total_vo
 # vote stagnancy % by voters
 vote_stagnancy['total_voters'] = vote_stagnancy.groupby(measuring_interval)['voters'].transform('sum')
 vote_stagnancy['pct_voters'] = vote_stagnancy['voters'] / vote_stagnancy['total_voters']
-vote_stagnancy = vote_stagnancy[vote_stagnancy[measuring_interval] != '2019-34']
-
+vote_stagnancy = vote_stagnancy[vote_stagnancy[measuring_interval] != '2019-34']  # for order of the plot
 vote_stagnancy = vote_stagnancy.sort_values(by=['Stagnant', measuring_interval])
-
-
 
 # currPath = os.getcwd()
 # vote_stagnancy.to_csv(os.path.join(currPath, 'test.csv'), index=False)
