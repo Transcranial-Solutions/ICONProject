@@ -43,7 +43,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-26', '2020-25']
+terms = ['2020-27', '2020-26']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -610,8 +610,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-800000, ymax_val=700000, ytick_scale=200000, # these are actual ylims & tick interval
-                voter_mult=0.9, voter_diff_mult=1.01, # voter change multiplier
+                ymin_val=-3000000, ymax_val=3500000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                voter_mult=1, voter_diff_mult=1.11, # voter change multiplier
                 top10_1_mult=0.9, top10_2_mult=0.8, # where top 10 streak locates
                 topF_1_mult=0.48, topF_2_mult=0.38) # where top first locates
 
@@ -792,7 +792,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-20, ymax_val=35, ytick_scale=10,
+                    ymin_val=-20, ymax_val=50, ytick_scale=10,
                     first_time_voter_mult=0.97, new_voter_mult=1.1,
                     top10_1_mult=0.94, top10_2_mult=0.86,
                     topF_1_mult=0.65, topF_2_mult=0.57)
@@ -1103,3 +1103,6 @@ plt.tight_layout()
 
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_vote_stagnancy_by_activity_of_wallet.png"))
+
+# checking if the range for the data is complete (just by looking at the dates)
+print(unique_date[-1:])
