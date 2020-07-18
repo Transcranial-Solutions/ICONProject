@@ -1,7 +1,7 @@
 
 #########################################################################
 ## Project: Transparency Report Auto Generator                         ##
-## Date: June 2020                                                     ##
+## Date: August 2020                                                   ##
 ## Author: Tono / Sung Wook Chung (Transcranial Solutions)             ##
 ## transcranial.solutions@gmail.com                                    ##
 ##                                                                     ##
@@ -62,11 +62,57 @@ def extract_values(obj, key):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
 known_address_url = Request('https://iconwat.ch/data/thes', headers={'User-Agent': 'Mozilla/5.0'})
-jknown_address_url = json.load(urlopen(known_address_url))
+jknown_address = json.load(urlopen(known_address_url))
+
+# add any known addresses here manually
+jknown_address.update({'hx02dd8846baddc171302fb88b896f79899c926a5a': 'ICON_Vote_Monitor'})
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Contract Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# getting contract information from icon transaction page
+known_contract_url = Request('https://tracker.icon.foundation/v3/contract/list?page=1&count=1', headers={'User-Agent': 'Mozilla/5.0'})
+
+# first getting total number of contract from website
+# (this will need to change because icon page will have 500k max)
+jknown_contract = json.load(urlopen(known_contract_url))
+
+contract_count = 100
+listSize = extract_values(jknown_contract, 'listSize')
+
+# get page count to loop over
+page_count = round((listSize[0] / contract_count) + 0.5)
+
+known_contract_all = []
+i = []
+for i in range(0, page_count):
+
+    known_contract_url = Request('https://tracker.icon.foundation/v3/contract/list?page=' + str(i+1) + '&count=' +
+                                 str(contract_count), headers={'User-Agent': 'Mozilla/5.0'})
+
+    jknown_contract = json.load(urlopen(known_contract_url))
+
+    # json format
+    jknown_contract = json.load(urlopen(known_contract_url))
+    known_contract_all.append(jknown_contract)
+
+# extracting information by labels
+contract_address = extract_values(known_contract_all, 'address')
+contract_name = extract_values(known_contract_all, 'contractName')
+
+# converting list into dictionary
+def Convert(lst1, lst2):
+    res_dct = {lst1[i]: lst2[i] for i in range(0, len(lst1), 2)}
+    return res_dct
+
+contract_d = Convert(contract_address, contract_name)
+
+# updating known address with other contract addresses
+jknown_address.update(contract_d)
+
+
 
 # making same table but with different column names
-known_address_details_to = pd.DataFrame(jknown_address_url.items(), columns=['dest_address', 'dest_def'])
-known_address_details_from = pd.DataFrame(jknown_address_url.items(), columns=['from_address', 'from_def'])
+known_address_details_to = pd.DataFrame(jknown_address.items(), columns=['dest_address', 'dest_def'])
+known_address_details_from = pd.DataFrame(jknown_address.items(), columns=['from_address', 'from_def'])
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Rewards Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 prep_address = 'hx2f3fb9a9ff98df2145936d2bfcaa3837a289496b'
@@ -117,12 +163,13 @@ rewards_df['month'] = pd.to_datetime(rewards_df['datetime']).dt.strftime("%Y-%m"
 
 # rewards_df.to_csv(os.path.join(inPath, 'test_rewards_x.csv'), index=False)
 
+
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Transaction Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # getting transaction information from icon transaction page
 prep_tx_url = Request('https://tracker.icon.foundation/v3/address/txList?count=1&address='
                       + prep_address, headers={'User-Agent': 'Mozilla/5.0'})
-
-
 
 
 # first getting total number of tx from website (this will need to change because icon page will have 500k max)
