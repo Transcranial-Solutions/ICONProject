@@ -1,4 +1,4 @@
-# Vote analysis
+# Data Analysis
 
 Currently it extracts data from publicly available sources, such as 
 Icon Vote Monitor by Everstake (https://iconvotemonitor.com/) and 
