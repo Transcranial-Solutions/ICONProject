@@ -22,7 +22,7 @@ https://medium.com/@transcranial.solutions/icon-in-numbers-2-week-27-2020-173a70
 ## 04_vote_stagnancy
 This is for the analysis of vote stagnancy on ICON network.
 Webscrapes the data, saves into csv, manipulates & calculates, produces images.
-Medium article: ...to be added soon...
+Medium article: https://medium.com/@transcranial.solutions/investigation-of-vote-stagnancy-on-icon-network-icx-5aab416b8b2e
 
 If you have any question or feedback, please e-mail at transcranial.solutions@gmail.com.
 

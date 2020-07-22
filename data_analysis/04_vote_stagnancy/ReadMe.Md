@@ -8,4 +8,6 @@ If you wish to run all the analysis at once, please run:
 
 Please feel free to ask questions at transcranial.solutions@gmail.com
 
+Medium Article: https://medium.com/@transcranial.solutions/investigation-of-vote-stagnancy-on-icon-network-icx-5aab416b8b2e
+
 Thank you.
