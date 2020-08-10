@@ -43,7 +43,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-30', '2020-29']
+terms = ['2020-31', '2020-30']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -489,6 +489,8 @@ this_term_change = this_term_change_comb.sort_values(by=['win_rank_votes'], asce
 temp_this_term_change = this_term_change[this_term_change['win_rank_votes'].between(1,10) \
     | this_term_change['loss_rank_votes'].between(1,10)]
 
+# temporary
+# temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
 
 def insert_week(string, index):
     return string[:index] + ' week' + string[index:]
@@ -519,7 +521,7 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
     ymin, ymax = ax.get_ylim()
     ymin_set = ymin*ymin_mult
     ymax_set = ymax*ymax_mult
-    ax.set_ylim([ymin_set,ymax_set])
+    ax.set_ylim([ymin_set, ymax_set])
     ax.yaxis.set_ticks(np.arange(ymin_val, ymax_val, ytick_scale))
     ################################################################
 
@@ -607,16 +609,16 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
     plt.tight_layout()
 
-
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-350000, ymax_val=600000, ytick_scale=100000, # these are actual ylims & tick interval20
-                voter_mult=0.90, voter_diff_mult=1.02, # voter change multiplier
+                ymin_val=0, ymax_val=10000000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                voter_mult=10.90, voter_diff_mult=1.12, # voter change multiplier
                 top10_1_mult=0.9, top10_2_mult=0.8, # where top 10 streak locates
                 topF_1_mult=0.48, topF_2_mult=0.38) # where top first locates
 
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '01_' + measuring_interval + "_vote_change.png"))
+# plt.savefig(os.path.join(resultsPath_interval, '01_' + measuring_interval + "_vote_change_neoply.png"))
 
 
 # adding top 10 ranking - voter
@@ -792,7 +794,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-30, ymax_val=35, ytick_scale=10,
+                    ymin_val=-25, ymax_val=40, ytick_scale=10,
                     first_time_voter_mult=0.95, new_voter_mult=1.10, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.82,
                     topF_1_mult=0.55, topF_2_mult=0.47)
