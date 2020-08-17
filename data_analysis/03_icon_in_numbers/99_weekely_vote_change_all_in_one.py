@@ -43,12 +43,13 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-31', '2020-30']
+terms = ['2020-32', '2020-31']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
 
 this_term = terms[0]
+last_term = terms[1]
 # this_week = weeks[0]
 # this_month = months[0]
 
@@ -560,7 +561,7 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
     ax.text(-0.2, ymin*voter_mult, '( Δ voters )',
             color='white', fontsize=10)
 
-    props = dict(boxstyle='round', facecolor='green', alpha=1)
+    props = dict(boxstyle='round', facecolor=face_color, alpha=1)
     ax.text(xmax, ymax_set*0.9, total_cum_text + '\n' + total_change,
             linespacing = 1.5,
             horizontalalignment='right',
@@ -611,10 +612,10 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=0, ymax_val=10000000, ytick_scale=1000000, # these are actual ylims & tick interval20
-                voter_mult=10.90, voter_diff_mult=1.12, # voter change multiplier
-                top10_1_mult=0.9, top10_2_mult=0.8, # where top 10 streak locates
-                topF_1_mult=0.48, topF_2_mult=0.38) # where top first locates
+                ymin_val=-2500000, ymax_val=2000000, ytick_scale=500000, # these are actual ylims & tick interval20
+                voter_mult=1.02, voter_diff_mult=1.12, # voter change multiplier
+                top10_1_mult=0.92, top10_2_mult=0.8, # where top 10 streak locates
+                topF_1_mult=0.45, topF_2_mult=0.35) # where top first locates
 
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '01_' + measuring_interval + "_vote_change.png"))
@@ -744,7 +745,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
     ax.text(-0.2, ymin*first_time_voter_mult, '( First-time Voters )',
             color='white', fontsize=10)
 
-    props = dict(boxstyle='round', facecolor='green', alpha=1)
+    props = dict(boxstyle='round', facecolor=face_color, alpha=1)
     ax.text(xmax, ymax_set*0.9, total_cum_text + '\n' + total_change,
             linespacing = 1.5,
             horizontalalignment='right',
@@ -794,10 +795,10 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-25, ymax_val=40, ytick_scale=10,
-                    first_time_voter_mult=0.95, new_voter_mult=1.10, ## change these
-                    top10_1_mult=0.90, top10_2_mult=0.82,
-                    topF_1_mult=0.55, topF_2_mult=0.47)
+                    ymin_val=-40, ymax_val=35, ytick_scale=10,
+                    first_time_voter_mult=1.00, new_voter_mult=1.10, ## change these
+                    top10_1_mult=0.85, top10_2_mult=0.75,
+                    topF_1_mult=0.43, topF_2_mult=0.33)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02_' + measuring_interval + "_voter_change.png"))
 
@@ -908,6 +909,21 @@ prep_voted_count = df_longer.groupby(['delegator', measuring_interval, 'how_many
 
 # Votes and Voters
 votes_and_prep_count = prep_voted_count.groupby([measuring_interval, 'how_many_prep_voted'])['cum_votes'].agg(['sum','count']).reset_index()
+
+# getting the maximum number of prep voted given terms
+# most_no_of_prep_voted = votes_and_prep_count[votes_and_prep_count[measuring_interval].isin(terms)].groupby([measuring_interval]).tail(1)
+most_no_of_prep_voted = votes_and_prep_count[votes_and_prep_count[measuring_interval].isin([this_term])]['how_many_prep_voted'].tail(1)
+
+
+# adding "11" as anything more than 10 for now
+votes_and_prep_count['how_many_prep_voted'] = np.where(votes_and_prep_count['how_many_prep_voted']>10, 11, votes_and_prep_count['how_many_prep_voted'])
+
+# summing '11'
+votes_and_prep_count = votes_and_prep_count.groupby([measuring_interval, 'how_many_prep_voted']).\
+    agg(['sum']).\
+    reset_index().\
+    droplevel(1, axis=1)
+
 votes_and_prep_count = votes_and_prep_count.rename(columns={'sum': 'votes', 'count': 'voters'})
 
 # Percentages across Week (Votes)
@@ -922,8 +938,18 @@ votes_and_prep_count['pct_voters'] = votes_and_prep_count['voters'] / votes_and_
 
 # Interested term and get difference between previous term & this term
 votes_and_prep_count_term = votes_and_prep_count[votes_and_prep_count[measuring_interval].isin(terms)].reset_index(drop=True)
+votes_and_prep_count_term['how_many_prep_voted'] = np.where(votes_and_prep_count_term['how_many_prep_voted']>10, '11+', votes_and_prep_count_term['how_many_prep_voted'])
+
 votes_and_prep_count_this_term = votes_and_prep_count[votes_and_prep_count[measuring_interval].isin([this_term])].reset_index(drop=True)
-votes_and_prep_count_term_diff = votes_and_prep_count_term.drop(columns=[measuring_interval]).groupby('how_many_prep_voted').diff().dropna().reset_index(drop=True)
+votes_and_prep_count_this_term['how_many_prep_voted'] = np.where(votes_and_prep_count_this_term['how_many_prep_voted']>10, '11+', votes_and_prep_count_this_term['how_many_prep_voted'])
+
+# getting last term data to get length and remove later
+votes_and_prep_count_last_term = votes_and_prep_count[votes_and_prep_count[measuring_interval].isin([last_term])].reset_index(drop=True)
+last_term_length = len(votes_and_prep_count_last_term)
+
+# votes_and_prep_count_term_diff = votes_and_prep_count_term.drop(columns=[measuring_interval]).groupby('how_many_prep_voted').diff().dropna().reset_index(drop=True)
+votes_and_prep_count_term_diff = votes_and_prep_count_term.drop(columns=[measuring_interval]).groupby('how_many_prep_voted').diff().reset_index(drop=True)
+votes_and_prep_count_term_diff = votes_and_prep_count_term_diff[last_term_length:].reset_index(drop=True) #remove last term here
 
 # adding change symbols here for graph
 change_symbol_votes = votes_and_prep_count_term_diff['pct_votes'].apply(lambda x: "+" if x>0 else '') # for voter count
@@ -939,7 +965,6 @@ votes_and_prep_count_term_diff['pct_votes'] = votes_and_prep_count_term_diff['pc
 votes_and_prep_count_term_diff['pct_voters'] = votes_and_prep_count_term_diff['pct_voters'].astype(float).map("{:.2%}".format)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
 ## Votes
 grand_total_votes_text = 'Total Votes: ' + '{:,}'.format(votes_and_prep_count_this_term['total_votes'][0].astype(int)) + ' ICX' \
                          + '\n' + 'Total Wallets: '+ '{:,}'.format(votes_and_prep_count_this_term['total_voters'][0])
@@ -971,7 +996,7 @@ wedges, texts = plt.pie(votes_and_prep_count_this_term['votes'],
                                    textprops={'fontsize': 12, 'weight': 'bold'})
                                    #textprops={'color': "y"})
 
-for text, color in zip(texts, inner_colors):
+for text, color in zip(texts, these_colors):
     text.set_color(color)
 
 ax.text(0., 0., grand_total_votes_text,
@@ -981,6 +1006,15 @@ ax.text(0., 0., grand_total_votes_text,
         fontsize=12,
         weight='bold')
 
+xmin, xmax = ax.get_xlim()
+ymin, ymax = ax.get_ylim()
+
+ax.text(xmax*2.5, ymin,
+        'Maximum Number of P-Reps Voted: ' + most_no_of_prep_voted.astype(str).item(),
+        linespacing=1.4,
+        horizontalalignment='right',
+        verticalalignment='top',
+        color='yellow', fontsize=11, weight='bold')
 
 plt.legend(wedges, label_text,
           title="Number of P-Reps Voted (ICX)",
