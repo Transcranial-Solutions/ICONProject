@@ -15,7 +15,7 @@ This is for the investigation of i_rep changes. It is in a rough state and may n
 ## 03_icon_in_numbers
 This is for weekly report for the status of voting in ICON network.
 Webscrapes data, manipulates, re-codes, calculates and produces images -- does not save data but there is an option to do so.
-Medium articles:
+Medium articles (only showing first 2):
 https://medium.com/@transcranial.solutions/icon-in-numbers-1-week-26-2020-ec658ba66e93
 https://medium.com/@transcranial.solutions/icon-in-numbers-2-week-27-2020-173a7062bd8c
 
