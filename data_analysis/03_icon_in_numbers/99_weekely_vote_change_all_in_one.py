@@ -475,7 +475,7 @@ total_term_change = term_change_comb.groupby([measuring_interval])[['votes','cum
 total_term_change['pct_change_votes'] = total_term_change['votes'] / (total_term_change['cum_votes'].shift(1))
 total_term_change = total_term_change[total_term_change[measuring_interval].isin([this_term])].drop(columns=measuring_interval)
 change_symbol = total_term_change['votes'].apply(lambda x: "+" if x>0 else '').values[0] # for voter count
-face_color = total_term_change['votes'].apply(lambda x: "green" if x>0 else 'red').values[0] # this is for box color
+face_color = total_term_change['votes'].apply(lambda x: "green" if x>0 else 'firebrick').values[0] # this is for box color
 
 total_cum_text = "Total votes: " + round(total_term_change['cum_votes']).apply('{:,}'.format).values[0].split('.', 1)[0] + " ICX"
 total_text = "Weekly change: " + change_symbol + round(total_term_change['votes']).apply('{:,}'.format).values[0].split('.', 1)[0] + " ICX"
