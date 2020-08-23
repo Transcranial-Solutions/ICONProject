@@ -43,7 +43,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-32', '2020-31']
+terms = ['2020-33', '2020-32']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -612,7 +612,7 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-2500000, ymax_val=2000000, ytick_scale=500000, # these are actual ylims & tick interval20
+                ymin_val=-2000000, ymax_val=1500000, ytick_scale=500000, # these are actual ylims & tick interval20
                 voter_mult=1.02, voter_diff_mult=1.12, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.8, # where top 10 streak locates
                 topF_1_mult=0.45, topF_2_mult=0.35) # where top first locates
@@ -795,10 +795,10 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-40, ymax_val=35, ytick_scale=10,
-                    first_time_voter_mult=1.00, new_voter_mult=1.10, ## change these
-                    top10_1_mult=0.85, top10_2_mult=0.75,
-                    topF_1_mult=0.43, topF_2_mult=0.33)
+                    ymin_val=-20, ymax_val=90, ytick_scale=10,
+                    first_time_voter_mult=0.90, new_voter_mult=1.20, ## change these
+                    top10_1_mult=0.95, top10_2_mult=0.89,
+                    topF_1_mult=0.65, topF_2_mult=0.59)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02_' + measuring_interval + "_voter_change.png"))
 
