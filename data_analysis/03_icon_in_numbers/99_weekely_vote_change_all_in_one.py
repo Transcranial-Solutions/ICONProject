@@ -812,15 +812,15 @@ total_term_change = df_longer.groupby(['delegator', measuring_interval])[['votes
 def bin_votes(row):
     if row['cum_votes'] < 1:
         val = '< 1'
-    if 1 <= row['cum_votes'] < 1000:
+    elif 1 <= row['cum_votes'] <= 1000:
         val = '1-1000'
-    elif 1000 <= row['cum_votes'] < 10000:
+    elif 1000 < row['cum_votes'] <= 10000:
         val = '1000-10K'
-    elif 10000 <= row['cum_votes'] < 100000:
+    elif 10000 < row['cum_votes'] <= 100000:
         val = '10K-100K'
-    elif 100000 <= row['cum_votes'] < 1000000:
+    elif 100000 < row['cum_votes'] <= 1000000:
         val = '100K-1M'
-    elif 1000000 <= row['cum_votes']:
+    elif 1000000 < row['cum_votes']:
         val = '1M +'
     else:
         pass
