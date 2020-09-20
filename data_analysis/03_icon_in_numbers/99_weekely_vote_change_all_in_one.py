@@ -1174,7 +1174,7 @@ plt.tight_layout()
 
 
 # saving
-plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_vote_stagnancy_by_activity_of_wallet.png"))
+plt.savefig(os.path.join(resultsPath_interval, '06_' + measuring_interval + "_vote_stagnancy_by_activity_of_wallet.png"))
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -1272,8 +1272,8 @@ def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=12,
         size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
         fig, ax = plt.subplots(figsize=size)
         ax.axis('off')
-        ax.set_title("'Spread Your Votes!'" + ' Participants (' + insert_week(this_term, 4) + ')', fontsize=14,
-                     weight='bold', pad=20)
+        ax.set_title("'Spread Your Votes!'" + ' Participants (' + insert_week(this_term, 4) + ')', fontsize=15,
+                     weight='bold', pad=30)
         plt.tight_layout()
 
     mpl_table = ax.table(cellText=data.values, bbox=bbox, colLabels=data.columns, **kwargs)
@@ -1294,7 +1294,7 @@ render_mpl_table(SYV_participants_summary_agg, header_columns=0, col_width=2.2)
 
 
 # saving
-plt.savefig(os.path.join(resultsPath_interval, '06_' + measuring_interval + "_spread_your_votes_participants.png"))
+plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_spread_your_votes_participants.png"))
 
 
 
