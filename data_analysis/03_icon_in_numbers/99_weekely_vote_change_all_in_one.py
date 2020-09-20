@@ -43,7 +43,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-36', '2020-35']
+terms = ['2020-37', '2020-36']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -612,8 +612,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-1500000, ymax_val=3000000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=0.95, voter_diff_mult=1.15, # voter change multiplier
+                ymin_val=-600000, ymax_val=1200000, ytick_scale=200000, # these are actual ylims & tick interval20
+                voter_mult=0.95, voter_diff_mult=1.10, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -795,8 +795,8 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-15, ymax_val=45, ytick_scale=10,
-                    first_time_voter_mult=1.10, new_voter_mult=1.35, ## change these
+                    ymin_val=-10, ymax_val=70, ytick_scale=10,
+                    first_time_voter_mult=1.10, new_voter_mult=1.75, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.89,
                     topF_1_mult=0.65, topF_2_mult=0.59)
 # saving
@@ -905,10 +905,45 @@ plt.savefig(os.path.join(resultsPath_interval, '03_' + measuring_interval + "_co
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 ## number of P-Reps voted
+
+# making bins to extract group
+def bin_NumPReps(df):
+    if df['how_many_prep_voted'] <= 10:
+        val = df['how_many_prep_voted']
+    elif 11 <= df['how_many_prep_voted'] <= 19:
+        val = '11-19'
+    elif 20 <= df['how_many_prep_voted'] <= 29:
+        val = '20-29'
+    elif 30 <= df['how_many_prep_voted'] <= 39:
+        val = '30-39'
+    elif 40 <= df['how_many_prep_voted'] <= 49:
+        val = '40-49'
+    elif 50 <= df['how_many_prep_voted'] <= 59:
+        val = '50-59'
+    elif 60 <= df['how_many_prep_voted'] <= 69:
+        val = '60-69'
+    elif 70 <= df['how_many_prep_voted'] <= 79:
+        val = '70-79'
+    elif 80 <= df['how_many_prep_voted'] <= 89:
+        val = '80-89'
+    elif 90 <= df['how_many_prep_voted'] <= 99:
+        val = '50-59'
+    elif df['how_many_prep_voted'] >= 100:
+        val = '100'
+    else:
+        pass
+        val = -1
+    return val
+
 prep_voted_count = df_longer.groupby(['delegator', measuring_interval, 'how_many_prep_voted']).agg('sum').reset_index()
 
 # Votes and Voters
 votes_and_prep_count = prep_voted_count.groupby([measuring_interval, 'how_many_prep_voted'])['cum_votes'].agg(['sum','count']).reset_index()
+
+# binning number of P-Reps voted ###
+votes_and_prep_count_bin = votes_and_prep_count.copy()
+votes_and_prep_count_bin['NumPReps_bin'] = votes_and_prep_count_bin.apply(bin_NumPReps, axis=1)
+no_of_prep_voted_binned = votes_and_prep_count_bin.groupby([measuring_interval,'NumPReps_bin']).agg({'sum':'sum', 'count': 'sum'}).reset_index()
 
 # getting the maximum number of prep voted given terms
 # most_no_of_prep_voted = votes_and_prep_count[votes_and_prep_count[measuring_interval].isin(terms)].groupby([measuring_interval]).tail(1)
@@ -1140,6 +1175,140 @@ plt.tight_layout()
 
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_vote_stagnancy_by_activity_of_wallet.png"))
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+### 'Spread Your Votes!' Participants ###
+
+def raffle_tickets(df):
+    if df.loc['how_many_prep_voted'] <= 10:
+        val = 0
+    elif 11 <= df['how_many_prep_voted'] <= 19:
+        val = 1
+    elif 20 <= df['how_many_prep_voted'] <= 29:
+        val = 2
+    elif 30 <= df['how_many_prep_voted'] <= 39:
+        val = 3
+    elif 40 <= df['how_many_prep_voted'] <= 49:
+        val = 4
+    elif 50 <= df['how_many_prep_voted'] <= 59:
+        val = 5
+    elif 60 <= df['how_many_prep_voted'] <= 69:
+        val = 6
+    elif 70 <= df['how_many_prep_voted'] <= 79:
+        val = 7
+    elif 80 <= df['how_many_prep_voted'] <= 89:
+        val = 8
+    elif 90 <= df['how_many_prep_voted'] <= 99:
+        val = 9
+    elif df['how_many_prep_voted'] >= 100:
+        val = 10
+    else:
+        pass
+        val = -1
+    return val
+
+# For transparency, Spread Your Votes data
+df_longer_this_term = df_longer[df_longer[measuring_interval].isin([this_term])]
+
+SYV_participants = df_longer_this_term[df_longer_this_term['how_many_prep_voted'] > 10]
+SYV_participants = SYV_participants[['validator_name', 'delegator', measuring_interval, 'votes', 'cum_votes', 'how_many_prep_voted']]
+SYV_participants['NumPReps_bin'] = SYV_participants.apply(bin_NumPReps, axis=1)
+SYV_participants['raffle_tickets'] = SYV_participants.apply(raffle_tickets, axis=1)
+
+# getting the % of votes per P-Rep
+SYV_participants['sum_votes'] = SYV_participants.groupby([measuring_interval, 'delegator'])['cum_votes'].transform('sum')
+SYV_participants = SYV_participants.rename(columns={'cum_votes' : 'total_votes'})
+SYV_participants['vote_percentages_per_prep'] = SYV_participants['total_votes']/SYV_participants['sum_votes']
+
+# for google sheets (participant information)
+SYV_participants_percentages = SYV_participants.drop(columns=['NumPReps_bin','votes']).\
+    groupby([measuring_interval, 'delegator','sum_votes','how_many_prep_voted','raffle_tickets']).\
+    agg(['min', 'max', 'median', 'mean']).sort_values(by='how_many_prep_voted', ascending=False).reset_index()
+
+SYV_participants_percentages[('vote_percentages_per_prep', 'min')] = SYV_participants_percentages[('vote_percentages_per_prep', 'min')].astype(float).map("{:.5%}".format)
+SYV_participants_percentages[('vote_percentages_per_prep', 'max')] = SYV_participants_percentages[('vote_percentages_per_prep', 'max')].astype(float).map("{:.5%}".format)
+SYV_participants_percentages[('vote_percentages_per_prep', 'median')] = SYV_participants_percentages[('vote_percentages_per_prep', 'median')].astype(float).map("{:.5%}".format)
+SYV_participants_percentages[('vote_percentages_per_prep', 'mean')] = SYV_participants_percentages[('vote_percentages_per_prep', 'mean')].astype(float).map("{:.5%}".format)
+
+SYV_participants_percentages.to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_RaffleTickets_' + this_term + '.csv'), index=False)
+
+# for IIN
+SYV_participants_summary = SYV_participants.drop_duplicates(['delegator','week'])\
+    [['delegator', 'week', 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets','sum_votes']].\
+    sort_values(by='how_many_prep_voted', ascending=False)
+
+SYV_participants_summary_agg = SYV_participants_summary.drop(columns='how_many_prep_voted')
+SYV_participants_summary_agg['sum_raffle_tickets'] = SYV_participants_summary_agg['raffle_tickets']
+
+SYV_participants_summary_agg = SYV_participants_summary_agg.groupby([measuring_interval, 'NumPReps_bin', 'raffle_tickets']).\
+    agg({'delegator':'count','sum_raffle_tickets':'sum','sum_votes':'sum'}).reset_index()
+
+SYV_participants_summary_agg.loc['Total']= SYV_participants_summary_agg.sum(numeric_only=True, axis=0)
+SYV_participants_summary_agg['NumPReps_bin'] = np.where(SYV_participants_summary_agg['NumPReps_bin'].isna(), 'Total', SYV_participants_summary_agg['NumPReps_bin'])
+# SYV_participants_summary_agg[measuring_interval] = np.where(SYV_participants_summary_agg[measuring_interval].isna(), 'Total', SYV_participants_summary_agg[measuring_interval])
+SYV_participants_summary_agg['raffle_tickets'] = SYV_participants_summary_agg['raffle_tickets'].astype(int).apply('{:,}'.format)
+SYV_participants_summary_agg['raffle_tickets'] = np.where(SYV_participants_summary_agg['NumPReps_bin'] == 'Total', '-', SYV_participants_summary_agg['raffle_tickets'])
+
+SYV_participants_summary_agg['delegator'] = SYV_participants_summary_agg['delegator'].astype(int).apply('{:,}'.format)
+SYV_participants_summary_agg['sum_raffle_tickets'] = SYV_participants_summary_agg['sum_raffle_tickets'].astype(int).apply('{:,}'.format)
+SYV_participants_summary_agg['sum_votes'] = SYV_participants_summary_agg['sum_votes'].astype(int).apply('{:,}'.format)
+
+
+this_order = ["11-19", "20-29","30-39","40-49","50-59","60-69","70-79","80-89","90-99","100","Total"]
+SYV_participants_summary_agg['NumPReps_bin'] = pd.Categorical(SYV_participants_summary_agg['NumPReps_bin'], this_order)
+SYV_participants_summary_agg = SYV_participants_summary_agg.sort_values(by='NumPReps_bin')[['NumPReps_bin','raffle_tickets', 'delegator', 'sum_raffle_tickets', 'sum_votes']]
+SYV_participants_summary_agg = SYV_participants_summary_agg.\
+    rename(columns={'NumPReps_bin': 'No. of P-Reps Voted', 'raffle_tickets': 'No. of Raffle Tickets \n Per Wallet', 'delegator': 'No. of Wallets',  'sum_raffle_tickets': "Total No. of \n Raffle Tickets",'sum_votes':'Total Votes (ICX)'})
+
+import six
+
+def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=12,
+                     header_color='#40466e', row_colors=['black', 'black'], edge_color='w',
+                     bbox=[0, 0, 1, 1], header_columns=0,
+                     ax=None, **kwargs):
+    if ax is None:
+        size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
+        fig, ax = plt.subplots(figsize=size)
+        ax.axis('off')
+        ax.set_title("'Spread Your Votes!'" + ' Participants (' + insert_week(this_term, 4) + ')', fontsize=14,
+                     weight='bold', pad=20)
+        plt.tight_layout()
+
+    mpl_table = ax.table(cellText=data.values, bbox=bbox, colLabels=data.columns, **kwargs)
+
+    mpl_table.auto_set_font_size(False)
+    mpl_table.set_fontsize(font_size)
+
+    for k, cell in  six.iteritems(mpl_table._cells):
+        cell.set_edgecolor(edge_color)
+        if k[0] == 0 or k[1] < header_columns:
+            cell.set_text_props(weight='bold', color='w')
+            cell.set_facecolor(header_color)
+        else:
+            cell.set_facecolor(row_colors[k[0]%len(row_colors) ])
+    return ax
+
+render_mpl_table(SYV_participants_summary_agg, header_columns=0, col_width=2.2)
+
+
+# saving
+plt.savefig(os.path.join(resultsPath_interval, '06_' + measuring_interval + "_spread_your_votes_participants.png"))
+
+
+
+# for lucky draw
+SYV_participants_luckydraw = SYV_participants.groupby(['delegator','week']).head(SYV_participants['raffle_tickets'])[['delegator', 'week', 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets']]
+SYV_participants_luckydraw = SYV_participants_luckydraw.sort_values(by='how_many_prep_voted', ascending=False)
+SYV_participants_luckydraw.drop(columns='NumPReps_bin').to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_LuckyDraw_' + this_term + '.csv'), index=False)
+
+
+# import random
+# random_number = random.randint(1, 10000)
+# print(random_number)
+# SYV_participants_luckydraw.sample(frac=1, random_state=random_number).head(1)
+
 
 # checking if the range for the data is complete (just by looking at the dates)
 print(unique_date[-1:])
