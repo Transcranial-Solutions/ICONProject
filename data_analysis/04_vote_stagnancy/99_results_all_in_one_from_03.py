@@ -21,17 +21,22 @@ import matplotlib.ticker as ticker
 import scipy.stats as sp
 import seaborn as sns
 import os
+from datetime import date
 
 
 desired_width = 320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns', 10)
 
+# today date
+today = date.today()
+day1 = today.strftime("%Y_%m_%d")
+
 # making path for loading/saving
 currPath = os.getcwd()
 inPath = os.path.join(currPath, "output")
 outPath = os.path.join(currPath, "04_vote_stagnancy")
-resultsPath = os.path.join(outPath, "results")
+resultsPath = os.path.join(outPath, "results_" + day1)
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
 
@@ -119,10 +124,13 @@ agg_df = count_cum_status[count_cum_status['lead_days_pure'] == 1][['delegator',
 
 # getting most recent total votes for each p-rep
 current_prep_votes = count_cum_status[count_cum_status['date'].max() == count_cum_status['date']]
+current_prep_voters = current_prep_votes.groupby(['validator_name'])['delegator'].agg('count').reset_index().rename(columns={'delegator': 'total_voter_count'})
+
 current_prep_votes = current_prep_votes.\
     drop_duplicates(['validator_name','prep_total_votes', 'prep_ranking'])[['validator_name','prep_total_votes', 'prep_ranking']].\
     reset_index(drop=True)
 
+current_prep_votes = pd.merge(current_prep_votes, current_prep_voters, on='validator_name', how='left')
 
 # shortening your names, hope you don't mind!
 def shorten_prep_name(inData):
@@ -178,7 +186,7 @@ plt.tight_layout()
 
 
 # saving
-plt.savefig(os.path.join(resultsPath, '01_wallet_count_by_voter_age.png'))
+plt.savefig(os.path.join(resultsPath, '01_wallet_count_by_voter_age' + day1 + '.png'))
 
 
 
@@ -219,7 +227,7 @@ ax.legend(reversed(handles), reversed(labels),
 plt.tight_layout(rect=[0,0,1,1])
 
 # saving
-plt.savefig(os.path.join(resultsPath, '02_Voting_Activity_By_Voter_Age.png'))
+plt.savefig(os.path.join(resultsPath, '02_Voting_Activity_By_Voter_Age' + day1 + '.png'))
 
 
 
@@ -248,7 +256,7 @@ ax.legend(reversed(handles), reversed(labels),
 plt.tight_layout(rect=[0,0,1,1])
 
 # saving
-plt.savefig(os.path.join(resultsPath, '03_Voting_Activity_By_PRep_Age.png'))
+plt.savefig(os.path.join(resultsPath, '03_Voting_Activity_By_PRep_Age' + day1 + '.png'))
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Pure (unchanged/untouched) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -305,7 +313,7 @@ for tick,label in zip(pos,ax.get_xticklabels()):
 plt.tight_layout()
 
 # saving
-plt.savefig(os.path.join(resultsPath, '04_days_votes_unchanged_by_voter_age.png'))
+plt.savefig(os.path.join(resultsPath, '04_days_votes_unchanged_by_voter_age' + day1 + '.png'))
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Same P-Rep (unmoved) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -352,7 +360,7 @@ plt.tight_layout()
 
 
 # saving
-plt.savefig(os.path.join(resultsPath, '05_days_votes_unmoved_by_voter_age.png'))
+plt.savefig(os.path.join(resultsPath, '05_days_votes_unmoved_by_voter_age' + day1 + '.png'))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Plots by P-Rep ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -404,13 +412,13 @@ def plot_box_by_prep(df, inVar, fig_title):
 plot_box_by_prep(agg_df_max_pure, 'days_pure', 'Consecutive Days with Votes Untouched in each P-Rep Node')
 
 # saving
-plt.savefig(os.path.join(resultsPath, '06_days_votes_untouched_by_prep_age.png'))
+plt.savefig(os.path.join(resultsPath, '06_days_votes_untouched_by_prep_age' + day1 + '.png'))
 
 # Same P-Rep by P-Rep
 plot_box_by_prep(agg_df_max_prep, 'days_same_prep', 'Consecutive Days with Votes Unmoved in each P-Rep Node')
 
 # saving
-plt.savefig(os.path.join(resultsPath, '07_days_votes_unmoved_by_prep_age.png'))
+plt.savefig(os.path.join(resultsPath, '07_days_votes_unmoved_by_prep_age' + day1 + '.png'))
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ correlation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -442,7 +450,7 @@ corr_plot(agg_df_max_pure,
           'Days of Votes Untouched vs P-Rep Ranking')
 
 # saving
-plt.savefig(os.path.join(resultsPath, '08_days_votes_untouched_vs_PRep_ranking_corr.png'))
+plt.savefig(os.path.join(resultsPath, '08_days_votes_untouched_vs_PRep_ranking_corr' + day1 + '.png'))
 
 # days of same P-Rep vs P-Rep ranking
 corr_plot(agg_df_max_prep,
@@ -453,12 +461,55 @@ corr_plot(agg_df_max_prep,
           'Days of Votes Unmoved vs P-Rep Ranking')
 
 # saving
-plt.savefig(os.path.join(resultsPath, '09_days_votes_unmoved_vs_PRep_ranking_corr.png'))
+plt.savefig(os.path.join(resultsPath, '09_days_votes_unmoved_vs_PRep_ranking_corr' + day1 + '.png'))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ days and votes stagnancy ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # data for today to be used for current votes
 today_df = count_cum_status[count_cum_status['date'].max() == count_cum_status['date']]
 today_df = shorten_prep_name(today_df)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ data for Scott ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# this data will be used for 'vote spreading' implementation
+
+def stag_votes_scott(df, stag_days, inVar):
+    df = df[df[inVar] >= stag_days]
+    df = df.groupby(['validator_name','date'])['cum_votes'].agg(['count', 'sum']).reset_index()
+    df = pd.merge(df, current_prep_votes, on='validator_name', how='left')
+    # df['pct_stagnant'] = (df['sum'] / df['prep_total_votes'])
+    df['included_network_total_votes'] = df.groupby('date')['prep_total_votes'].transform('sum')
+    df['current_network_total_votes'] = current_prep_votes['prep_total_votes'].sum()
+    # df['pct_entire_votes'] = (df['sum'] / df['entire_votes'])
+    # df['pct_prep_votes'] = (df['prep_total_votes'] / df['entire_votes'])
+    df = df.sort_values(by=['prep_ranking'])
+    # df['pct_label'] = df['pct_prep_votes'].map("{:.2%}".format) + ' / ' + df['pct_entire_votes'].map("{:.2%}".format)
+    df = df.rename(columns={'validator_name': 'P-Reps',
+                            'date': 'extraction_date',
+                            'count': 'stagnant_voter_count',
+                            'sum': 'stagnant_votes'})
+    df = df[['P-Reps', 'stagnant_voter_count', 'total_voter_count',
+             'stagnant_votes', 'prep_total_votes', 'included_network_total_votes', 'current_network_total_votes',
+             'prep_ranking','extraction_date']]
+    return(df)
+
+
+## 30 days and 90 days
+stag_days = 30
+stag_days_df = stag_votes_scott(df=today_df, stag_days=stag_days, inVar='days_pure')
+stag_days_df.to_csv(os.path.join(resultsPath, 'vote_stagnancy_' + str(stag_days) + '_days' + '.csv'), index=False)
+
+stag_days = 60
+stag_days_df = stag_votes_scott(df=today_df, stag_days=stag_days, inVar='days_pure')
+stag_days_df.to_csv(os.path.join(resultsPath, 'vote_stagnancy_' + str(stag_days) + '_days' + '.csv'), index=False)
+
+stag_days = 90
+stag_days_df = stag_votes_scott(df=today_df, stag_days=stag_days, inVar='days_pure')
+stag_days_df.to_csv(os.path.join(resultsPath, 'vote_stagnancy_' + str(stag_days) + '_days' + '.csv'), index=False)
+
+current_prep_votes_csv = current_prep_votes.rename(columns={'validator_name': 'P-Reps'}).sort_values(by='prep_ranking')
+current_prep_votes_csv.to_csv(os.path.join(resultsPath, 'current_votes.csv'), index=False)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
 
 entire_vote_df = today_df.copy()
 entire_vote_df = entire_vote_df.drop_duplicates(['validator_sub', 'prep_total_votes', 'date'])[['validator_sub', 'prep_total_votes', 'date']]
@@ -541,13 +592,13 @@ def stag_votes(df, stag_days, inVar, stag_type):
 stag_votes_df = stag_votes(df=today_df, stag_days=90, inVar='days_pure', stag_type='Untouched')
 
 # saving
-plt.savefig(os.path.join(resultsPath, '10_vote_stagnancy_untouched_90_days.png'))
+plt.savefig(os.path.join(resultsPath, '10_vote_stagnancy_untouched_90_days' + day1 + '.png'))
 
 # same P-Rep
 stag_votes_df = stag_votes(df=today_df, stag_days=90, inVar='days_same_prep', stag_type='Unmoved')
 
 # saving
-plt.savefig(os.path.join(resultsPath, '11_vote_stagnancy_unmoved_90_days.png'))
+plt.savefig(os.path.join(resultsPath, '11_vote_stagnancy_unmoved_90_days' + day1 + '.png'))
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Historical vote stagnancy ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -626,7 +677,7 @@ for x,y,z in zip(xs,ys,stag_votes_label):
 plt.tight_layout()
 
 # saving
-plt.savefig(os.path.join(resultsPath, '12_vote_stagnancy_by_votes_going_backward.png'))
+plt.savefig(os.path.join(resultsPath, '12_vote_stagnancy_by_votes_going_backward' + day1 + '.png'))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Vote Stagnancy Time-Series ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # Vote Stagnancy -- by having voted or not for that day
@@ -708,7 +759,7 @@ plt.tight_layout()
 
 
 # saving
-plt.savefig(os.path.join(resultsPath, '13_vote_stagnancy_by_votes_over_time.png'))
+plt.savefig(os.path.join(resultsPath, '13_vote_stagnancy_by_votes_over_time' + day1 + '.png'))
 
 
 
