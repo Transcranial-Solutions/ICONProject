@@ -43,7 +43,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-38', '2020-37']
+terms = ['2020-39', '2020-38']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -612,8 +612,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-1000000, ymax_val=4500000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=0.80, voter_diff_mult=1.05, # voter change multiplier
+                ymin_val=-1000000, ymax_val=1200000, ytick_scale=200000, # these are actual ylims & tick interval20
+                voter_mult=1.00, voter_diff_mult=1.125, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -795,8 +795,8 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-5, ymax_val=55, ytick_scale=5,
-                    first_time_voter_mult=0.70, new_voter_mult=1.25, ## change these
+                    ymin_val=-10, ymax_val=40, ytick_scale=5,
+                    first_time_voter_mult=0.90, new_voter_mult=1.15, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.89,
                     topF_1_mult=0.65, topF_2_mult=0.59)
 # saving
@@ -1315,3 +1315,50 @@ print(unique_date[-1:])
 
 
 # first_time_voter_history = combined_df.sort_values(['week', 'new_wallet_Voted'], ascending=False).groupby(['week']).first()
+
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+# voter ranking vs prep ranking
+# voter_rank = combined_df.copy()
+# voter_rank['prep_ranking'] = voter_rank.sort_values([measuring_interval, 'cum_votes'], ascending=False) \
+#     .groupby(measuring_interval)['cum_votes'].rank(method='first', ascending=False).astype(int)
+#
+# voter_rank['first_time_voter_ranking'] = voter_rank.sort_values([measuring_interval, 'new_wallet_Voted'], ascending=False) \
+#     .groupby(measuring_interval)['new_wallet_Voted'].rank(method='first', ascending=False).astype(int)
+#
+# voter_rank = voter_rank[['validator_name','cum_votes',measuring_interval,'prep_ranking', 'win_rank_Voter','first_time_voter_ranking']]
+# # voter_rank = combined_df.groupby(['validator_name'])['win_rank_Voter'].agg(['mean','median'])
+#
+# import scipy.stats as sp
+#
+# def corr_plot(df, inVar1, inVar2, this_xlabel, this_ylabel, this_title):
+#
+#     m_var1 = df.groupby('validator_name')[[inVar1]].apply(np.median).reset_index(name='var1')
+#     m_var2 = df.groupby('validator_name')[[inVar2]].apply(np.median).reset_index(name='var2')
+#     m_days_ranking = pd.merge(m_var1, m_var2, on='validator_name', how='left')
+#
+#     # plot
+#     sns.set(style="ticks")
+#     plt.style.use("dark_background")
+#     g = sns.jointplot("var1", "var2", data=m_days_ranking,
+#                       kind="reg", height=6, truncate=False, color='m',
+#                       joint_kws={'scatter_kws': dict(alpha=0.5)}
+#                       ).annotate(sp.pearsonr)
+#     g.set_axis_labels(this_xlabel, this_ylabel, fontsize=14, weight='bold', labelpad=10)
+#     g = g.ax_marg_x
+#     g.set_title(this_title, fontsize=12, weight='bold')
+#     plt.tight_layout()
+#
+# corr_plot(voter_rank,
+#           'win_rank_Voter',
+#           'prep_ranking',
+#           'Voter Ranking (median)',
+#           'P-Rep Ranking (median)',
+#           'Voter Ranking vs P-Rep Ranking (Weekly)')
+#
+# corr_plot(voter_rank,
+#           'first_time_voter_ranking',
+#           'prep_ranking',
+#           'First Time Voter Ranking (median)',
+#           'P-Rep Ranking (median)',
+#           'First Time Voter Ranking vs P-Rep Ranking (Weekly)')
+
