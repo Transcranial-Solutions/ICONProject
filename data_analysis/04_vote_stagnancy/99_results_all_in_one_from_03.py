@@ -30,13 +30,13 @@ pd.set_option('display.max_columns', 10)
 
 # today date
 today = date.today()
-day1 = today.strftime("%Y_%m_%d")
+day1 = '_' + today.strftime("%Y_%m_%d")
 
 # making path for loading/saving
 currPath = os.getcwd()
 inPath = os.path.join(currPath, "output")
 outPath = os.path.join(currPath, "04_vote_stagnancy")
-resultsPath = os.path.join(outPath, "results_" + day1)
+resultsPath = os.path.join(outPath, "results" + day1)
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
 
@@ -468,12 +468,21 @@ plt.savefig(os.path.join(resultsPath, '09_days_votes_unmoved_vs_PRep_ranking_cor
 today_df = count_cum_status[count_cum_status['date'].max() == count_cum_status['date']]
 today_df = shorten_prep_name(today_df)
 
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ data for Scott ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this data will be used for 'vote spreading' implementation
 
+not_stagnant_user = today_df[today_df['days_pure'] < 30].drop_duplicates(['delegator'])[['delegator']]
+today_df_only_stag_user = today_df.copy()
+
+# today_df_only_stag_user = today_df_only_stag_user[~today_df_only_stag_user.isin(not_stagnant_user.to_dict('l')).any(1)]
+today_df_only_stag_user = today_df_only_stag_user[~today_df_only_stag_user.isin(not_stagnant_user.to_dict('l')).iloc[:, 0]]
+
+
+
 def stag_votes_scott(df, stag_days, inVar):
-    df = df[df[inVar] >= stag_days]
+    # df = df[df[inVar] >= stag_days] # outdated -- this is by P-Rep, not by user
+    temp_df = df[df[inVar] < stag_days].drop_duplicates(['delegator'])[['delegator']] # finding users with less than stag_days
+    df = df[~df.isin(temp_df.to_dict('l')).iloc[:, 0]] # remove these users from the data
     df = df.groupby(['validator_name','date'])['cum_votes'].agg(['count', 'sum']).reset_index()
     df = pd.merge(df, current_prep_votes, on='validator_name', how='left')
     # df['pct_stagnant'] = (df['sum'] / df['prep_total_votes'])
@@ -492,22 +501,39 @@ def stag_votes_scott(df, stag_days, inVar):
              'prep_ranking','extraction_date']]
     return(df)
 
-
 ## 30 days and 90 days
 stag_days = 30
 stag_days_df = stag_votes_scott(df=today_df, stag_days=stag_days, inVar='days_pure')
 stag_days_df.to_csv(os.path.join(resultsPath, 'vote_stagnancy_' + str(stag_days) + '_days' + '.csv'), index=False)
 
+stag_days_df_30 = stag_days_df.copy()
+stag_days_df_30 = stag_days_df_30[['P-Reps', 'prep_ranking', 'stagnant_votes']].rename(columns={'stagnant_votes': 'stagnant_votes_30_days'})
+
 stag_days = 60
 stag_days_df = stag_votes_scott(df=today_df, stag_days=stag_days, inVar='days_pure')
 stag_days_df.to_csv(os.path.join(resultsPath, 'vote_stagnancy_' + str(stag_days) + '_days' + '.csv'), index=False)
+
+stag_days_df_60 = stag_days_df.copy()
+stag_days_df_60 = stag_days_df_60[['P-Reps', 'prep_ranking', 'stagnant_votes']].rename(columns={'stagnant_votes': 'stagnant_votes_60_days'})
 
 stag_days = 90
 stag_days_df = stag_votes_scott(df=today_df, stag_days=stag_days, inVar='days_pure')
 stag_days_df.to_csv(os.path.join(resultsPath, 'vote_stagnancy_' + str(stag_days) + '_days' + '.csv'), index=False)
 
+stag_days_df_90 = stag_days_df.copy()
+stag_days_df_90 = stag_days_df_90[['P-Reps', 'prep_ranking', 'stagnant_votes']].rename(columns={'stagnant_votes': 'stagnant_votes_90_days'})
+
 current_prep_votes_csv = current_prep_votes.rename(columns={'validator_name': 'P-Reps'}).sort_values(by='prep_ranking')
 current_prep_votes_csv.to_csv(os.path.join(resultsPath, 'current_votes.csv'), index=False)
+
+current_prep_ranking = current_prep_votes_csv[['P-Reps', 'prep_ranking']]
+
+stag_days_df_all = current_prep_ranking.\
+    merge(stag_days_df_30, on=['P-Reps', 'prep_ranking'], how='left').\
+    merge(stag_days_df_60, on=['P-Reps', 'prep_ranking'], how='left').\
+    merge(stag_days_df_90, on=['P-Reps', 'prep_ranking'], how='left').fillna(0)
+
+stag_days_df_all.to_csv(os.path.join(resultsPath, 'vote_stagnancy_all' + '.csv'), index=False)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
