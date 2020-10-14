@@ -37,18 +37,19 @@ all_vars = scripts[2]
 
 def get_data_from_script(corresponding_number):
     for s in all_vars:
-            if corresponding_number == 11 or corresponding_number == 12: # treat 11 and 12 differently
-                df = s.split('var ')[corresponding_number].split(' =', 1)[0] +  ',' + \
-                          s.split('=')[corresponding_number].split(';', 1)[0]
-            else:
-                df = "'" + s.split('var ')[corresponding_number].split(' =', 1)[0] + "', " + \
-                              s.split('[')[corresponding_number].split(']', 1)[0] # extract from 'script'
+        if corresponding_number == 11 or corresponding_number == 12:  # treat 11 and 12 differently
+            df = s.split('var ')[corresponding_number].split(' =', 1)[0] + ',' + \
+                 s.split('=')[corresponding_number].split(';', 1)[0]
+        else:
+            df = "'" + s.split('var ')[corresponding_number].split(' =', 1)[0] + "', " + \
+                 s.split('[')[corresponding_number].split(']', 1)[0]  # extract from 'script'
 
-            df = pd.DataFrame([x.split(',') for x in df.split('\n')]).T.\
-                apply(lambda s:s.str.replace("'", "")) # convert string to dataframe & remove quotes
-            df = df.rename(columns=df.iloc[0]).drop(df.index[0]).reset_index(drop=True) # first row into col name & remove quotes
+        df = pd.DataFrame([x.split(',') for x in df.split('\n')]).T. \
+            apply(lambda s: s.str.replace("'", ""))  # convert string to dataframe & remove quotes
+        df = df.rename(columns=df.iloc[0]).drop(df.index[0]).reset_index(
+            drop=True)  # first row into col name & remove quotes
 
-    return(df)
+    return (df)
 
 
 # getting data from div  -- marketcap, supply etc
@@ -97,9 +98,9 @@ wallet_and_reward_df = pd.concat([these_dates, balance_wallet, total_wallet,
                                   annual_real_yield, annual_reward, annual_inflation], axis=1, sort=False)
 
 basic_icx_stat = pd.concat([market_cap, circulating_supply,
-                   total_supply, public_treasury,
-                   total_staked_ICX, total_staked,
-                   circulation_staked, total_voted], axis=1, sort=False)
+                            total_supply, public_treasury,
+                            total_staked_ICX, total_staked,
+                            circulation_staked, total_voted], axis=1, sort=False)
 
 # today date
 today = date.today()
@@ -109,7 +110,3 @@ day1 = today.strftime("%Y_%m_%d")
 tx_df.to_csv(os.path.join(outDataPath, 'tx_df_' + day1 + '.csv'), index=False)
 wallet_and_reward_df.to_csv(os.path.join(outDataPath, 'wallet_and_reward_df_' + day1 + '.csv'), index=False)
 basic_icx_stat.to_csv(os.path.join(outDataPath, 'basic_icx_stat_df_' + day1 + '.csv'), index=False)
-
-
-
-
