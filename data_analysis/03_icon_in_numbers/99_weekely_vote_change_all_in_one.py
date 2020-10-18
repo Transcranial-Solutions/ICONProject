@@ -43,7 +43,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-40', '2020-39']
+terms = ['2020-41', '2020-40']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -612,8 +612,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-400000, ymax_val=450000, ytick_scale=100000, # these are actual ylims & tick interval20
-                voter_mult=1.05, voter_diff_mult=1.15, # voter change multiplier
+                ymin_val=-1000000, ymax_val=1200000, ytick_scale=200000, # these are actual ylims & tick interval20
+                voter_mult=0.91, voter_diff_mult=1.01, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -1252,16 +1252,23 @@ SYV_participants_summary_agg = SYV_participants_summary_agg.groupby([measuring_i
 # this term
 SYV_participants_summary_agg_this_term = SYV_participants_summary_agg[SYV_participants_summary_agg[measuring_interval].isin([this_term])]
 
-SYV_participants_summary_agg_this_term.loc['Total']= SYV_participants_summary_agg_this_term.sum(numeric_only=True, axis=0)
+SYV_participants_summary_agg_this_term = SYV_participants_summary_agg_this_term.\
+    append(SYV_participants_summary_agg_this_term.sum(numeric_only=True).rename('Total')).\
+    assign(Total=lambda x: x.sum(1))
+
 SYV_participants_summary_agg_this_term['NumPReps_bin'] = np.where(SYV_participants_summary_agg_this_term['NumPReps_bin'].isna(), 'Total',
                                                                   SYV_participants_summary_agg_this_term['NumPReps_bin'])
-# SYV_participants_summary_agg[measuring_interval] = np.where(SYV_participants_summary_agg[measuring_interval].isna(), 'Total', SYV_participants_summary_agg[measuring_interval])
+
 SYV_participants_summary_agg_this_term['raffle_tickets'] = SYV_participants_summary_agg_this_term['raffle_tickets'].astype(int).apply('{:,}'.format)
 SYV_participants_summary_agg_this_term['raffle_tickets'] = np.where(SYV_participants_summary_agg_this_term['NumPReps_bin'] == 'Total', '-', SYV_participants_summary_agg_this_term['raffle_tickets'])
 
 # last term
 SYV_participants_summary_agg_last_term = SYV_participants_summary_agg[SYV_participants_summary_agg[measuring_interval].isin([last_term])]
-SYV_participants_summary_agg_last_term.loc['Total']= SYV_participants_summary_agg_last_term.sum(numeric_only=True, axis=0)
+
+SYV_participants_summary_agg_last_term = SYV_participants_summary_agg_last_term.\
+    append(SYV_participants_summary_agg_last_term.sum(numeric_only=True).rename('Total')).\
+    assign(Total=lambda x: x.sum(1))
+
 SYV_participants_summary_agg_last_term['NumPReps_bin'] = np.where(SYV_participants_summary_agg_last_term['NumPReps_bin'].isna(), 'Total',
                                                                   SYV_participants_summary_agg_last_term['NumPReps_bin'])
 
@@ -1281,11 +1288,8 @@ SYV_participants_summary_agg_merged['vote_symbol'] = np.where(SYV_participants_s
 
 
 # get rid of decimals
-SYV_participants_summary_agg_merged['delegator_diff'] = SYV_participants_summary_agg_merged['delegator_diff'].astype(int).apply('{:,}'.format)
-SYV_participants_summary_agg_merged['vote_diff'] = SYV_participants_summary_agg_merged['vote_diff'].astype(int).apply('{:,}'.format)
-SYV_participants_summary_agg_merged['delegator'] = SYV_participants_summary_agg_merged['delegator'].astype(int).apply('{:,}'.format)
-SYV_participants_summary_agg_merged['sum_raffle_tickets'] = SYV_participants_summary_agg_merged['sum_raffle_tickets'].astype(int).apply('{:,}'.format)
-SYV_participants_summary_agg_merged['sum_votes'] = SYV_participants_summary_agg_merged['sum_votes'].astype(int).apply('{:,}'.format)
+m = (SYV_participants_summary_agg_merged.dtypes=='float')
+SYV_participants_summary_agg_merged.loc[:,m] = SYV_participants_summary_agg_merged.loc[:,m].astype(int).applymap('{:,}'.format)
 
 # adding the delegation differences
 this_order = ["11-19", "20-29","30-39","40-49","50-59","60-69","70-79","80-89","90-99","100","Total"]
@@ -1300,7 +1304,8 @@ SYV_participants_summary_agg_merged['vote_diff'] = np.where(SYV_participants_sum
 SYV_participants_summary_agg_merged['vote_diff'] = ' (' + SYV_participants_summary_agg_merged['vote_diff'] + ')'
 SYV_participants_summary_agg_merged['sum_votes'] = SYV_participants_summary_agg_merged['sum_votes'] + SYV_participants_summary_agg_merged['vote_diff']
 
-SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.sort_values(by='NumPReps_bin')[['NumPReps_bin','raffle_tickets', 'delegator', 'sum_raffle_tickets', 'sum_votes']]
+SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.sort_values(by='NumPReps_bin')\
+    [['NumPReps_bin','raffle_tickets', 'delegator', 'sum_raffle_tickets', 'sum_votes']]
 
 
 SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.\
