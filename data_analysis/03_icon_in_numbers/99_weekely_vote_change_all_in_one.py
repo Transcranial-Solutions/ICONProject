@@ -1364,7 +1364,34 @@ SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path
 print(unique_date[-1:])
 
 
-# first_time_voter_history = combined_df.sort_values(['week', 'new_wallet_Voted'], ascending=False).groupby(['week']).first()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+first_time_voter_history = combined_df.sort_values([measuring_interval, 'new_wallet_Voted'], ascending=False).\
+groupby([measuring_interval]).first().reset_index()
+
+sns.set(style="ticks", rc={"lines.linewidth": 3})
+plt.style.use(['dark_background'])
+f, ax = plt.subplots(figsize=(12, 8))
+sns.barplot(x=measuring_interval, y='new_wallet_Voted', hue='validator_name', data=first_time_voter_history,
+            palette=sns.color_palette('husl', n_colors=3))
+h,l = ax.get_legend_handles_labels()
+
+ax.set_xlabel('Weeks', fontsize=14, weight='bold', labelpad=10)
+ax.set_ylabel('Number of First-Time Voters', fontsize=14, weight='bold', labelpad=10)
+ax.set_title('P-Reps with the most First-Time Voters since August 2019', fontsize=14,
+             weight='bold')
+
+sns.despine(offset=5, trim=True)
+plt.tight_layout()
+ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
+ax.grid(False)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+n = 2  # Keeps every n-th label
+[l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
+plt.tight_layout()
 
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
 # voter ranking vs prep ranking
@@ -1411,4 +1438,44 @@ print(unique_date[-1:])
 #           'First Time Voter Ranking (median)',
 #           'P-Rep Ranking (median)',
 #           'First Time Voter Ranking vs P-Rep Ranking (Weekly)')
+
+
+## plotting for the progress of vote spreading
+Prep_11_plus = SYV_participants_summary.groupby([measuring_interval])['sum_votes'].agg(['count', 'sum']).reset_index()
+total = "n=" + Prep_11_plus['count'].apply('{:,}'.format).unique()
+
+
+sns.set(style="ticks", rc={"lines.linewidth": 3})
+plt.style.use(['dark_background'])
+f, ax = plt.subplots(figsize=(8, 6))
+sns.barplot(x=measuring_interval, y='sum', data=Prep_11_plus,
+            palette=sns.cubehelix_palette(len(Prep_11_plus), start=.5, rot=-.75))
+h,l = ax.get_legend_handles_labels()
+
+ax.set_xlabel('Weeks', fontsize=14, weight='bold', labelpad=10)
+ax.set_ylabel('Votes (ICX)', fontsize=14, weight='bold', labelpad=10)
+ax.set_title("Votes in '11+ P-Rep' Voted Category", fontsize=14,
+             weight='bold')
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. format(x/1000000) + ' M'))
+
+
+sns.despine(offset=5, trim=True)
+plt.tight_layout()
+ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
+ax.grid(False)
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+
+for i in range(len(total)):
+    p = ax.patches[i]
+    height = p.get_height()
+    ax.text(p.get_x() + p.get_width() / 2., height + height * 0.02,
+                total[i],
+                ha="center",
+            fontsize=10)
+
+
+plt.tight_layout()
+
+
 
