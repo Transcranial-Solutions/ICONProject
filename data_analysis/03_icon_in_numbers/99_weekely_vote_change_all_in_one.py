@@ -1,6 +1,6 @@
 #########################################################################
 ## Project: ICON in Numbers                                            ##
-## Date: July 2020                                                     ##
+## Date: July 2020 (updated Oct 2020)                                  ##
 ## Author: Tono / Sung Wook Chung (Transcranial Solutions)             ##
 ## transcranial.solutions@gmail.com                                    ##
 ##                                                                     ##
@@ -43,7 +43,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-41', '2020-40']
+terms = ['2020-42', '2020-41']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -612,7 +612,7 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-1000000, ymax_val=1200000, ytick_scale=200000, # these are actual ylims & tick interval20
+                ymin_val=-600000, ymax_val=800000, ytick_scale=200000, # these are actual ylims & tick interval20
                 voter_mult=0.91, voter_diff_mult=1.01, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
@@ -795,8 +795,8 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-10, ymax_val=30, ytick_scale=5,
-                    first_time_voter_mult=0.90, new_voter_mult=1.15, ## change these
+                    ymin_val=-15, ymax_val=30, ytick_scale=5,
+                    first_time_voter_mult=0.95, new_voter_mult=1.10, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.89,
                     topF_1_mult=0.65, topF_2_mult=0.59)
 # saving
