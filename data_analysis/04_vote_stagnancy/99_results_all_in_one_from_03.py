@@ -477,8 +477,6 @@ today_df_only_stag_user = today_df.copy()
 # today_df_only_stag_user = today_df_only_stag_user[~today_df_only_stag_user.isin(not_stagnant_user.to_dict('l')).any(1)]
 today_df_only_stag_user = today_df_only_stag_user[~today_df_only_stag_user.isin(not_stagnant_user.to_dict('l')).iloc[:, 0]]
 
-
-
 def stag_votes_scott(df, stag_days, inVar):
     # df = df[df[inVar] >= stag_days] # outdated -- this is by P-Rep, not by user
     temp_df = df[df[inVar] < stag_days].drop_duplicates(['delegator'])[['delegator']] # finding users with less than stag_days
