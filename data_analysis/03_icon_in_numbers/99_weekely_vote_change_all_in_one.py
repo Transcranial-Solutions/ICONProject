@@ -1367,9 +1367,21 @@ print(unique_date[-1:])
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+voter_rank = combined_df.copy()
+voter_rank['prep_ranking'] = voter_rank.sort_values([measuring_interval, 'cum_votes'], ascending=False) \
+    .groupby(measuring_interval)['cum_votes'].rank(method='first', ascending=False).astype(int)
 
-first_time_voter_history = combined_df.sort_values([measuring_interval, 'new_wallet_Voted'], ascending=False).\
+first_time_voter_history = voter_rank.sort_values([measuring_interval, 'new_wallet_Voted'], ascending=False).\
 groupby([measuring_interval]).first().reset_index()
+
+# just to see the behaviour of first-time voters
+# first_time_voter_history = voter_rank.sort_values([measuring_interval, 'new_wallet_Voted'], ascending=False).\
+# groupby([measuring_interval]).head(10).reset_index()
+# median_rank = first_time_voter_history.groupby(["validator_name"])['prep_ranking'].agg('median').astype(int)
+# top10_new_voter = first_time_voter_history.groupby(["validator_name"])[measuring_interval].\
+#     agg('count').sort_values(ascending=False).reset_index()
+# top10_new_voter.merge(median_rank, on='validator_name')
+
 
 sns.set(style="ticks", rc={"lines.linewidth": 3})
 plt.style.use(['dark_background'])
