@@ -62,7 +62,7 @@ def get_data_from_div(corresponding_number):
     df = df.rename(columns=df.iloc[0]).drop(df.index[0]).reset_index(drop=True)
     return (df)
 
-
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 ## dataframes
 
 # transactions
