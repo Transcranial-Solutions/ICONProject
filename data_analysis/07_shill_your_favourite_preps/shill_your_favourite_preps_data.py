@@ -66,6 +66,7 @@ text = shill_prep_data.drop_duplicates(['Reasons'])[['Reasons']]
 text = text['Reasons'].str.replace('\n', '').str.replace('-', '')
 text = text.values
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # reasons for each prep
 def wc_prep(df, prep):
     text = df[shill_prep_data['Preps'] == prep]
@@ -74,13 +75,6 @@ def wc_prep(df, prep):
     text = text.values
     return(text)
 
-text_pinas = wc_prep(shill_prep_data, '@IconPilipinas')
-text_iconbet = wc_prep(shill_prep_data, '@IconbetP')
-text_reliantnode = wc_prep(shill_prep_data, '@ReliantNode')
-text_rhizome = wc_prep(shill_prep_data, '@RhizomeICX')
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def plot_cloud(wordcloud):
     # matplotlib.rcParams["figure.dpi"] = 100
     # Set figure size
@@ -99,11 +93,6 @@ def gen_wc(text):
               stopwords=STOPWORDS).generate(str(text))
     return(wc)
 
-
-
-
-
-
 # Plot
 # preps
 wordcloud_preps = gen_wc(prep)
@@ -115,31 +104,28 @@ wordcloud_reasons = gen_wc(text)
 plot_cloud(wordcloud_reasons)
 plt.savefig(os.path.join(inPath, 'wc_reasons.png'), facecolor='k', bbox_inches='tight')
 
-# iconpinas
-wordcloud_pinas = gen_wc(text_pinas)
-plot_cloud(wordcloud_pinas)
-plt.savefig(os.path.join(inPath, 'wc_iconpinas.png'), facecolor='k', bbox_inches='tight')
-
-# iconbet
-wordcloud_iconbet = gen_wc(text_iconbet)
-plot_cloud(wordcloud_iconbet)
-plt.savefig(os.path.join(inPath, 'wc_iconbet.png'), facecolor='k', bbox_inches='tight')
-
-
-# reliantnode
-wordcloud_reliantnode = gen_wc(text_reliantnode)
-plot_cloud(wordcloud_reliantnode)
-plt.savefig(os.path.join(inPath, 'wc_reliantnode.png'), facecolor='k', bbox_inches='tight')
-
-
-# rhizome
-wordcloud_rhizome = gen_wc(text_rhizome)
-plot_cloud(wordcloud_rhizome)
-plt.savefig(os.path.join(inPath, 'wc_rhizome.png'), facecolor='k', bbox_inches='tight')
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
+
+unique_prep = shill_prep_data.drop_duplicates(['Preps'])[['Preps']]
+
+# loop around P-Reps
+for k in range(len(unique_prep)):
+
+    # prep name
+    prep_name = unique_prep['Preps'].iloc[k].replace('@', '')
+
+    # prep reasons
+    prep_texts = wc_prep(shill_prep_data, unique_prep['Preps'].iloc[k])
+
+    # wordcloud and save
+    wordcloud_preps_text = gen_wc(prep_texts)
+    plot_cloud(wordcloud_preps_text)
+    plt.savefig(os.path.join(inPath, 'wc_' + prep_name + '.png'), facecolor='k', bbox_inches='tight')
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
 
