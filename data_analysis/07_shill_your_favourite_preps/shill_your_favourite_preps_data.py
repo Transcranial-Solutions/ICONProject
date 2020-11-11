@@ -78,7 +78,7 @@ def wc_prep(df, prep):
 def plot_cloud(wordcloud):
     # matplotlib.rcParams["figure.dpi"] = 100
     # Set figure size
-    # plt.figure(figsize=(9, 6))
+    # plt.figure(figsize=(12, 4))
     plt.figure(figsize=(16, 8))
     # Display image
     plt.imshow(wordcloud)
