@@ -176,6 +176,10 @@ for k in range(len(prep_address)):
 # concatenate them into a dataframe -- by validator_name
 df = pd.concat(all_df)
 unique_date = df.drop_duplicates(['year', 'month', 'week', 'date', 'day'])[['year', 'month', 'week', 'date', 'day']].sort_values('date')
+
+# get unique interval
+unique_interval = df.drop_duplicates(measuring_interval)[[measuring_interval]].sort_values(measuring_interval).reset_index(drop=True)
+
 df = df.groupby(['validator_name', 'delegator', measuring_interval]).agg('sum').reset_index()
 df = df.sort_values(by=['validator_name', 'delegator', measuring_interval]).reset_index(drop=True)
 
@@ -1121,7 +1125,10 @@ vote_stagnancy['pct_votes'] = vote_stagnancy['votes'] / vote_stagnancy['total_vo
 # vote stagnancy % by voters
 vote_stagnancy['total_voters'] = vote_stagnancy.groupby(measuring_interval)['voters'].transform('sum')
 vote_stagnancy['pct_voters'] = vote_stagnancy['voters'] / vote_stagnancy['total_voters']
-vote_stagnancy = vote_stagnancy[vote_stagnancy[measuring_interval] != '2019-34']  # for order of the plot
+
+first_appearing_interval = unique_interval[measuring_interval][0]
+# vote_stagnancy = vote_stagnancy[vote_stagnancy[measuring_interval] != '2019-34']  # for order of the plot
+vote_stagnancy = vote_stagnancy[vote_stagnancy[measuring_interval] != first_appearing_interval]  # for order of the plot
 vote_stagnancy = vote_stagnancy.sort_values(by=['Stagnant', measuring_interval])
 
 # currPath = os.getcwd()
