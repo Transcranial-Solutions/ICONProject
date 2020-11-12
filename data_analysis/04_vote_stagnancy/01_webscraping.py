@@ -99,6 +99,7 @@ if not os.path.exists(votesPath):
 
 # loop through P-Rep addresses and extract information, make into data frame, save as .csv
 for k in range(len(prep_address)):
+# for k in range(130,len(prep_address)):
 
     # Request url, no limit here
     req = Request('https://api.iconvotemonitor.com/delegations?validators='+ prep_address[k], headers={'User-Agent': 'Mozilla/5.0'})
@@ -123,17 +124,17 @@ for k in range(len(prep_address)):
          'votes': votes,
          'created_at': created_at}
 
-     # convert into dataframe
-     df = pd.DataFrame(data=d)
+    # convert into dataframe
+    df = pd.DataFrame(data=d)
 
-     # convert timestamp into date & day
-     df['datetime'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%Y-%m-%d %H:%M:%S")
-     df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
+    # convert timestamp into date & day
+    df['datetime'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%Y-%m-%d %H:%M:%S")
+    df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
 
-     # write to csv
-     df.to_csv(os.path.join(votesPath, validator[0] + '.csv'), index=False)
+    try:
+        # write to csv
+        df.to_csv(os.path.join(votesPath, validator[0] + '.csv'), index=False)
 
-        try:
-            print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
-        except:
-            print("An exception occurred - Possibly a new P-Rep without votes")
+        print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
+    except:
+        print("An exception occurred - Possibly a new P-Rep without votes")
