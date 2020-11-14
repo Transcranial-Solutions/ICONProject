@@ -24,6 +24,11 @@ This is for the analysis of vote stagnancy on ICON network.
 Webscrapes the data, saves into csv, manipulates & calculates, produces images.
 Medium article: https://medium.com/@transcranial.solutions/investigation-of-vote-stagnancy-on-icon-network-icx-5aab416b8b2e
 
+## 07_shill_your_favourite_preps
+This is the feedbacks from the community about what their views are on their favourite P-Reps.
+Qualitative data are presented using word cloud.
+Medium article: https://transcranial-solutions.medium.com/shill-your-favourite-p-reps-results-fca2ae729916
+
 If you have any question or feedback, please e-mail at transcranial.solutions@gmail.com.
 
 Thank you.
