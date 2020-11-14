@@ -43,7 +43,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-44', '2020-43']
+terms = ['2020-45', '2020-44']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -140,36 +140,36 @@ for k in range(len(prep_address)):
          'votes': votes,
          'created_at': created_at}
 
-     # convert into dataframe
-     df = pd.DataFrame(data=d)
+    # convert into dataframe
+    df = pd.DataFrame(data=d)
 
-     # convert timestamp into Year & measuring_interval (Week/Month), and summarise data by year + measuring_interval
-     # df['datetime'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%Y-%m-%d %H:%M:%S")
-     df['year'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y")
-     df['month'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m")
-     df['week'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%U")
-     df['date'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m-%d")
-     df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%U-%a")
+    # convert timestamp into Year & measuring_interval (Week/Month), and summarise data by year + measuring_interval
+    # df['datetime'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%Y-%m-%d %H:%M:%S")
+    df['year'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y")
+    df['month'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m")
+    df['week'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%U")
+    df['date'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m-%d")
+    df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%U-%a")
 
-# if measuring_interval == 'week':
-     #     df[measuring_interval] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%U")
-     # elif measuring_interval == 'month':
-     #     df[measuring_interval] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%m")
+    # if measuring_interval == 'week':
+    #     df[measuring_interval] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%U")
+    # elif measuring_interval == 'month':
+    #     df[measuring_interval] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%m")
 
-     # df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
-     df.drop(columns=['created_at'], inplace=True)
+    # df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
+    df.drop(columns=['created_at'], inplace=True)
 
-     df['votes'] = pd.to_numeric(df['votes'])
+    df['votes'] = pd.to_numeric(df['votes'])
 
-     df = df.groupby(['validator_name', 'delegator', 'year', 'month', 'week', 'date', 'day']).agg('sum').reset_index()
-     # df = df.groupby(['validator_name', 'delegator', 'year', measuring_interval]).agg('sum').reset_index()
+    df = df.groupby(['validator_name', 'delegator', 'year', 'month', 'week', 'date', 'day']).agg('sum').reset_index()
+    # df = df.groupby(['validator_name', 'delegator', 'year', measuring_interval]).agg('sum').reset_index()
 
-     all_df.append(df)
+    all_df.append(df)
 
-     try:
-        print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
-     except:
-        print("An exception occurred - Possibly a new P-Rep without votes")
+    try:
+       print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
+    except:
+       print("An exception occurred - Possibly a new P-Rep without votes")
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Data -- by validator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
