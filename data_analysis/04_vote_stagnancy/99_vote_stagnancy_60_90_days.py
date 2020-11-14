@@ -16,10 +16,9 @@
 # This file extracts information from two main different sources
 # (https://iconvotemonitor.com/) & (https://tracker.icon.foundation/)
 
-# Extracts P-RREP information from https://tracker.icon.foundation/
 # Extracts vote information (delegator, validator, amount, etc) from https://iconvotemonitor.com/
 # Big shout-out to Everstake!
-# Data put together in a DataFrame, saved separately in CSV format.
+# Data put together in a DataFrame, saved in CSV format.
 
 # import json library
 import urllib
