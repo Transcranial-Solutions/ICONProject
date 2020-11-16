@@ -616,8 +616,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-500000, ymax_val=600000, ytick_scale=100000, # these are actual ylims & tick interval20
-                voter_mult=0.91, voter_diff_mult=1.01, # voter change multiplier
+                ymin_val=-600000, ymax_val=2200000, ytick_scale=200000, # these are actual ylims & tick interval20
+                voter_mult=0.85, voter_diff_mult=1.05, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -799,8 +799,8 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-40, ymax_val=30, ytick_scale=5,
-                    first_time_voter_mult=1.05, new_voter_mult=1.12, ## change these
+                    ymin_val=-25, ymax_val=55, ytick_scale=5,
+                    first_time_voter_mult=0.98, new_voter_mult=1.12, ## change these
                     top10_1_mult=0.85, top10_2_mult=0.75,
                     topF_1_mult=0.45, topF_2_mult=0.35)
 # saving
