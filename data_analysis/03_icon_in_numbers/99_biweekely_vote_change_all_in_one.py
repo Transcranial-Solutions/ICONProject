@@ -1373,19 +1373,9 @@ render_mpl_table(SYV_participants_summary_agg_merged, header_columns=0, col_widt
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_spread_your_votes_participants.png"))
 
-# for lucky draw
-SYV_participants_luckydraw_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
-SYV_participants_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
-SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.groupby(['delegator',measuring_interval]).\
-    head(SYV_participants_this_term['raffle_tickets'])[['delegator', measuring_interval, 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets']]
-SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.sort_values(by='how_many_prep_voted', ascending=False)
-SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_LuckyDraw_' + this_term + '.csv'), index=False)
 
 
-# import random
-# random_number = random.randint(1, 10000)
-# print(random_number)
-# SYV_participants_luckydraw.sample(frac=1, random_state=random_number).head(1)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
 # checking if the range for the data is complete (just by looking at the dates)
@@ -1519,4 +1509,100 @@ for i in range(len(total)):
 plt.tight_layout()
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lucky Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
+# for lucky draw
+SYV_participants_luckydraw_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
+SYV_participants_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
+SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.groupby(['delegator',measuring_interval]).\
+    head(SYV_participants_this_term['raffle_tickets'])[['delegator', measuring_interval, 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets']]
+SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.sort_values(by='how_many_prep_voted', ascending=False)
+SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_LuckyDraw_' + this_term + '.csv'), index=False)
+
+
+# this to be removed from small prize -- manually add address
+grand_prize_winner = 'hxb74fd8df615edb4894923e72ac0e1468497e0c30'
+
+grand_prize_winner_details = SYV_participants_luckydraw_this_term[SYV_participants_luckydraw_this_term['delegator'] == grand_prize_winner].\
+    drop_duplicates(['delegator','biweek','how_many_prep_voted','NumPReps_bin'])
+
+grand_prize_winner_details['prize_type'] = 'grand_prize'
+grand_prize_winner_details['turn'] = 'Wheel_of_Fortune'
+
+
+# lucky draw for small prize
+SYV_participants_luckydraw_small_prize = SYV_participants_luckydraw_this_term[SYV_participants_luckydraw_this_term['delegator'] != grand_prize_winner].\
+    drop_duplicates(['delegator','biweek','how_many_prep_voted','NumPReps_bin'])
+
+
+# small prize winners
+from datetime import datetime
+try:
+    from itertools import zip_longest
+except ImportError:
+    # Python 2
+    from itertools import izip_longest as zip_longest
+
+No_of_total_winners = 10
+
+NumPReps_bin = SYV_participants_luckydraw_small_prize.\
+    drop_duplicates(['NumPReps_bin']).\
+    sort_values(by='raffle_tickets', ascending=False)[['NumPReps_bin']].\
+    reset_index(drop=True)
+
+
+small_prize_winners = []
+for i in range(No_of_total_winners):
+
+    small_prize_winners_temp = SYV_participants_luckydraw_small_prize.groupby('NumPReps_bin').\
+        apply(lambda  x: x.sample(n=1, random_state=datetime.now().microsecond)).reset_index(drop=True).\
+        sort_values(by='raffle_tickets', ascending=False)
+
+    small_prize_winners.append(small_prize_winners_temp)
+
+small_prize_winners = pd.concat(small_prize_winners)
+small_prize_winners = small_prize_winners.drop_duplicates('delegator').sort_values(by='raffle_tickets', ascending=False)
+
+
+# assigning number of winners depending on total number of winners and number of brackets available
+division_no = int(No_of_total_winners / len(NumPReps_bin))
+remainder_no = No_of_total_winners % len(NumPReps_bin)
+lists = [[division_no] * len(NumPReps_bin), [division_no] * remainder_no]
+prize_division = pd.DataFrame({'default_winners': [sum(x) for x in zip_longest(*lists, fillvalue=0)]})
+
+# logic to get first turn winner and leftovers
+len_winners_group = small_prize_winners.groupby('raffle_tickets')['delegator'].\
+    agg('count').reset_index().sort_values(by='raffle_tickets', ascending=False).reset_index(drop=True)
+len_winners_group = pd.concat([len_winners_group, prize_division], axis=1)
+len_winners_group['leftover'] = len_winners_group['delegator'] - len_winners_group['default_winners']
+len_winners_group['leftover'] = np.where(len_winners_group['leftover'] < 0, len_winners_group['leftover'], 0)
+len_winners_group['first_turn_winner'] = len_winners_group['default_winners'] + len_winners_group['leftover']
+
+# first turn winners
+first_turn_winner = len_winners_group[['raffle_tickets', 'first_turn_winner']]
+first_turn_winner = small_prize_winners.merge(first_turn_winner, on='raffle_tickets', how='left')
+first_turn_winner = (first_turn_winner.groupby('raffle_tickets', group_keys=False)
+        .apply(lambda x: x.head(x['first_turn_winner'].iat[0]))).drop(columns='first_turn_winner')
+first_turn_winner['prize_type'] = 'small_prize'
+first_turn_winner['turn'] = 'first'
+
+
+# 2nd turn winner - leftovers will do re-draw
+second_turn = abs(sum(len_winners_group['leftover']))
+second_turn_winner = small_prize_winners[~small_prize_winners.delegator.isin(first_turn_winner.delegator)]
+second_turn_winner = second_turn_winner.sample(n=second_turn,
+                                               random_state=datetime.now().microsecond,
+                                               weights=second_turn_winner.raffle_tickets)
+second_turn_winner['prize_type'] = 'small_prize'
+second_turn_winner['turn'] = 'second'
+
+all_prize_winners = grand_prize_winner_details.\
+    append(first_turn_winner).\
+    append(second_turn_winner).\
+    sort_values(by=['turn','raffle_tickets'], ascending=[True,False]).\
+    reset_index(drop=True)
+
+all_prize_winners.drop(columns='NumPReps_bin').\
+    to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_PrizeWinners_' + this_term + '.csv'), index=False)
