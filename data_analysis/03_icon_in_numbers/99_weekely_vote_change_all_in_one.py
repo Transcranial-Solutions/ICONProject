@@ -43,7 +43,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-45', '2020-44']
+terms = ['2020-46', '2020-45']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -471,6 +471,9 @@ term_change_comb = combined_df[combined_df[measuring_interval].isin(terms)]
 this_term_change_comb = combined_df[combined_df[measuring_interval].isin([this_term])]
 
 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 ## votes change this week
 
@@ -616,7 +619,7 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-600000, ymax_val=2200000, ytick_scale=200000, # these are actual ylims & tick interval20
+                ymin_val=-600000, ymax_val=1800000, ytick_scale=200000, # these are actual ylims & tick interval20
                 voter_mult=0.85, voter_diff_mult=1.05, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
@@ -799,10 +802,10 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-25, ymax_val=55, ytick_scale=5,
-                    first_time_voter_mult=0.98, new_voter_mult=1.12, ## change these
-                    top10_1_mult=0.85, top10_2_mult=0.75,
-                    topF_1_mult=0.45, topF_2_mult=0.35)
+                    ymin_val=-15, ymax_val=60, ytick_scale=5,
+                    first_time_voter_mult=0.95, new_voter_mult=1.15, ## change these
+                    top10_1_mult=0.95, top10_2_mult=0.87,
+                    topF_1_mult=0.65, topF_2_mult=0.57)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02_' + measuring_interval + "_voter_change.png"))
 
