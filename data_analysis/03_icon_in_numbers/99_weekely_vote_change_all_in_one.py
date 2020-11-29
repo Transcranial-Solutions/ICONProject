@@ -24,6 +24,8 @@ import json
 import pandas as pd
 import numpy as np
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from time import time
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
@@ -43,7 +45,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-46', '2020-45']
+terms = ['2020-47', '2020-46']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -106,16 +108,16 @@ prep_d = {'address': prep_address,
 
 # convert into dataframe
 prep_df = pd.DataFrame(data=prep_d)
+len_prep_address = len(prep_address)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Extraction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-all_df = []
-# loop through P-Rep addresses and extract information, make into data frame, save as .csv
-for k in range(len(prep_address)):
-# for k in range(100,128):
+count = 0
+def get_votes(prep_address, len_prep_address):
+    global count
 
     # Request url, no limit here
-    req = Request('https://api.iconvotemonitor.com/delegations?validators='+ prep_address[k], headers={'User-Agent': 'Mozilla/5.0'})
+    req = Request('https://api.iconvotemonitor.com/delegations?validators=' + prep_address, headers={'User-Agent': 'Mozilla/5.0'})
 
     # req = Request('https://api.iconvotemonitor.com/delegations?validators='+ prep_address[k] + '&limit=' + str(max_extract_count),
     #               headers={'User-Agent': 'Mozilla/5.0'})
@@ -130,8 +132,6 @@ for k in range(len(prep_address)):
     created_at = extract_values(jreq, 'created_at')
     validator_name = extract_values(jreq, 'validator_name')
 
-    d=[]
-    df=[]
     # combining strings into list
     d = {# 'block_id': block_id,
          'delegator': delegator,
@@ -164,17 +164,34 @@ for k in range(len(prep_address)):
     df = df.groupby(['validator_name', 'delegator', 'year', 'month', 'week', 'date', 'day']).agg('sum').reset_index()
     # df = df.groupby(['validator_name', 'delegator', 'year', measuring_interval]).agg('sum').reset_index()
 
-    all_df.append(df)
-
     try:
-       print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
+       print("Votes for " + validator_name[0] + ": Done - " + str(count) + " out of " + str(len_prep_address))
     except:
        print("An exception occurred - Possibly a new P-Rep without votes")
 
+    count += 1
+
+    return(df)
+
+# threading
+start = time()
+
+all_votes = []
+with ThreadPoolExecutor(max_workers=5) as executor:
+    for k in range(len(prep_address)):
+        all_votes.append(executor.submit(get_votes, prep_address[k], len_prep_address))
+
+temp_df = []
+for task in as_completed(all_votes):
+    temp_df.append(task.result())
+
+print(f'Time taken: {time() - start}')
+
+# all votes per wallet
+df = pd.concat(temp_df)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Data -- by validator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # concatenate them into a dataframe -- by validator_name
-df = pd.concat(all_df)
 unique_date = df.drop_duplicates(['year', 'month', 'week', 'date', 'day'])[['year', 'month', 'week', 'date', 'day']].sort_values('date')
 
 # get unique interval
@@ -1289,7 +1306,7 @@ SYV_participants_summary_agg_last_term_delegator = SYV_participants_summary_agg_
 SYV_participants_summary_agg_merged = pd.merge(SYV_participants_summary_agg_this_term,
                                                SYV_participants_summary_agg_last_term_delegator,
                                                on='NumPReps_bin',
-                                               how='left')
+                                               how='left').fillna(0)
 SYV_participants_summary_agg_merged['delegator_diff'] = SYV_participants_summary_agg_merged['delegator'] - SYV_participants_summary_agg_merged['delegator_prev']
 SYV_participants_summary_agg_merged['vote_diff'] = SYV_participants_summary_agg_merged['sum_votes'] - SYV_participants_summary_agg_merged['sum_votes_prev']
 
