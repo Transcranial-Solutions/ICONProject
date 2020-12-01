@@ -647,8 +647,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-500000, ymax_val=800000, ytick_scale=100000, # these are actual ylims & tick interval20
-                voter_mult=0.91, voter_diff_mult=1.01, # voter change multiplier
+                ymin_val=-800000, ymax_val=2400000, ytick_scale=400000, # these are actual ylims & tick interval20
+                voter_mult=0.91, voter_diff_mult=1.11, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -825,8 +825,8 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-60, ymax_val=60, ytick_scale=10,
-                    first_time_voter_mult=1.05, new_voter_mult=1.12, ## change these
+                    ymin_val=-40, ymax_val=80, ytick_scale=10,
+                    first_time_voter_mult=1.00, new_voter_mult=1.12, ## change these
                     top10_1_mult=0.85, top10_2_mult=0.75,
                     topF_1_mult=0.45, topF_2_mult=0.35)
 # saving
@@ -1610,6 +1610,13 @@ all_prize_winners = grand_prize_winner_details.\
     append(second_turn_winner).\
     sort_values(by=['turn','raffle_tickets'], ascending=[True,False]).\
     reset_index(drop=True)
+
+# total pool of money here
+total_prize_money = 500
+all_prize_winners['winnings'] = np.where(all_prize_winners['turn'] == 'Wheel_of_Fortune',
+                                         'US$' + str(int(total_prize_money/2)),
+                                         'US$' + str(int(total_prize_money/2/10)))
+
 
 all_prize_winners.drop(columns='NumPReps_bin').\
     to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_PrizeWinners_' + this_term + '.csv'), index=False)
