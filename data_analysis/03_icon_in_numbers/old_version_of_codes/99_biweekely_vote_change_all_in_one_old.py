@@ -950,7 +950,7 @@ def bin_NumPReps(df):
     elif 80 <= df['how_many_prep_voted'] <= 89:
         val = '80-89'
     elif 90 <= df['how_many_prep_voted'] <= 99:
-        val = '50-59'
+        val = '90-99'
     elif df['how_many_prep_voted'] >= 100:
         val = '100'
     else:
