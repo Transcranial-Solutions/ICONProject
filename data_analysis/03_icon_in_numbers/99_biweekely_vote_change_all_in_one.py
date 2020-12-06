@@ -11,8 +11,8 @@
 #########################################################################
 
 # This is for 'ICON in Numbers' biweekly series.
-# It is an automated figure generator based on the time of your choosing (mainly tailored for weekly).
-# Terms will require the timeframe to have finished (e.g. this may not work as intended if week 25 is still on-going).
+# It is an automated figure generator based on the time of your choosing (tailored for biweekly).
+# Terms will require the timeframe to have finished.
 # This will webscrape iconvotemonitor.com by Everstake and also P-Rep information from ICON Foundation site.
 # It will then do data manipulation, recoding, calculation, aggregation and generate multiple figures.
 # Please note that depending on the amount of vote change, the scale may be off, and needs to be manually modified (ylim mostly).
@@ -45,7 +45,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day"// "biweek" //
-terms = ['2020-45 & 2020-46', '2020-43 & 2020-44']
+terms = ['2020-47 & 2020-48', '2020-45 & 2020-46']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -157,7 +157,7 @@ def get_votes(prep_address, len_prep_address):
     # df = df.groupby(['validator_name', 'delegator', 'year', measuring_interval]).agg('sum').reset_index()
 
     try:
-       print("Votes for " + validator_name[0] + ": Done - " + str(count) + " out of " + str(len_prep_address))
+       print("Votes for " + validator_name[0] + ": Done - " + str(count+1) + " out of " + str(len_prep_address))
     except:
        print("An exception occurred - Possibly a new P-Rep without votes")
 
@@ -169,7 +169,7 @@ def get_votes(prep_address, len_prep_address):
 start = time()
 
 all_votes = []
-with ThreadPoolExecutor(max_workers=5) as executor:
+with ThreadPoolExecutor(max_workers=3) as executor:
     for k in range(len(prep_address)):
         all_votes.append(executor.submit(get_votes, prep_address[k], len_prep_address))
 
@@ -365,7 +365,7 @@ vote_status_count = vote_status_count.\
     drop(columns=['delegator', 'votes', 'cum_votes', 'how_many_prep_voted', 'unvoted_and_left',
                   'cum_unvoted_and_left']).\
     rename(columns={'vote_status_A': 'Voted', 'vote_status_B': 'Unvoted',
-                    'returned_voting': 'U_Voted', 'stopped_voting': 'U_Unvoted', ## these are for counts per week overall
+                    'returned_voting': 'U_Voted', 'stopped_voting': 'U_Unvoted', ## these are for counts per biweek overall
                     'new_wallet_A': 'new_wallet_Voted', 'new_wallet_B': 'new_wallet_Unvoted'})
 
 vote_status_count['Voter_diff'] = vote_status_count['Voted'] - vote_status_count['Unvoted']
@@ -502,7 +502,7 @@ this_term_change_comb = combined_df[combined_df[measuring_interval].isin([this_t
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-## votes change this week
+## votes change this term
 
 # overall vote change (turning them into texts)
 total_term_change = term_change_comb.groupby([measuring_interval])[['votes','cum_votes']].agg('sum').reset_index()
@@ -647,8 +647,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-800000, ymax_val=2400000, ytick_scale=400000, # these are actual ylims & tick interval20
-                voter_mult=0.91, voter_diff_mult=1.11, # voter change multiplier
+                ymin_val=-800000, ymax_val=1200000, ytick_scale=200000, # these are actual ylims & tick interval20
+                voter_mult=0.95, voter_diff_mult=1.11, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -825,10 +825,10 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-40, ymax_val=80, ytick_scale=10,
-                    first_time_voter_mult=1.00, new_voter_mult=1.12, ## change these
-                    top10_1_mult=0.85, top10_2_mult=0.75,
-                    topF_1_mult=0.45, topF_2_mult=0.35)
+                    ymin_val=-100, ymax_val=300, ytick_scale=50,
+                    first_time_voter_mult=0.95, new_voter_mult=1.12, ## change these
+                    top10_1_mult=0.90, top10_2_mult=0.83,
+                    topF_1_mult=0.60, topF_2_mult=0.53)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02_' + measuring_interval + "_voter_change.png"))
 
@@ -957,7 +957,7 @@ def bin_NumPReps(df):
     elif 80 <= df['how_many_prep_voted'] <= 89:
         val = '80-89'
     elif 90 <= df['how_many_prep_voted'] <= 99:
-        val = '50-59'
+        val = '90-99'
     elif df['how_many_prep_voted'] >= 100:
         val = '100'
     else:
@@ -1170,7 +1170,7 @@ h,l = ax.get_legend_handles_labels()
 
 ax.set_xlabel('Week', fontsize=14, weight='bold', labelpad=10)
 ax.set_ylabel('Votes (ICX)', fontsize=14, weight='bold', labelpad=10)
-ax.set_title('Vote Stagnancy \n (based on active voting wallets per week)', fontsize=14, weight='bold', linespacing=1.5)
+ax.set_title('Vote Stagnancy \n (based on active voting wallets per 2-week period)', fontsize=14, weight='bold', linespacing=1.5)
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. format(x/10e6) + ' M'))
 ymin, ymax = ax.get_ylim()
 ymax_set = ymax*1.2
@@ -1564,7 +1564,7 @@ small_prize_winners = []
 for i in range(No_of_total_winners):
 
     small_prize_winners_temp = SYV_participants_luckydraw_small_prize.groupby('NumPReps_bin').\
-        apply(lambda  x: x.sample(n=1, random_state=datetime.now().microsecond)).reset_index(drop=True).\
+        apply(lambda x: x.sample(n=1, random_state=datetime.now().microsecond)).reset_index(drop=True).\
         sort_values(by='raffle_tickets', ascending=False)
 
     small_prize_winners.append(small_prize_winners_temp)
@@ -1605,18 +1605,28 @@ second_turn_winner = second_turn_winner.sample(n=second_turn,
 second_turn_winner['prize_type'] = 'small_prize'
 second_turn_winner['turn'] = 'second'
 
-all_prize_winners = grand_prize_winner_details.\
-    append(first_turn_winner).\
+# appending 1st and 2nd turn first so that it can be 'ranked' by how many p-reps voted
+frst_second_turn_winner = first_turn_winner.\
     append(second_turn_winner).\
-    sort_values(by=['turn','raffle_tickets'], ascending=[True,False]).\
+    sort_values(by=['how_many_prep_voted'], ascending=[False]).\
+    reset_index(drop=True)
+
+all_prize_winners = grand_prize_winner_details.\
+    append(frst_second_turn_winner).\
     reset_index(drop=True)
 
 # total pool of money here
 total_prize_money = 500
-all_prize_winners['winnings'] = np.where(all_prize_winners['turn'] == 'Wheel_of_Fortune',
-                                         'US$' + str(int(total_prize_money/2)),
-                                         'US$' + str(int(total_prize_money/2/10)))
+# all_prize_winners['winnings'] = np.where(all_prize_winners['turn'] == 'Wheel_of_Fortune',
+#                                          'US$' + str(int(total_prize_money/2)),
+#                                          'US$' + str(int(total_prize_money/2/10)))
 
+winnings = [int(total_prize_money/2),40,30,30,30,25,25,20,20,20,10] # manual
+winnings = ['US$ {:}'.format(item) for item in winnings]
+all_prize_winners['winnings'] = winnings
 
 all_prize_winners.drop(columns='NumPReps_bin').\
     to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_PrizeWinners_' + this_term + '.csv'), index=False)
+
+
+
