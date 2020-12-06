@@ -116,41 +116,68 @@ len_prep_address = len(prep_address)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
+#load insight data
 temp_votes = pd.read_csv(os.path.join(inDataPath, 'icx_delegation_20201129.csv'))
 
-temp = temp_votes.copy()
+# jsonise
+temp_votes['data'] = temp_votes['data'].apply(ast.literal_eval)
+delegation_df = pd.json_normalize(temp_votes['data'])
+delegation_df = delegation_df[['params.delegations']]
+delegation_df = delegation_df.rename(columns={'params.delegations': 'delegations'})
 
-# test = ast.literal_eval(temp['data'][2])
+# merging data back with all voting info
+votes_df = pd.concat([temp_votes, delegation_df], axis=1)
+votes_df = votes_df.drop(columns='data')
+votes_df = votes_df.rename(columns={'from_address': 'delegator'})
 
-temp['data'] = temp['data'].apply(ast.literal_eval)
+# extract each variable
+votes_df['validator'] = votes_df.apply(lambda x: extract_values(x['delegations'], 'address'), axis=1)
+votes_df['votes'] = votes_df.apply(lambda x: extract_values(x['delegations'], 'value'), axis=1)
+votes_df = votes_df.drop(columns='delegations')
+votes_df = votes_df.explode('validator')
+votes_df = votes_df.explode('votes')
+votes_df = votes_df.reset_index(drop=True)
 
-
-
-test = pd.json_normalize(temp['data'])
-test = test[['params.delegations']]
-test = test.rename(columns={'params.delegations' : 'delegations'})
-test['delegations'] = test['delegations'].str.get(0)
-
-
-test = test['params.delegations'].apply(ast.literal_eval)
-test2 = pd.json_normalize(test['params.delegations'])
-
-
-temp['data'].apply(pd.Series)
-
-
-test = extract_values(temp['data'][2], 'address')
-
-pd.DataFrame(test)
+test = votes_df.copy()
 
 
 
+test = test.drop_duplicates(['votes'])[['delegator','votes']].sort_values(by='votes')
 
-test = temp.apply(lambda x: extract_values('data', 'address'))
+
+check = test['votes'].apply(int, base=16)
+
+int(test['votes'][3], 0)
+
+int('140a21d7818002', 16)
+
+int('0x1.feb851eb851ecp+1', 16)
+
+import struct
+def double_to_hex(f):
+    return hex(struct.unpack('<Q', struct.pack('<d', f))[0])
+
+double_to_hex(3.99)
+
+(3.99).hex()
+
+test['votes'][3]
 
 
-test = extract_values(temp['data'].to_list(), 'address')
+
+int(check)
+
+
+votes_df['votes'] = int(votes_df['votes'].astype(str), 16)
+
+checks = votes_df[votes_df['delegator'] == 'hxe4fe7f4ca8ea5994d1993e938622809b3e1be504']
+
+checks['votes'] = checks['votes'].apply(int, base=16)
+
+checks2 = votes_df[votes_df['delegator'] == 'hx93862a2eb9f1eb94b2d1077d6ff90d16c9cbb7b3']
+checks2 = temp_votes[temp_votes['from_address'] == 'hx93862a2eb9f1eb94b2d1077d6ff90d16c9cbb7b3']
+
+
 
 
 
