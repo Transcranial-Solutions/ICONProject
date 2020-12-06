@@ -45,7 +45,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-47', '2020-46']
+terms = ['2020-48', '2020-47']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -85,29 +85,40 @@ def extract_values(obj, key):
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ P-Rep Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
 # getting p-rep information from icon governance page
-prep_list_url = Request('https://tracker.icon.foundation/v3/iiss/prep/list?count=1000', headers={'User-Agent': 'Mozilla/5.0'})
+prep_list_url_reg = Request('https://tracker.icon.foundation/v3/iiss/prep/list?count=1000', headers={'User-Agent': 'Mozilla/5.0'})
+prep_list_url_unreg = Request('https://tracker.icon.foundation/v3/iiss/prep/list?count=1000&grade=3', headers={'User-Agent': 'Mozilla/5.0'})
 
 # json format
-jprep_list_url = json.load(urlopen(prep_list_url))
+jprep_list_url_reg = json.load(urlopen(prep_list_url_reg))
+jprep_list_url_unreg = json.load(urlopen(prep_list_url_unreg))
 
-# extracting p-rep information by labels
-prep_address = extract_values(jprep_list_url, 'address')
-prep_name = extract_values(jprep_list_url, 'name')
-prep_country = extract_values(jprep_list_url, 'country')
-prep_city = extract_values(jprep_list_url, 'city')
-prep_logo = extract_values(jprep_list_url, 'logo')
+def extract_json(json_dict, reg_status):
+    # extracting p-rep information by labels
+    prep_address = extract_values(json_dict, 'address')
+    prep_name = extract_values(json_dict, 'name')
+    prep_country = extract_values(json_dict, 'country')
+    prep_city = extract_values(json_dict, 'city')
+    prep_logo = extract_values(json_dict, 'logo')
 
-# combining strings into list
-prep_d = {'address': prep_address,
-     'name': prep_name,
-     'country': prep_country,
-     'city': prep_city,
-     'logo': prep_logo}
+    # combining strings into list
+    prep_d = {'address': prep_address,
+         'name': prep_name,
+         'country': prep_country,
+         'city': prep_city,
+         'logo': prep_logo}
 
-# convert into dataframe
-prep_df = pd.DataFrame(data=prep_d)
+    # convert into dataframe
+    df = pd.DataFrame(data=prep_d)
+    df['status'] = reg_status
+    return(df)
+
+prep_df = []
+prep_df_reg = extract_json(jprep_list_url_reg, 'registered')
+prep_df_unreg = extract_json(jprep_list_url_unreg, 'unregistered')
+prep_df = pd.concat([prep_df_reg, prep_df_unreg]).reset_index(drop=True)
+
+prep_address = prep_df['address']
 len_prep_address = len(prep_address)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Extraction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -165,7 +176,7 @@ def get_votes(prep_address, len_prep_address):
     # df = df.groupby(['validator_name', 'delegator', 'year', measuring_interval]).agg('sum').reset_index()
 
     try:
-       print("Votes for " + validator_name[0] + ": Done - " + str(count) + " out of " + str(len_prep_address))
+       print("Votes for " + validator_name[0] + ": Done - " + str(count+1) + " out of " + str(len_prep_address))
     except:
        print("An exception occurred - Possibly a new P-Rep without votes")
 
@@ -204,7 +215,7 @@ df = df.sort_values(by=['validator_name', 'delegator', measuring_interval]).rese
 df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
 df.loc[df['validator_name'] == 'Piconbello { You Pick We Build }', 'validator_name'] = 'Piconbello'
 df.loc[df['validator_name'] == 'UNBLOCK {ICX GROWTH INCUBATOR}', 'validator_name'] = 'UNBLOCK'
-df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital'
+df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
 
 
 # pivot wider & longer to get all the longitudinal data
