@@ -67,27 +67,39 @@ def extract_values(obj, key):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ P-Rep Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # getting p-rep information from icon governance page
-prep_list_url = Request('https://tracker.icon.foundation/v3/iiss/prep/list?count=1000', headers={'User-Agent': 'Mozilla/5.0'})
+prep_list_url_reg = Request('https://tracker.icon.foundation/v3/iiss/prep/list?count=1000', headers={'User-Agent': 'Mozilla/5.0'})
+prep_list_url_unreg = Request('https://tracker.icon.foundation/v3/iiss/prep/list?count=1000&grade=3', headers={'User-Agent': 'Mozilla/5.0'})
 
 # json format
-jprep_list_url = json.load(urlopen(prep_list_url))
+jprep_list_url_reg = json.load(urlopen(prep_list_url_reg))
+jprep_list_url_unreg = json.load(urlopen(prep_list_url_unreg))
 
-# extracting p-rep information by labels
-prep_address = extract_values(jprep_list_url, 'address')
-prep_name = extract_values(jprep_list_url, 'name')
-prep_country = extract_values(jprep_list_url, 'country')
-prep_city = extract_values(jprep_list_url, 'city')
-prep_logo = extract_values(jprep_list_url, 'logo')
+def extract_json(json_dict, reg_status):
+    # extracting p-rep information by labels
+    prep_address = extract_values(json_dict, 'address')
+    prep_name = extract_values(json_dict, 'name')
+    prep_country = extract_values(json_dict, 'country')
+    prep_city = extract_values(json_dict, 'city')
+    prep_logo = extract_values(json_dict, 'logo')
 
-# combining strings into list
-prep_d = {'address': prep_address,
-     'name': prep_name,
-     'country': prep_country,
-     'city': prep_city,
-     'logo': prep_logo}
+    # combining strings into list
+    prep_d = {'address': prep_address,
+         'name': prep_name,
+         'country': prep_country,
+         'city': prep_city,
+         'logo': prep_logo}
 
-# convert into dataframe
-prep_df = pd.DataFrame(data=prep_d)
+    # convert into dataframe
+    df = pd.DataFrame(data=prep_d)
+    df['status'] = reg_status
+    return(df)
+
+prep_df = []
+prep_df_reg = extract_json(jprep_list_url_reg, 'registered')
+prep_df_unreg = extract_json(jprep_list_url_unreg, 'unregistered')
+prep_df = pd.concat([prep_df_reg, prep_df_unreg]).reset_index(drop=True)
+
+prep_address = prep_df['address']
 
 # export to csv
 prep_df.to_csv(os.path.join(outPath, 'icon_prep_details.csv'), index=False)
@@ -215,17 +227,17 @@ for k in range(len(prep_address)):
          'votes': votes,
          'created_at': created_at}
 
-     # convert into dataframe
-     df = pd.DataFrame(data=d)
+    # convert into dataframe
+    df = pd.DataFrame(data=d)
 
-     # convert timestamp into date & day
-     df['datetime'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%Y-%m-%d %H:%M:%S")
-     df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
+    # convert timestamp into date & day
+    df['datetime'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%Y-%m-%d %H:%M:%S")
+    df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
 
-     # write to csv
-     df.to_csv(os.path.join(votesPath, validator[0] + '.csv'), index=False)
+    # write to csv
+    df.to_csv(os.path.join(votesPath, validator[0] + '.csv'), index=False)
 
-        try:
-            print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
-        except:
-            print("An exception occurred - Possibly a new P-Rep without votes")
+       try:
+           print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
+       except:
+           print("An exception occurred - Possibly a new P-Rep without votes")
