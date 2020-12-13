@@ -1,2 +1,2 @@
 # ICONProject
-Codes related to ICON Blockchain Network (ICX)
+Codes related to data analysis on ICON Network (ICX)
