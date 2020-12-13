@@ -45,7 +45,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-48', '2020-47']
+terms = ['2020-49', '2020-48']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -647,7 +647,7 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-600000, ymax_val=1800000, ytick_scale=200000, # these are actual ylims & tick interval20
+                ymin_val=-1200000, ymax_val=1400000, ytick_scale=200000, # these are actual ylims & tick interval20
                 voter_mult=0.85, voter_diff_mult=1.05, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
@@ -830,8 +830,8 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-15, ymax_val=60, ytick_scale=5,
-                    first_time_voter_mult=0.95, new_voter_mult=1.15, ## change these
+                    ymin_val=-40, ymax_val=160, ytick_scale=20,
+                    first_time_voter_mult=0.95, new_voter_mult=1.25, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.87,
                     topF_1_mult=0.65, topF_2_mult=0.57)
 # saving
@@ -1420,12 +1420,14 @@ groupby([measuring_interval]).first().reset_index()
 #     agg('count').sort_values(ascending=False).reset_index()
 # top10_new_voter.merge(median_rank, on='validator_name')
 
+# for graphs
+no_colours = first_time_voter_history['validator_name'].nunique()
 
 sns.set(style="ticks", rc={"lines.linewidth": 3})
 plt.style.use(['dark_background'])
 f, ax = plt.subplots(figsize=(12, 8))
 sns.barplot(x=measuring_interval, y='new_wallet_Voted', hue='validator_name', data=first_time_voter_history,
-            palette=sns.color_palette('husl', n_colors=3))
+            palette=sns.color_palette('husl', n_colors=no_colours))
 h,l = ax.get_legend_handles_labels()
 
 ax.set_xlabel('Weeks', fontsize=14, weight='bold', labelpad=10)
@@ -1494,10 +1496,9 @@ plt.tight_layout()
 Prep_11_plus = SYV_participants_summary.groupby([measuring_interval])['sum_votes'].agg(['count', 'sum']).reset_index()
 total = "n=" + Prep_11_plus['count'].apply('{:,}'.format).unique()
 
-
 sns.set(style="ticks", rc={"lines.linewidth": 3})
 plt.style.use(['dark_background'])
-f, ax = plt.subplots(figsize=(8, 6))
+f, ax = plt.subplots(figsize=(10, 6))
 sns.barplot(x=measuring_interval, y='sum', data=Prep_11_plus,
             palette=sns.cubehelix_palette(len(Prep_11_plus), start=.5, rot=-.75))
 h,l = ax.get_legend_handles_labels()
