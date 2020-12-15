@@ -1533,9 +1533,8 @@ plt.tight_layout()
 
 # for lucky draw
 SYV_participants_luckydraw_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
-SYV_participants_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
 SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.groupby(['delegator',measuring_interval]).\
-    head(SYV_participants_this_term['raffle_tickets'])[['delegator', measuring_interval, 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets']]
+    head(SYV_participants_luckydraw_this_term['raffle_tickets'])[['delegator', measuring_interval, 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets']]
 SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.sort_values(by='how_many_prep_voted', ascending=False)
 SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_LuckyDraw_' + this_term + '.csv'), index=False)
 
@@ -1544,7 +1543,7 @@ SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path
 grand_prize_winner = 'hxb74fd8df615edb4894923e72ac0e1468497e0c30'
 
 grand_prize_winner_details = SYV_participants_luckydraw_this_term[SYV_participants_luckydraw_this_term['delegator'] == grand_prize_winner].\
-    drop_duplicates(['delegator','biweek','how_many_prep_voted','NumPReps_bin'])
+    drop_duplicates(['delegator', measuring_interval ,'how_many_prep_voted','NumPReps_bin'])
 
 grand_prize_winner_details['prize_type'] = 'grand_prize'
 grand_prize_winner_details['turn'] = 'Wheel_of_Fortune'
@@ -1552,7 +1551,7 @@ grand_prize_winner_details['turn'] = 'Wheel_of_Fortune'
 
 # lucky draw for small prize
 SYV_participants_luckydraw_small_prize = SYV_participants_luckydraw_this_term[SYV_participants_luckydraw_this_term['delegator'] != grand_prize_winner].\
-    drop_duplicates(['delegator','biweek','how_many_prep_voted','NumPReps_bin'])
+    drop_duplicates(['delegator',measuring_interval,'how_many_prep_voted','NumPReps_bin'])
 
 
 # small prize winners
