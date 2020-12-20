@@ -1275,6 +1275,9 @@ SYV_participants_percentages = SYV_participants.drop(columns=['NumPReps_bin','vo
     groupby([measuring_interval, 'delegator','sum_votes','how_many_prep_voted','raffle_tickets']).\
     agg(['min', 'max', 'median', 'mean']).sort_values(by='how_many_prep_voted', ascending=False).reset_index()
 
+# simple qualification criteria -- should not vote for more than 80% of total votes in one P-Rep
+SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('vote_percentages_per_prep', 'max')] > 0.8, "NO", "YES")
+
 SYV_participants_percentages[('vote_percentages_per_prep', 'min')] = SYV_participants_percentages[('vote_percentages_per_prep', 'min')].astype(float).map("{:.5%}".format)
 SYV_participants_percentages[('vote_percentages_per_prep', 'max')] = SYV_participants_percentages[('vote_percentages_per_prep', 'max')].astype(float).map("{:.5%}".format)
 SYV_participants_percentages[('vote_percentages_per_prep', 'median')] = SYV_participants_percentages[('vote_percentages_per_prep', 'median')].astype(float).map("{:.5%}".format)
@@ -1282,6 +1285,9 @@ SYV_participants_percentages[('vote_percentages_per_prep', 'mean')] = SYV_partic
 
 # this term
 SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])]
+
+disqualified_wallets = SYV_participants_percentages_this_term[SYV_participants_percentages_this_term['Qualified'] == "NO"]['delegator'].reset_index(drop=True)
+
 SYV_participants_percentages_this_term.to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_RaffleTickets_' + this_term + '.csv'), index=False)
 
 # for IIN
@@ -1531,22 +1537,29 @@ plt.tight_layout()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lucky Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
+from datetime import datetime
+
 # for lucky draw
 SYV_participants_luckydraw_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
+
+# removing disqualified wallets
+SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term[~SYV_participants_luckydraw_this_term['delegator'].isin(disqualified_wallets)]
+
 SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.groupby(['delegator',measuring_interval]).\
     head(SYV_participants_luckydraw_this_term['raffle_tickets'])[['delegator', measuring_interval, 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets']]
 SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.sort_values(by='how_many_prep_voted', ascending=False)
 SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_LuckyDraw_' + this_term + '.csv'), index=False)
 
 
-# this to be removed from small prize -- manually add address
-grand_prize_winner = 'hxb74fd8df615edb4894923e72ac0e1468497e0c30'
+# this to be removed from small prize -- As wheel or fortune does not work, it has to be programmed
+grand_prize_winner = 'this_is_removed'
+grand_prize_winner = SYV_participants_luckydraw_this_term['delegator'].sample(n=1, random_state=datetime.now().microsecond).reset_index(drop=True)[0]
 
 grand_prize_winner_details = SYV_participants_luckydraw_this_term[SYV_participants_luckydraw_this_term['delegator'] == grand_prize_winner].\
     drop_duplicates(['delegator', measuring_interval ,'how_many_prep_voted','NumPReps_bin'])
 
 grand_prize_winner_details['prize_type'] = 'grand_prize'
-grand_prize_winner_details['turn'] = 'Wheel_of_Fortune'
+grand_prize_winner_details['turn'] = 'grand' #'Wheel_of_Fortune'
 
 
 # lucky draw for small prize
@@ -1555,7 +1568,6 @@ SYV_participants_luckydraw_small_prize = SYV_participants_luckydraw_this_term[SY
 
 
 # small prize winners
-from datetime import datetime
 try:
     from itertools import zip_longest
 except ImportError:
@@ -1626,17 +1638,24 @@ all_prize_winners = grand_prize_winner_details.\
     reset_index(drop=True)
 
 # total pool of money here
-total_prize_money = 500
+total_prize_money = 1250
 # all_prize_winners['winnings'] = np.where(all_prize_winners['turn'] == 'Wheel_of_Fortune',
 #                                          'US$' + str(int(total_prize_money/2)),
 #                                          'US$' + str(int(total_prize_money/2/10)))
 
-winnings = [int(total_prize_money/2),40,30,30,30,25,25,20,20,20,10] # manual
-winnings = ['US$ {:}'.format(item) for item in winnings]
-all_prize_winners['winnings'] = winnings
+winnings = ["{:.2f}".format(total_prize_money*0.5),
+            "{:.2f}".format(total_prize_money*0.08),
+            "{:.2f}".format(total_prize_money*0.075),
+            "{:.2f}".format(total_prize_money*0.07),
+            "{:.2f}".format(total_prize_money*0.065),
+            "{:.2f}".format(total_prize_money*0.055),
+            "{:.2f}".format(total_prize_money*0.045),
+            "{:.2f}".format(total_prize_money*0.035),
+            "{:.2f}".format(total_prize_money*0.03),
+            "{:.2f}".format(total_prize_money*0.025),
+            "{:.2f}".format(total_prize_money*0.02)]
+
+all_prize_winners['winnings ($ICX)'] = winnings
 
 all_prize_winners.drop(columns='NumPReps_bin').\
     to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_PrizeWinners_' + this_term + '.csv'), index=False)
-
-
-
