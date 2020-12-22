@@ -1528,5 +1528,6 @@ for i in range(len(total)):
 
 plt.tight_layout()
 
+plt.savefig(os.path.join(resultsPath_interval, '07_' + measuring_interval + "_vote_spreading_time_series.png"))
 
 
