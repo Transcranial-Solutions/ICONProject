@@ -287,7 +287,6 @@ for x in lst:
 combined_df = df_longer[['validator_name', 'delegator', measuring_interval, 'how_many_prep_voted']]
 
 
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Table for Count ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # for combined
@@ -591,3 +590,54 @@ plt.savefig(os.path.join(resultsPath_interval, "Spread_your_votes_participants_"
 
 
 print(unique_date[-1:])
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#
+# df_agg = df_longer.groupby([measuring_interval,'validator_name'])['cum_votes']\
+#     .agg(['sum','count'])\
+#     .reset_index()
+#
+# df_agg['prep_ranking'] = df_agg.sort_values([measuring_interval, 'sum'], ascending=False)\
+#     .groupby(measuring_interval)['sum'].rank(method='first', ascending=False).astype(int)
+#
+#
+# icx_australia = df_agg[df_agg['validator_name'] == 'ICX Australia']
+#
+# icx_australia_early = icx_australia[:80].reset_index(drop=True)
+#
+# ## plotting for the progress of vote spreading
+# total = icx_australia_early['prep_ranking']
+#
+#
+# sns.set(style="ticks", rc={"lines.linewidth": 3})
+# plt.style.use(['dark_background'])
+# f, ax = plt.subplots(figsize=(18, 6))
+# sns.barplot(x=measuring_interval, y='sum', data=icx_australia_early,
+#             palette=sns.cubehelix_palette(len(total), start=.5, rot=-.75))
+# h,l = ax.get_legend_handles_labels()
+#
+# ax.set_xlabel('days', fontsize=14, weight='bold', labelpad=10)
+# ax.set_ylabel('Votes (ICX)', fontsize=14, weight='bold', labelpad=10)
+# ax.set_title("History of ICX Australia", fontsize=14,
+#              weight='bold')
+# ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.2f}'. format(x/1000000) + ' M'))
+#
+#
+# sns.despine(offset=5, trim=True)
+# plt.tight_layout()
+# ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
+# ax.grid(False)
+# plt.xticks(fontsize=12)
+# plt.yticks(fontsize=12)
+#
+# for i in range(len(total)):
+#     p = ax.patches[i]
+#     height = p.get_height()
+#     ax.text(p.get_x() + p.get_width() / 2., height + height * 0.02,
+#                 total[i],
+#                 ha="center",
+#             fontsize=10)
+#
+#
+# plt.tight_layout()
