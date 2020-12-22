@@ -1275,8 +1275,25 @@ SYV_participants_percentages = SYV_participants.drop(columns=['NumPReps_bin','vo
     groupby([measuring_interval, 'delegator','sum_votes','how_many_prep_voted','raffle_tickets']).\
     agg(['min', 'max', 'median', 'mean']).sort_values(by='how_many_prep_voted', ascending=False).reset_index()
 
-# simple qualification criteria -- should not vote for more than 80% of total votes in one P-Rep
-SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('vote_percentages_per_prep', 'max')] > 0.8, "NO", "YES")
+# qualification criteria --
+# should not vote for more than 80% of total votes in one P-Rep
+SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('vote_percentages_per_prep', 'max')] > 0.8, "dishonest", "yes")
+
+# median % should not be less than 0.5% while more than 70% of total votes in one P-Rep
+SYV_participants_percentages['Qualified'] = np.where((SYV_participants_percentages[('vote_percentages_per_prep', 'max')] > 0.7)
+                                                     & (SYV_participants_percentages[('vote_percentages_per_prep', 'median')] < 0.005), "dishonest", SYV_participants_percentages['Qualified'])
+
+# simple qualification criteria -- need to have more than 50 icx
+SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('sum_votes', '')] < 50, "not_enough", SYV_participants_percentages['Qualified'])
+
+these_wallets = ['hx34d02bb86519113b653ef5ed3a68de9cfff0f2ab']
+
+# same user, multiple wallet
+SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('delegator', '')].isin(these_wallets), "split_wallet", SYV_participants_percentages['Qualified'])
+
+## for checking disqualification
+# SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])]
+# check = SYV_participants_percentages_this_term[SYV_participants_percentages_this_term['Qualified'] == 'NO']
 
 SYV_participants_percentages[('vote_percentages_per_prep', 'min')] = SYV_participants_percentages[('vote_percentages_per_prep', 'min')].astype(float).map("{:.5%}".format)
 SYV_participants_percentages[('vote_percentages_per_prep', 'max')] = SYV_participants_percentages[('vote_percentages_per_prep', 'max')].astype(float).map("{:.5%}".format)
@@ -1286,7 +1303,7 @@ SYV_participants_percentages[('vote_percentages_per_prep', 'mean')] = SYV_partic
 # this term
 SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])]
 
-disqualified_wallets = SYV_participants_percentages_this_term[SYV_participants_percentages_this_term['Qualified'] == "NO"]['delegator'].reset_index(drop=True)
+disqualified_wallets = SYV_participants_percentages_this_term[SYV_participants_percentages_this_term['Qualified'] != "yes"]['delegator'].reset_index(drop=True)
 
 SYV_participants_percentages_this_term.to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_RaffleTickets_' + this_term + '.csv'), index=False)
 
@@ -1425,15 +1442,17 @@ groupby([measuring_interval]).first().reset_index()
 #     agg('count').sort_values(ascending=False).reset_index()
 # top10_new_voter.merge(median_rank, on='validator_name')
 
+# for graphs
+no_colours = first_time_voter_history['validator_name'].nunique()
 
 sns.set(style="ticks", rc={"lines.linewidth": 3})
 plt.style.use(['dark_background'])
 f, ax = plt.subplots(figsize=(12, 8))
 sns.barplot(x=measuring_interval, y='new_wallet_Voted', hue='validator_name', data=first_time_voter_history,
-            palette=sns.color_palette('husl', n_colors=3))
+            palette=sns.color_palette('husl', n_colors=no_colours))
 h,l = ax.get_legend_handles_labels()
 
-ax.set_xlabel('Biweeks', fontsize=14, weight='bold', labelpad=10)
+ax.set_xlabel('Weeks', fontsize=14, weight='bold', labelpad=10)
 ax.set_ylabel('Number of First-Time Voters', fontsize=14, weight='bold', labelpad=10)
 ax.set_title('P-Reps with the most First-Time Voters since August 2019', fontsize=14,
              weight='bold')
@@ -1531,6 +1550,9 @@ for i in range(len(total)):
 
 
 plt.tight_layout()
+
+# saving
+plt.savefig(os.path.join(resultsPath_interval, '07_' + measuring_interval + "_vote_spreading_time_series.png"))
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
