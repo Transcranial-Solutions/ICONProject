@@ -45,7 +45,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'date' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-12-28', '2020-12-27']
+terms = ['2021-01-01', '2020-12-31']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -220,6 +220,9 @@ df_wider = df.pivot_table(index=['validator_name', 'delegator'],
 df_longer = df_wider.melt(id_vars=['validator_name', 'delegator'], var_name=[measuring_interval], value_name='votes')
 df_longer = df_longer.sort_values(by=['validator_name', 'delegator', measuring_interval, 'votes']).reset_index(drop=True)
 
+df = []
+df_wider = []
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # removing NaN to first non-NaN
 df_longer.loc[df_longer.groupby(['validator_name', 'delegator'])[measuring_interval].cumcount()==0,'remove_this']= '1'
@@ -274,6 +277,7 @@ df_longer = pd.merge(df_longer,
                      on=['delegator', measuring_interval],
                      how='left')
 
+count_voted_prep_per_measuring_interval = []
 
 # just to have the number without decimals
 def remove_decimal_with_int(df, inVar):
@@ -399,10 +403,8 @@ SYV_participants_percentages[('vote_percentages_per_prep', 'mean')] = SYV_partic
 SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])]
 SYV_participants_percentages_this_term.to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_RaffleTickets_' + this_term + '.csv'), index=False)
 
-
-
-
-
+SYV_participants_percentages = []
+SYV_participants_percentages_this_term = []
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lucky Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
