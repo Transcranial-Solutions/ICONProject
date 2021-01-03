@@ -1301,11 +1301,12 @@ SYV_participants_percentages = SYV_participants.drop(columns=['NumPReps_bin','vo
 
 # qualification criteria --
 # should not vote for more than 80% of total votes in one P-Rep
-SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('vote_percentages_per_prep', 'max')] > 0.8, "dishonest", "yes")
+SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('vote_percentages_per_prep', 'max')] > 0.85, "dishonest", "yes")
 
 # median % should not be less than 0.5% while more than 70% of total votes in one P-Rep
 SYV_participants_percentages['Qualified'] = np.where((SYV_participants_percentages[('vote_percentages_per_prep', 'max')] > 0.7)
-                                                     & (SYV_participants_percentages[('vote_percentages_per_prep', 'median')] < 0.005), "dishonest", SYV_participants_percentages['Qualified'])
+                                                     & (SYV_participants_percentages[('vote_percentages_per_prep', 'median')] < 0.02)
+                                                     & (SYV_participants_percentages[('vote_percentages_per_prep', 'mean')] < 0.07) , "dishonest", SYV_participants_percentages['Qualified'])
 
 # simple qualification criteria -- need to have more than 50 icx
 SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('sum_votes', '')] < 50, "not_enough", SYV_participants_percentages['Qualified'])
@@ -1332,7 +1333,7 @@ SYV_participants_percentages[('vote_percentages_per_prep', 'median')] = SYV_part
 SYV_participants_percentages[('vote_percentages_per_prep', 'mean')] = SYV_participants_percentages[('vote_percentages_per_prep', 'mean')].astype(float).map("{:.5%}".format)
 
 # this term
-SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])]
+SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])].reset_index(drop=True)
 
 disqualified_wallets = SYV_participants_percentages_this_term[SYV_participants_percentages_this_term['Qualified'] != "yes"]['delegator'].reset_index(drop=True)
 
