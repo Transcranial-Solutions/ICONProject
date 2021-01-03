@@ -45,7 +45,10 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day"// "biweek" //
-terms = ['2020-49 & 2020-50', '2020-47 & 2020-48']
+
+alternating_biweek = 2 # starting from first week or 2nd week
+
+terms = ['2020-51 & 2020-52', '2020-49 & 2020-50']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -160,7 +163,13 @@ def get_votes(prep_address, len_prep_address):
     df['month'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m")
     df['week'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%U")
     df['date'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m-%d")
-    df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%U-%a")
+    df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
+
+    # fix week (week-00 into previous year week (week-52))
+    fix_week = df['week'].str.contains("-00")
+    df['temp_week'] = np.where(fix_week, df['year'].astype(int)-1, df['week'])
+    df['temp_week'] = np.where(fix_week, df['temp_week'].astype(str) + '-52', df['week'])
+    df = df.drop(columns=['week']).rename(columns={'temp_week':'week'})
 
     df['votes'] = pd.to_numeric(df['votes'])
 
@@ -196,12 +205,27 @@ df = pd.concat(temp_df)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Data -- by validator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # concatenate them into a dataframe -- by validator_name
 
-# making biweekly logic here
-unique_week = df.drop_duplicates(['year', 'week'])[['year','week']].sort_values('week')
-unique_week['week1'] = np.where(unique_week['week'].isin(unique_week.iloc[::2,1]), unique_week['week'], unique_week['week'].shift())
-unique_week['week2'] = np.where(unique_week['week'].isin(unique_week.iloc[1::2,1]), unique_week['week'], unique_week['week'].shift(-1))
-unique_week['biweek'] = unique_week['week1'].fillna(unique_week['week2']) + ' & ' + unique_week['week2'].fillna(unique_week['week1'])
-unique_week = unique_week[['week','biweek']].reset_index()
+# making biweekly logic here - alternating 1
+unique_week = df.drop_duplicates(['week'])[['week']].sort_values('week').reset_index(drop=True)
+unique_week['week1'] = np.where(unique_week['week'].isin(unique_week.iloc[::2,0]), unique_week['week'], unique_week['week'].shift())
+unique_week['week2'] = np.where(unique_week['week'].isin(unique_week.iloc[1::2,0]), unique_week['week'], unique_week['week'].shift(-1))
+unique_week['biweek1'] = unique_week['week1'].fillna(unique_week['week2']) + ' & ' + unique_week['week2'].fillna(unique_week['week1'])
+unique_week = unique_week[['week','biweek1']].reset_index(drop=True)
+
+# making biweekly logic here - alternating 2
+unique_week['week1'] = np.where(unique_week['week'].isin(unique_week.iloc[1::2,0]), unique_week['week'], unique_week['week'].shift())
+unique_week['week2'] = np.where(unique_week['week'].isin(unique_week.iloc[2::2,0]), unique_week['week'], unique_week['week'].shift(-1))
+# fixing first entry
+unique_week['week1'][0] = unique_week['week'][0]
+unique_week['week2'][0] = unique_week['week'][0]
+unique_week['biweek2'] = unique_week['week1'].fillna(unique_week['week2']) + ' & ' + unique_week['week2'].fillna(unique_week['week1'])
+unique_week = unique_week[['week', 'biweek1', 'biweek2']].reset_index(drop=True)
+
+if (alternating_biweek == 1):
+    unique_week['biweek'] = unique_week['biweek1']
+else:
+    unique_week['biweek'] = unique_week['biweek2']
+
 
 # merge here
 df = pd.merge(df, unique_week, on='week', how='left')
@@ -658,8 +682,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-1000000, ymax_val=5000000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=0.75, voter_diff_mult=1.05, # voter change multiplier
+                ymin_val=-2000000, ymax_val=5500000, ytick_scale=500000, # these are actual ylims & tick interval20
+                voter_mult=0.85, voter_diff_mult=1.05, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -836,7 +860,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-50, ymax_val=300, ytick_scale=50,
+                    ymin_val=-100, ymax_val=300, ytick_scale=50,
                     first_time_voter_mult=0.90, new_voter_mult=1.12, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.83,
                     topF_1_mult=0.60, topF_2_mult=0.53)
@@ -1286,10 +1310,17 @@ SYV_participants_percentages['Qualified'] = np.where((SYV_participants_percentag
 # simple qualification criteria -- need to have more than 50 icx
 SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('sum_votes', '')] < 50, "not_enough", SYV_participants_percentages['Qualified'])
 
-these_wallets = ['hx34d02bb86519113b653ef5ed3a68de9cfff0f2ab']
+# splitting wallets
+these_wallets = ['hx34d02bb86519113b653ef5ed3a68de9cfff0f2ab',
+                 'hx10d24cae4bcc94bb8e8249c94dc23a0375958c0d']
+
+# suspicious wallets
+sus_wallets = ['hxc52cbcfe49bad4ac8a51e00af002e676c7c8b501A ',
+               'hx7128611fef60b4ee183d4b5be9c338a46b338f18']
 
 # same user, multiple wallet
 SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('delegator', '')].isin(these_wallets), "split_wallet", SYV_participants_percentages['Qualified'])
+SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('delegator', '')].isin(sus_wallets), "suspicious_wallet", SYV_participants_percentages['Qualified'])
 
 ## for checking disqualification
 # SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])]
