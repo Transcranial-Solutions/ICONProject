@@ -45,7 +45,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-51', '2020-50']
+terms = ['2020-52', '2020-51']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -162,10 +162,11 @@ def get_votes(prep_address, len_prep_address):
     df['date'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m-%d")
     df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%U-%a")
 
-    # if measuring_interval == 'week':
-    #     df[measuring_interval] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%U")
-    # elif measuring_interval == 'month':
-    #     df[measuring_interval] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%m")
+    # fix week (week-00 into previous year week (week-52))
+    fix_week = df['week'].str.contains("-00")
+    df['temp_week'] = np.where(fix_week, df['year'].astype(int)-1, df['week'])
+    df['temp_week'] = np.where(fix_week, df['temp_week'].astype(str) + '-52', df['week'])
+    df = df.drop(columns=['week']).rename(columns={'temp_week':'week'})
 
     # df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
     df.drop(columns=['created_at'], inplace=True)
@@ -647,8 +648,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-500000, ymax_val=4000000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=0.70, voter_diff_mult=1.05, # voter change multiplier
+                ymin_val=-2000000, ymax_val=2000000, ytick_scale=500000, # these are actual ylims & tick interval20
+                voter_mult=1.05, voter_diff_mult=1.17, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -830,7 +831,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-60, ymax_val=160, ytick_scale=20,
+                    ymin_val=-60, ymax_val=120, ytick_scale=20,
                     first_time_voter_mult=0.90, new_voter_mult=1.07, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.87,
                     topF_1_mult=0.65, topF_2_mult=0.57)
