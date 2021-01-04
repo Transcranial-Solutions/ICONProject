@@ -1,12 +1,12 @@
-delegator,biweek,how_many_prep_voted,raffle_tickets,prize_type,turn,winnings ($ICX)
-hxaf0882e1856ba71a69408edea4c244f706ac622e,2020-51 & 2020-52,37,3,grand_prize,grand,625
-hx414742cdbec72d48568077742998810433afad1e,2020-51 & 2020-52,100,10,small_prize,first,100
-hxb0d886f01ca2697ce9961232a754bb3923142128,2020-51 & 2020-52,100,10,small_prize,first,93.75
-hx114049660809114582bfc83f66833560544bf877,2020-51 & 2020-52,81,8,small_prize,first,87.5
-hxe174e405642b059aab26c9d738c6fc188b085ef6,2020-51 & 2020-52,73,7,small_prize,first,81.25
-hx14c5d80083258bca5146f7c1eecb780ad0c0f930,2020-51 & 2020-52,67,6,small_prize,first,68.75
-hx049eec5560f8518cffce2ab74fce56ad31fc79c6,2020-51 & 2020-52,56,5,small_prize,first,56.25
-hxd2fe38548f3f4a8c545112582c668913a85d4b93,2020-51 & 2020-52,47,4,small_prize,first,43.75
-hxf7680b84aed887350194c26bd98996312020379f,2020-51 & 2020-52,36,3,small_prize,first,37.5
-hx82b4acc37a019e08235724f88d4cb0f130a0a208,2020-51 & 2020-52,20,2,small_prize,first,31.25
-hx2d6ceeb021b38d12152a74877e18d8ec353393b1,2020-51 & 2020-52,11,1,small_prize,first,25
+delegator,biweek,how_many_prep_voted,raffle_tickets,prize_type,turn,winnings ($ICX),tx
+hxaf0882e1856ba71a69408edea4c244f706ac622e,2020-51 & 2020-52,37,3,grand_prize,grand,625,https://tracker.icon.foundation/transaction/0x6e2d3689ed1ced93dfcb34b4f54921f935a04ede150385dbadf0ebd4c0df4248
+hx414742cdbec72d48568077742998810433afad1e,2020-51 & 2020-52,100,10,small_prize,first,100,https://tracker.icon.foundation/transaction/0x905733cfc423d205f6a4cd635a3027bb064279e8a17c8193d1dc86236ae17947
+hxb0d886f01ca2697ce9961232a754bb3923142128,2020-51 & 2020-52,100,10,small_prize,first,93.75,https://tracker.icon.foundation/transaction/0x86949c661377ab958b1869517d0f0c8d0449f9d1ae5d3b3dbda0ae46922aea89
+hx114049660809114582bfc83f66833560544bf877,2020-51 & 2020-52,81,8,small_prize,first,87.5,https://tracker.icon.foundation/transaction/0x18b012969b57e2a955c0c147e393bb022fa18ee9922d0a285406dc231f96d776
+hxe174e405642b059aab26c9d738c6fc188b085ef6,2020-51 & 2020-52,73,7,small_prize,first,81.25,https://tracker.icon.foundation/transaction/0x4c90abc3d0d3f50b4e2b017fc6cce834e82d5698b5b5f2ad58e42e5d1506b618
+hx14c5d80083258bca5146f7c1eecb780ad0c0f930,2020-51 & 2020-52,67,6,small_prize,first,68.75,https://tracker.icon.foundation/transaction/0xe06b30c223a97ffd3f53a519eb0f1842a842cd0c916d7f4811b16ad0a7448574
+hx049eec5560f8518cffce2ab74fce56ad31fc79c6,2020-51 & 2020-52,56,5,small_prize,first,56.25,https://tracker.icon.foundation/transaction/0x0653934e2a8036e08efa8266e3743edd548f67334ee22879ba223afc62d9c359
+hxd2fe38548f3f4a8c545112582c668913a85d4b93,2020-51 & 2020-52,47,4,small_prize,first,43.75,https://tracker.icon.foundation/transaction/0x4861c3cfe919d74542df5f25ddfb0599295c591128aeefecf9bdb60e90b63427
+hxf7680b84aed887350194c26bd98996312020379f,2020-51 & 2020-52,36,3,small_prize,first,37.5,https://tracker.icon.foundation/transaction/0x4ba6148868f9d3b973fdb6fa48035f4383a4387e024253f8c8eaa229a0c9fb44
+hx82b4acc37a019e08235724f88d4cb0f130a0a208,2020-51 & 2020-52,20,2,small_prize,first,31.25,https://tracker.icon.foundation/transaction/0xdbe35044ae62519d1f3f370edbceda63156d18e009e03ff8f6ccc9dd3cf4981d
+hx2d6ceeb021b38d12152a74877e18d8ec353393b1,2020-51 & 2020-52,11,1,small_prize,first,25,https://tracker.icon.foundation/transaction/0x489ca37b58aa1a67a8a8e8e27eb9e96ad1c8e96b1854375a69204df3327d3ab5
