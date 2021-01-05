@@ -1325,7 +1325,7 @@ SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentage
 
 ## for checking disqualification
 # SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])]
-# check = SYV_participants_percentages_this_term[SYV_participants_percentages_this_term['Qualified'] == 'NO']
+# check = SYV_participants_percentages_this_term[SYV_participants_percentages_this_term['Qualified'] != "yes"]
 
 SYV_participants_percentages[('vote_percentages_per_prep', 'min')] = SYV_participants_percentages[('vote_percentages_per_prep', 'min')].astype(float).map("{:.5%}".format)
 SYV_participants_percentages[('vote_percentages_per_prep', 'max')] = SYV_participants_percentages[('vote_percentages_per_prep', 'max')].astype(float).map("{:.5%}".format)
