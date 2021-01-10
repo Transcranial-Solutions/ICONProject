@@ -41,6 +41,9 @@ if not os.path.exists(outPath):
 resultsPath = os.path.join(outPath, "results")
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
+resultsPath = os.path.join(resultsPath, "biweekly")
+if not os.path.exists(resultsPath):
+    os.mkdir(resultsPath)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 

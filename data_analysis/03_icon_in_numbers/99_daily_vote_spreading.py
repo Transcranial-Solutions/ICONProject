@@ -41,11 +41,14 @@ if not os.path.exists(outPath):
 resultsPath = os.path.join(outPath, "results")
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
+resultsPath = os.path.join(resultsPath, "daily")
+if not os.path.exists(resultsPath):
+    os.mkdir(resultsPath)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'date' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-01-07', '2021-01-06']
+terms = ['2021-01-10', '2021-01-09']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
