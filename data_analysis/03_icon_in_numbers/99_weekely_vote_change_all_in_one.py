@@ -45,7 +45,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2020-52', '2020-51']
+terms = ['2021-01', '2020-52']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -648,8 +648,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-2000000, ymax_val=2000000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=1.05, voter_diff_mult=1.17, # voter change multiplier
+                ymin_val=-2500000, ymax_val=6500000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                voter_mult=0.90, voter_diff_mult=1.05, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -699,7 +699,7 @@ voting_unique_first_last = wallet_count(df_longer, 'new_wallet_A', 'new_wallet_B
 voting_unique_inc_return['pct_change_voters'] = voting_unique_inc_return['diff_AB'] / (voting_unique_inc_return['diff_cum_AB'].shift(1))
 total_term_change = voting_unique_inc_return[voting_unique_inc_return[measuring_interval].isin([this_term])].drop(columns=measuring_interval)
 change_symbol = total_term_change['diff_AB'].apply(lambda x: "+" if x>0 else '').values[0] # for voter count
-face_color = total_term_change['diff_AB'].apply(lambda x: "green" if x>0 else 'red').values[0] # this is for box color
+face_color = total_term_change['diff_AB'].apply(lambda x: "green" if x>0 else 'firebrick').values[0] # this is for box color
 
 total_cum_text = "Total voters: " + round(total_term_change['diff_cum_AB']).apply('{:,}'.format).values[0].split('.', 1)[0]
 total_text = "Weekly change: " + change_symbol + round(total_term_change['diff_AB']).apply('{:,}'.format).values[0].split('.', 1)[0]
@@ -831,7 +831,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-60, ymax_val=120, ytick_scale=20,
+                    ymin_val=-150, ymax_val=250, ytick_scale=50,
                     first_time_voter_mult=0.90, new_voter_mult=1.07, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.87,
                     topF_1_mult=0.65, topF_2_mult=0.57)
