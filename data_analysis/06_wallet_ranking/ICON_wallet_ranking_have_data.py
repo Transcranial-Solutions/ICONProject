@@ -245,7 +245,7 @@ df_exchange = pd.merge(df_exchange,
                        how='left',
                        on='address')
 
-total_exchange = df_exchange[['names', 'total']]\
+total_exchange = df_exchange[['address', 'names', 'total']]\
     .rename(columns={'total':'Amount (ICX)', 'names':'Exchanges'})\
     .sort_values('Amount (ICX)', ascending=False)
 
@@ -254,7 +254,7 @@ total_exchange['Amount (ICX)'] = total_exchange['Amount (ICX)'].astype(int).appl
 render_mpl_table(total_exchange,
                  header_color='tab:pink',
                  header_columns=0,
-                 col_width=3.5,
+                 col_width=5,
                  title="Major Exchange Wallets")
 
 plt.savefig(os.path.join(resultsPath, "exchange_wallets_" + day1 + ".png"))
