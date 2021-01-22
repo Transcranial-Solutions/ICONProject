@@ -39,7 +39,14 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Loading wallet info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 fname = 'wallet_balance_2021_01_22'
-fdate = fname.rsplit('wallet_balance_', 1)[1].replace('_','-')
+fdate = fname.rsplit('wallet_balance_', 1)[1]
+
+# for output (tables)
+outputPath = os.path.join(resultsPath, fdate)
+if not os.path.exists(outputPath):
+    os.mkdir(outputPath)
+
+fdate = fdate.replace('_','-')
 
 ori_df = pd.read_csv(os.path.join(resultsPath, fname + '.csv'))
 
@@ -182,7 +189,7 @@ render_mpl_table(get_binned_df(df, 'total'),
                  col_width=3.5,
                  title="Total ICX Owned - " + fdate + "\n (Staking + Unstaking + Balance)")
 
-plt.savefig(os.path.join(resultsPath, "total_balance_" + fdate + ".png"))
+plt.savefig(os.path.join(outputPath, "total_balance_" + fdate + ".png"))
 
 # staked
 render_mpl_table(get_binned_df(df, 'stake'),
@@ -191,7 +198,7 @@ render_mpl_table(get_binned_df(df, 'stake'),
                  col_width=3.5,
                  title="Total ICX Staked - " + fdate)
 
-plt.savefig(os.path.join(resultsPath, "staking_balance_" + fdate + ".png"))
+plt.savefig(os.path.join(outputPath, "staking_balance_" + fdate + ".png"))
 
 # unstaking
 render_mpl_table(get_binned_df(df, 'unstake'),
@@ -200,7 +207,7 @@ render_mpl_table(get_binned_df(df, 'unstake'),
                  col_width=3.5,
                  title="Total ICX Unstaking - " + fdate)
 
-plt.savefig(os.path.join(resultsPath, "unstaking_balance_" + fdate + ".png"))
+plt.savefig(os.path.join(outputPath, "unstaking_balance_" + fdate + ".png"))
 
 # i-score
 render_mpl_table(get_binned_df(df, 'estimatedICX'),
@@ -209,7 +216,7 @@ render_mpl_table(get_binned_df(df, 'estimatedICX'),
                  col_width=3.5,
                  title="Total I-Score Unclaimed - " + fdate)
 
-plt.savefig(os.path.join(resultsPath, "iscore_balance_" + fdate + ".png"))
+plt.savefig(os.path.join(outputPath, "iscore_balance_" + fdate + ".png"))
 
 
 
@@ -264,4 +271,4 @@ render_mpl_table(total_exchange,
                  col_width=5,
                  title="Major Exchange Wallets - " + fdate)
 
-plt.savefig(os.path.join(resultsPath, "exchange_wallets_" + fdate + ".png"))
+plt.savefig(os.path.join(outputPath, "exchange_wallets_" + fdate + ".png"))
