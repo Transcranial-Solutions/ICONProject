@@ -78,11 +78,25 @@ df = df[df['address'].str[:2].str.contains('hx', case=False, regex=True, na=Fals
 # binning the balance
 # df_binned = df.copy()
 
-bins = [-1, 0, 1, 1000, 5000, 10000, 25000, 50000, 100000,
-        250000, 500000, 1000000, 5000000, 10000000, 25000000, 50000000, 100000000, 9999999999999]
+# bins = [-1, 0, 1, 1000, 5000, 10000, 25000, 50000, 100000,
+#         250000, 500000, 1000000, 5000000, 10000000, 25000000,
+#         50000000, 100000000, 9999999999999]
+#
+# names = ["0", "1 or less", "1 - 1K", "1K - 5K", "5K - 10K", "10K - 25K", "25K - 50K", "50K - 100K",
+#        "100K - 250K", "250K - 500K", "500K - 1M", "1M - 5M", "5M - 10M", "10M - 25M",
+#          "25M - 50M", "50M - 100M", "100M +"]
 
-names = ["0", "1 or less", "1 - 1K", "1K - 5K", "5K - 10K", "10K - 25K", "25K - 50K", "50K - 100K",
-       "100K - 250K", "250K - 500K", "500K - 1M", "1M - 5M", "5M - 10M", "10M - 25M", "25M - 50M", "50M - 100M", "100M +"]
+bins = [-1, 0, 1, 1000, 5000, 10000, 15000, 20000,
+        25000, 30000, 35000, 40000, 45000, 50000, 60000, 75000,
+        100000, 150000, 250000, 500000,
+        1000000, 5000000, 10000000, 25000000,
+        50000000, 100000000, 9999999999999]
+
+names = ["0", "1 or less", "1 - 1K", "1K - 5K", "5K - 10K", "10K - 15K", "15K - 20K",
+         "20K - 25K", "25K - 30K", "30K - 35K", "35K - 40K", "40K - 45K", "45K - 50K", "50K - 60K", "60K - 75K",
+         "75K - 100K", "100K - 150K", "150K - 250K", "250K - 500K",
+         "500K - 1M", "1M - 5M", "5M - 10M", "10M - 25M",
+         "25M - 50M", "50M - 100M", "100M +"]
 
 
 # bin based on above list and make a table
@@ -144,6 +158,7 @@ def get_binned_df(df, inVar):
 
 # total_icx = df[['stake','unstake','balance']].sum(numeric_only=True, axis=0).reset_index().sum()
 
+df[df['total'].max() == df['total']]
 
 
 import six
@@ -219,7 +234,7 @@ render_mpl_table(get_binned_df(df, 'estimatedICX'),
 plt.savefig(os.path.join(outputPath, "iscore_balance_" + fdate + ".png"))
 
 
-
+# exchange wallets
 exchange_wallets = ['hx1729b35b690d51e9944b2e94075acff986ea0675',
                     'hx99cc8eb746de5885f5e5992f084779fc0c2c135b',
                     'hx9f0c84a113881f0617172df6fc61a8278eb540f5',
@@ -249,11 +264,11 @@ exchange_names = ['binance_cold1',
 exchange_details = {'address': exchange_wallets,
                     'names': exchange_names}
 
+# dataframe
 exchange_details = pd.DataFrame(exchange_details)
 
-
+# getting only exchange wallets
 df_exchange = df[df['address'].isin(exchange_wallets)]
-
 df_exchange = pd.merge(df_exchange,
                        exchange_details,
                        how='left',
