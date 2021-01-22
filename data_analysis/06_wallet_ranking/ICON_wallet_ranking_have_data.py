@@ -38,7 +38,10 @@ if not os.path.exists(resultsPath):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Loading wallet info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-ori_df = pd.read_csv(os.path.join(resultsPath, 'wallet_balance_2021_01_22.csv'))
+fname = 'wallet_balance_2021_01_22'
+fdate = fname.rsplit('wallet_balance_', 1)[1].replace('_','-')
+
+ori_df = pd.read_csv(os.path.join(resultsPath, fname + '.csv'))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -168,45 +171,45 @@ plt.style.use(['dark_background'])
 
 # render_mpl_table(get_binned_df(df, 'estimatedICX'), header_columns=0, col_width=4, title="i-score unclaimed")
 
-# today date
-today = date.today()
-day1 = today.strftime("%Y_%m_%d")
+# # today date
+# today = date.today()
+# day1 = today.strftime("%Y_%m_%d")
 
 # total
 render_mpl_table(get_binned_df(df, 'total'),
                  header_color='green',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total ICX Owned \n (Staking + Unstaking + Balance)")
+                 title="Total ICX Owned - " + fdate + "\n (Staking + Unstaking + Balance)")
 
-plt.savefig(os.path.join(resultsPath, "total_balance_" + day1 + ".png"))
+plt.savefig(os.path.join(resultsPath, "total_balance_" + fdate + ".png"))
 
 # staked
 render_mpl_table(get_binned_df(df, 'stake'),
                  header_color='tab:purple',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total ICX Staked")
+                 title="Total ICX Staked - " + fdate)
 
-plt.savefig(os.path.join(resultsPath, "staking_balance_" + day1 + ".png"))
+plt.savefig(os.path.join(resultsPath, "staking_balance_" + fdate + ".png"))
 
 # unstaking
 render_mpl_table(get_binned_df(df, 'unstake'),
                  header_color='firebrick',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total ICX Unstaking")
+                 title="Total ICX Unstaking - " + fdate)
 
-plt.savefig(os.path.join(resultsPath, "unstaking_balance_" + day1 + ".png"))
+plt.savefig(os.path.join(resultsPath, "unstaking_balance_" + fdate + ".png"))
 
 # i-score
 render_mpl_table(get_binned_df(df, 'estimatedICX'),
                  header_color='darkorange',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total I-Score Unclaimed")
+                 title="Total I-Score Unclaimed - " + fdate)
 
-plt.savefig(os.path.join(resultsPath, "iscore_balance_" + day1 + ".png"))
+plt.savefig(os.path.join(resultsPath, "iscore_balance_" + fdate + ".png"))
 
 
 
@@ -219,18 +222,22 @@ exchange_wallets = ['hx1729b35b690d51e9944b2e94075acff986ea0675',
                     'hx14ea4bca6f205fecf677ac158296b7f352609871',
                     'hx3881f2ba4e3265a11cf61dd68a571083c7c7e6a5',
                     'hxd9fb974459fe46eb9d5a7c438f17ae6e75c0f2d1',
-                    'hx68646780e14ee9097085f7280ab137c3633b4b5f']
+                    'hx68646780e14ee9097085f7280ab137c3633b4b5f',
+                    'hxbf90314546bbc3ed980454c9e2a9766160389302',
+                    'hx562dc1e2c7897432c298115bc7fbcc3b9d5df294']
 
 exchange_names = ['binance_cold1',
-                    'binance_cold2',
-                    'binance_cold3',
-                    'binance_hot',
-                    'velic_hot',
-                    'velic_stave',
-                    'latoken',
-                    'coinex',
-                    'huobi',
-                    'kraken_hot']
+                  'binance_cold2',
+                  'binance_cold3',
+                  'binance_hot',
+                  'velic_hot',
+                  'velic_stave',
+                  'latoken',
+                  'coinex',
+                  'huobi',
+                  'kraken_hot',
+                  'upbit',
+                  'upbit_cold']
 
 exchange_details = {'address': exchange_wallets,
                     'names': exchange_names}
@@ -255,6 +262,6 @@ render_mpl_table(total_exchange,
                  header_color='tab:pink',
                  header_columns=0,
                  col_width=5,
-                 title="Major Exchange Wallets")
+                 title="Major Exchange Wallets - " + fdate)
 
-plt.savefig(os.path.join(resultsPath, "exchange_wallets_" + day1 + ".png"))
+plt.savefig(os.path.join(resultsPath, "exchange_wallets_" + fdate + ".png"))
