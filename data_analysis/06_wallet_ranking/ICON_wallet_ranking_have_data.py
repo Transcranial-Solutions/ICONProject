@@ -44,6 +44,7 @@ ori_df = pd.read_csv(os.path.join(resultsPath, 'wallet_balance_2021_01_22.csv'))
 
 # adding date/datetime info
 df = ori_df.drop_duplicates()
+df = df.groupby('address').sum().reset_index()
 
 # str to float and get total icx owned
 col_list = ['balance', 'stake', 'unstake']
@@ -65,7 +66,7 @@ df = df[df['address'].str[:2].str.contains('hx', case=False, regex=True, na=Fals
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # binning the balance
-df_binned = df.copy()
+# df_binned = df.copy()
 
 bins = [-1, 0, 1, 1000, 5000, 10000, 25000, 50000, 100000,
         250000, 500000, 1000000, 5000000, 10000000, 25000000, 50000000, 100000000, 9999999999999]
@@ -206,3 +207,54 @@ render_mpl_table(get_binned_df(df, 'estimatedICX'),
                  title="Total I-Score Unclaimed")
 
 plt.savefig(os.path.join(resultsPath, "iscore_balance_" + day1 + ".png"))
+
+
+
+exchange_wallets = ['hx1729b35b690d51e9944b2e94075acff986ea0675',
+                    'hx99cc8eb746de5885f5e5992f084779fc0c2c135b',
+                    'hx9f0c84a113881f0617172df6fc61a8278eb540f5',
+                    'hxc4193cda4a75526bf50896ec242d6713bb6b02a3',
+                    'hx307c01535bfd1fb86b3b309925ae6970680eb30d',
+                    'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8',
+                    'hx14ea4bca6f205fecf677ac158296b7f352609871',
+                    'hx3881f2ba4e3265a11cf61dd68a571083c7c7e6a5',
+                    'hxd9fb974459fe46eb9d5a7c438f17ae6e75c0f2d1',
+                    'hx68646780e14ee9097085f7280ab137c3633b4b5f']
+
+exchange_names = ['binance_cold1',
+                    'binance_cold2',
+                    'binance_cold3',
+                    'binance_hot',
+                    'velic_hot',
+                    'velic_stave',
+                    'latoken',
+                    'coinex',
+                    'huobi',
+                    'kraken_hot']
+
+exchange_details = {'address': exchange_wallets,
+                    'names': exchange_names}
+
+exchange_details = pd.DataFrame(exchange_details)
+
+
+df_exchange = df[df['address'].isin(exchange_wallets)]
+
+df_exchange = pd.merge(df_exchange,
+                       exchange_details,
+                       how='left',
+                       on='address')
+
+total_exchange = df_exchange[['names', 'total']]\
+    .rename(columns={'total':'Amount (ICX)', 'names':'Exchanges'})\
+    .sort_values('Amount (ICX)', ascending=False)
+
+total_exchange['Amount (ICX)'] = total_exchange['Amount (ICX)'].astype(int).apply('{:,}'.format)
+
+render_mpl_table(total_exchange,
+                 header_color='tab:pink',
+                 header_columns=0,
+                 col_width=3.5,
+                 title="Major Exchange Wallets")
+
+plt.savefig(os.path.join(resultsPath, "exchange_wallets_" + day1 + ".png"))
