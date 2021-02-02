@@ -51,7 +51,7 @@ measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day
 
 alternating_biweek = 2 # starting from first week or 2nd week
 
-terms = ['2021-01 & 2021-02', '2020-51 & 2020-52']
+terms = ['2021-03 & 2021-04', '2021-01 & 2021-02']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -685,8 +685,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-3000000, ymax_val=8000000, ytick_scale=1000000, # these are actual ylims & tick interval20
-                voter_mult=0.85, voter_diff_mult=1.03, # voter change multiplier
+                ymin_val=-3000000, ymax_val=5000000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                voter_mult=0.95, voter_diff_mult=1.10, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -863,8 +863,8 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-200, ymax_val=350, ytick_scale=50,
-                    first_time_voter_mult=0.95, new_voter_mult=1.12, ## change these
+                    ymin_val=-50, ymax_val=350, ytick_scale=50,
+                    first_time_voter_mult=0.90, new_voter_mult=1.30, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.83,
                     topF_1_mult=0.60, topF_2_mult=0.53)
 # saving
@@ -1311,8 +1311,14 @@ SYV_participants_percentages['Qualified'] = np.where((SYV_participants_percentag
                                                      & (SYV_participants_percentages[('vote_percentages_per_prep', 'median')] < 0.02)
                                                      & (SYV_participants_percentages[('vote_percentages_per_prep', 'mean')] < 0.07) , "dishonest", SYV_participants_percentages['Qualified'])
 
-# simple qualification criteria -- need to have more than 50 icx
-SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('sum_votes', '')] < 50, "not_enough", SYV_participants_percentages['Qualified'])
+# median should not be less than 2 while mean is higher
+SYV_participants_percentages['Qualified'] = np.where((SYV_participants_percentages[('total_votes', 'median')] < 2)
+                                                     & (SYV_participants_percentages[('total_votes', 'median')] <
+                                                     SYV_participants_percentages[('total_votes', 'mean')]),
+                                                     "dishonest", SYV_participants_percentages['Qualified'])
+
+# simple qualification criteria -- need to have more than 100 icx
+SYV_participants_percentages['Qualified'] = np.where(SYV_participants_percentages[('sum_votes', '')] < 101, "not_enough", SYV_participants_percentages['Qualified'])
 
 # splitting wallets
 these_wallets = ['hx34d02bb86519113b653ef5ed3a68de9cfff0f2ab',
