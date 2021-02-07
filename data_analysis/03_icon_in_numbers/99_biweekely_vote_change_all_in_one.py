@@ -243,9 +243,17 @@ df = df.groupby(['validator_name', 'delegator', measuring_interval]).agg('sum').
 df = df.sort_values(by=['validator_name', 'delegator', measuring_interval]).reset_index(drop=True)
 
 # hope you don't mind, just shortening your names
-df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
-df.loc[df['validator_name'] == 'Piconbello { You Pick We Build }', 'validator_name'] = 'Piconbello'
-df.loc[df['validator_name'] == 'UNBLOCK {ICX GROWTH INCUBATOR}', 'validator_name'] = 'UNBLOCK'
+def shorten_prep_name(df, contains_name, change_to_name):
+    index_prep = df['validator_name'].str.contains(contains_name, case=False, regex=True, na=False)
+    df.loc[index_prep, 'validator_name'] = change_to_name
+    return df
+
+# hope you don't mind, just shortening your names
+df = shorten_prep_name(df, "ICONLEO", "ICONLEO")
+df = shorten_prep_name(df, "ICONIST VOTE WISELY", "ICONIST VOTE WISELY")
+df = shorten_prep_name(df, "Piconbello", "Piconbello")
+df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
+# df = shorten_prep_name(df, "Gilga Capital", "Gilga Capital")
 df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
 
 
