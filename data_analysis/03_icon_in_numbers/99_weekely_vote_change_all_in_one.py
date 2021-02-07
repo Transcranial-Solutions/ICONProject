@@ -48,7 +48,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-03', '2021-02']
+terms = ['2021-05', '2021-04']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -215,10 +215,22 @@ unique_interval = df.drop_duplicates(measuring_interval)[[measuring_interval]].s
 df = df.groupby(['validator_name', 'delegator', measuring_interval]).agg('sum').reset_index()
 df = df.sort_values(by=['validator_name', 'delegator', measuring_interval]).reset_index(drop=True)
 
+
+def shorten_prep_name(df, contains_name, change_to_name):
+    index_prep = df['validator_name'].str.contains(contains_name, case=False, regex=True, na=False)
+    df.loc[index_prep, 'validator_name'] = change_to_name
+    return df
+
 # hope you don't mind, just shortening your names
-df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
-df.loc[df['validator_name'] == 'Piconbello { You Pick We Build }', 'validator_name'] = 'Piconbello'
-df.loc[df['validator_name'] == 'UNBLOCK {ICX GROWTH INCUBATOR}', 'validator_name'] = 'UNBLOCK'
+df = shorten_prep_name(df, "ICONLEO", "ICONLEO")
+df = shorten_prep_name(df, "ICONIST VOTE WISELY", "ICONIST VOTE WISELY")
+df = shorten_prep_name(df, "Piconbello", "Piconbello")
+df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
+# df = shorten_prep_name(df, "Gilga Capital (NEW - LETS GROW ICON)", "Gilga Capital (NEW)")
+
+# df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
+# df.loc[df['validator_name'] == 'Piconbello { You Pick We Build }', 'validator_name'] = 'Piconbello'
+# df.loc[df['validator_name'] == 'UNBLOCK {ICX GROWTH INCUBATOR}', 'validator_name'] = 'UNBLOCK'
 df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
 
 
@@ -651,8 +663,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-600000, ymax_val=1400000, ytick_scale=200000, # these are actual ylims & tick interval20
-                voter_mult=0.88, voter_diff_mult=1.02, # voter change multiplier
+                ymin_val=-2000000, ymax_val=8000000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                voter_mult=0.82, voter_diff_mult=1.00, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -834,8 +846,8 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-30, ymax_val=110, ytick_scale=10,
-                    first_time_voter_mult=0.90, new_voter_mult=1.10, ## change these
+                    ymin_val=-80, ymax_val=300, ytick_scale=40,
+                    first_time_voter_mult=0.90, new_voter_mult=1.15, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.87,
                     topF_1_mult=0.65, topF_2_mult=0.57)
 # saving
