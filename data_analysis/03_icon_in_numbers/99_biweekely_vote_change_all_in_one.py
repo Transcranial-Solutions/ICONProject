@@ -1612,7 +1612,7 @@ plt.savefig(os.path.join(resultsPath_interval, '07_' + measuring_interval + "_vo
 
 from datetime import datetime
 
-def get_winners():
+def get_winners(total_prize_money = 400):
 
     # for lucky draw
     SYV_participants_luckydraw_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
@@ -1713,7 +1713,7 @@ def get_winners():
         reset_index(drop=True)
 
     # total pool of money here
-    total_prize_money = 825
+    total_prize_money = total_prize_money
     # all_prize_winners['winnings'] = np.where(all_prize_winners['turn'] == 'Wheel_of_Fortune',
     #                                          'US$' + str(int(total_prize_money/2)),
     #                                          'US$' + str(int(total_prize_money/2/10)))
