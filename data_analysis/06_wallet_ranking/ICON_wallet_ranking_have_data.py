@@ -38,8 +38,10 @@ if not os.path.exists(resultsPath):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Loading wallet info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-fname = 'wallet_balance_2021_01_22'
-fdate = fname.rsplit('wallet_balance_', 1)[1]
+fname_now = 'wallet_balance_2021_02_08'
+fname_past = 'wallet_balance_2021_01_22' # for comparison
+
+fdate = fname_now.rsplit('wallet_balance_', 1)[1]
 
 # for output (tables)
 outputPath = os.path.join(resultsPath, fdate)
@@ -48,31 +50,36 @@ if not os.path.exists(outputPath):
 
 fdate = fdate.replace('_','-')
 
-ori_df = pd.read_csv(os.path.join(resultsPath, fname + '.csv'))
-
+ori_df_now = pd.read_csv(os.path.join(resultsPath, fname_now + '.csv'))
+ori_df_past = pd.read_csv(os.path.join(resultsPath, fname_past + '.csv'))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # adding date/datetime info
-df = ori_df.drop_duplicates()
-df = df.groupby('address').sum().reset_index()
+def preprocess_df(inData):
+    df = inData.drop_duplicates()
+    df = df.groupby('address').sum().reset_index()
 
-# str to float and get total icx owned
-col_list = ['balance', 'stake', 'unstake']
-df['totalDelegated'] = df['totalDelegated'].astype(float)
-df[col_list] = df[col_list].astype(float)
-df['total'] = df[col_list].sum(axis=1)
-df['staking_but_not_delegating'] = df['stake'] - df['totalDelegated']
+    # str to float and get total icx owned
+    col_list = ['balance', 'stake', 'unstake']
+    df['totalDelegated'] = df['totalDelegated'].astype(float)
+    df[col_list] = df[col_list].astype(float)
+    df['total'] = df[col_list].sum(axis=1)
+    df['staking_but_not_delegating'] = df['stake'] - df['totalDelegated']
 
-# add date
-# df['created_at'] = df['created_at'].astype(int)
-# df['date'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m-%d")
+    # add date
+    # df['created_at'] = df['created_at'].astype(int)
+    # df['date'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m-%d")
 
-# only use wallets with 'hx' prefix
-df = df[df['address'].str[:2].str.contains('hx', case=False, regex=True, na=False)]
+    # only use wallets with 'hx' prefix
+    df = df[df['address'].str[:2].str.contains('hx', case=False, regex=True, na=False)]
 
-# in case if there is any duplicates, we take the lastest value
-# df = df.sort_values(by='created_at', ascending=False).groupby(['address']).first().reset_index()
+    # in case if there is any duplicates, we take the lastest value
+    # df = df.sort_values(by='created_at', ascending=False).groupby(['address']).first().reset_index()
 
+    return df
+
+df_now = preprocess_df(ori_df_now)
+df_past = preprocess_df(ori_df_past)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # binning the balance
@@ -157,9 +164,7 @@ def get_binned_df(df, inVar):
 
 
 # total_icx = df[['stake','unstake','balance']].sum(numeric_only=True, axis=0).reset_index().sum()
-
-df[df['total'].max() == df['total']]
-
+# df_now[df_now['total'].max() == df_now['total']]
 
 import six
 
@@ -197,8 +202,22 @@ plt.style.use(['dark_background'])
 # today = date.today()
 # day1 = today.strftime("%Y_%m_%d")
 
+# function to add count difference between before and now
+def add_count_differences(df_now, df_past, invar, diff_var):
+    df_now = get_binned_df(df_now, invar)
+    df_past = get_binned_df(df_past, invar)
+    df_now['diff_val'] = df_now[diff_var] - df_past[diff_var]
+    df_now['diff_symbol'] = df_now['diff_val'].apply(lambda x: "+" if x>0 else '')
+    df_now['diff_val'] = np.where(df_now['diff_val'] == 0, '=', df_now['diff_val'])
+    df_now['diff_val'] = '(' + df_now['diff_symbol'] + df_now['diff_val'].astype(str) + ')'
+    df_now[diff_var] = df_now[diff_var].astype(str) + ' ' + df_now['diff_val']
+    df_now = df_now.drop(columns=['diff_val','diff_symbol'])
+    return df_now
+
 # total
-render_mpl_table(get_binned_df(df, 'total'),
+df = add_count_differences(df_now, df_past, invar='total', diff_var='Count')
+
+render_mpl_table(df,
                  header_color='green',
                  header_columns=0,
                  col_width=3.5,
@@ -206,84 +225,123 @@ render_mpl_table(get_binned_df(df, 'total'),
 
 plt.savefig(os.path.join(outputPath, "total_balance_" + fdate + ".png"))
 
+
+
 # staked
-render_mpl_table(get_binned_df(df, 'stake'),
+total_staked_but_not_delegated_text = '{:,}'.format(df_now['staking_but_not_delegating'].sum().round(0).astype(int)) + ' ICX'
+
+df = add_count_differences(df_now, df_past, invar='stake', diff_var='Count')
+render_mpl_table(df,
                  header_color='tab:purple',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total ICX Staked - " + fdate)
+                 title="Total ICX Staked - " + fdate + '\n(Staked but Not delegating: ' + total_staked_but_not_delegated_text + ')')
 
 plt.savefig(os.path.join(outputPath, "staking_balance_" + fdate + ".png"))
 
+
+
 # unstaking
-render_mpl_table(get_binned_df(df, 'unstake'),
+total_unstake_text = '{:,}'.format(df_now['unstake'].sum().round(0).astype(int)) + ' ICX'
+
+df = add_count_differences(df_now, df_past, invar='unstake', diff_var='Count')
+render_mpl_table(df,
                  header_color='firebrick',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total ICX Unstaking - " + fdate)
+                 title="Total ICX Unstaking - " + fdate + '\n(' + total_unstake_text + ')')
 
 plt.savefig(os.path.join(outputPath, "unstaking_balance_" + fdate + ".png"))
 
+
+
 # i-score
-render_mpl_table(get_binned_df(df, 'estimatedICX'),
+total_iscore_text = '{:,}'.format(df_now['estimatedICX'].sum().round(0).astype(int)) + ' ICX'
+
+df = add_count_differences(df_now, df_past, invar='estimatedICX', diff_var='Count')
+render_mpl_table(df,
                  header_color='darkorange',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total I-Score Unclaimed - " + fdate)
+                 title="Total I-Score Unclaimed - " + fdate + '\n(' + total_iscore_text + ')')
 
 plt.savefig(os.path.join(outputPath, "iscore_balance_" + fdate + ".png"))
 
 
-# exchange wallets
-exchange_wallets = ['hx1729b35b690d51e9944b2e94075acff986ea0675',
-                    'hx99cc8eb746de5885f5e5992f084779fc0c2c135b',
-                    'hx9f0c84a113881f0617172df6fc61a8278eb540f5',
-                    'hxc4193cda4a75526bf50896ec242d6713bb6b02a3',
-                    'hx307c01535bfd1fb86b3b309925ae6970680eb30d',
-                    'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8',
-                    'hx14ea4bca6f205fecf677ac158296b7f352609871',
-                    'hx3881f2ba4e3265a11cf61dd68a571083c7c7e6a5',
-                    'hxd9fb974459fe46eb9d5a7c438f17ae6e75c0f2d1',
-                    'hx68646780e14ee9097085f7280ab137c3633b4b5f',
-                    'hxbf90314546bbc3ed980454c9e2a9766160389302',
-                    'hx562dc1e2c7897432c298115bc7fbcc3b9d5df294']
 
-exchange_names = ['binance_cold1',
-                  'binance_cold2',
-                  'binance_cold3',
-                  'binance_hot',
-                  'velic_hot',
-                  'velic_stave',
-                  'latoken',
-                  'coinex',
-                  'huobi',
-                  'kraken_hot',
-                  'upbit',
-                  'upbit_cold']
-
-exchange_details = {'address': exchange_wallets,
-                    'names': exchange_names}
-
-# dataframe
-exchange_details = pd.DataFrame(exchange_details)
-
-# getting only exchange wallets
-df_exchange = df[df['address'].isin(exchange_wallets)]
-df_exchange = pd.merge(df_exchange,
-                       exchange_details,
-                       how='left',
-                       on='address')
-
-total_exchange = df_exchange[['address', 'names', 'total']]\
-    .rename(columns={'total':'Amount (ICX)', 'names':'Exchanges'})\
-    .sort_values('Amount (ICX)', ascending=False)
-
-total_exchange['Amount (ICX)'] = total_exchange['Amount (ICX)'].astype(int).apply('{:,}'.format)
-
-render_mpl_table(total_exchange,
-                 header_color='tab:pink',
-                 header_columns=0,
-                 col_width=5,
-                 title="Major Exchange Wallets - " + fdate)
-
-plt.savefig(os.path.join(outputPath, "exchange_wallets_" + fdate + ".png"))
+#
+# # exchange wallets
+# exchange_wallets = ['hx1729b35b690d51e9944b2e94075acff986ea0675',
+#                     'hx99cc8eb746de5885f5e5992f084779fc0c2c135b',
+#                     'hx9f0c84a113881f0617172df6fc61a8278eb540f5',
+#                     'hxc4193cda4a75526bf50896ec242d6713bb6b02a3',
+#                     'hxa527f96d8b988a31083167f368105fc0f2ab1143',
+#                     'hx307c01535bfd1fb86b3b309925ae6970680eb30d',
+#                     'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8',
+#                     'hx14ea4bca6f205fecf677ac158296b7f352609871',
+#                     'hx3881f2ba4e3265a11cf61dd68a571083c7c7e6a5',
+#                     'hxd9fb974459fe46eb9d5a7c438f17ae6e75c0f2d1',
+#                     'hx68646780e14ee9097085f7280ab137c3633b4b5f',
+#                     'hxbf90314546bbc3ed980454c9e2a9766160389302',
+#                     'hx562dc1e2c7897432c298115bc7fbcc3b9d5df294',
+#                     'hxb7f3d4bb2eb521f3c68f85bbc087d1e56a816fd6']
+#
+# exchange_names = ['binance_cold1',
+#                   'binance_cold2',
+#                   'binance_cold3',
+#                   'binance_hot',
+#                   'binance.us',
+#                   'velic_hot',
+#                   'velic_stave',
+#                   'latoken',
+#                   'coinex',
+#                   'huobi',
+#                   'kraken_hot',
+#                   'upbit',
+#                   'upbit_cold',
+#                   'crypto.com']
+#
+# exchange_details = {'address': exchange_wallets,
+#                     'names': exchange_names}
+#
+# # dataframe
+# exchange_details = pd.DataFrame(exchange_details)
+#
+# # getting only exchange wallets
+# def get_exchange_amount(df):
+#     df_exchange = df[df['address'].isin(exchange_wallets)]
+#     df_exchange = pd.merge(df_exchange,
+#                            exchange_details,
+#                            how='left',
+#                            on='address')
+#
+#     total_exchange = df_exchange[['address', 'names', 'total']]\
+#         .rename(columns={'total':'Amount (ICX)', 'names':'Exchanges'})\
+#         .sort_values('Amount (ICX)', ascending=False)
+#     return total_exchange
+#
+# total_exchange_now = get_exchange_amount(df_now)
+# total_exchange_past = get_exchange_amount(df_past)
+#
+#
+# # function to add count difference between before and now
+# def add_val_differences(df_now, df_past, diff_var):
+#     df_now['diff_val'] = (df_now[diff_var] - df_past[diff_var]).astype(int)
+#     df_now[diff_var] = df_now[diff_var].astype(int).apply('{:,}'.format)
+#     df_now['diff_symbol'] = df_now['diff_val'].apply(lambda x: "+" if x>0 else '')
+#     df_now['diff_val'] = df_now['diff_val'].apply('{:,}'.format)
+#     df_now['diff_val'] = np.where(df_now['diff_val'] == 0, '=', df_now['diff_val'])
+#     df_now['diff_val'] = '(' + df_now['diff_symbol'] + df_now['diff_val'].astype(str) + ')'
+#     df_now[diff_var] = df_now[diff_var].astype(str) + ' ' + df_now['diff_val']
+#     df_now = df_now.drop(columns=['diff_val','diff_symbol'])
+#     return df_now
+#
+# total_exchange = add_val_differences(total_exchange_now, total_exchange_past, 'Amount (ICX)')
+#
+# render_mpl_table(total_exchange,
+#                  header_color='tab:pink',
+#                  header_columns=0,
+#                  col_width=5,
+#                  title="Major Exchange Wallets - " + fdate)
+#
+# plt.savefig(os.path.join(outputPath, "exchange_wallets_" + fdate + ".png"))
