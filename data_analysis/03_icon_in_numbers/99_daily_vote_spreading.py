@@ -26,6 +26,7 @@ import numpy as np
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from time import time
+from datetime import date, datetime, timedelta
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
@@ -45,10 +46,31 @@ resultsPath = os.path.join(resultsPath, "daily")
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# date
+
+# get yesterday function
+def yesterday(string=False):
+    yesterday = datetime.utcnow() - timedelta(1)
+    if string:
+        return yesterday.strftime('%Y-%m-%d')
+    return yesterday
+
+# today's date
+# today = date.today()
+today = datetime.utcnow()
+day_today = today.strftime("%Y-%m-%d")
+
+# to use specific date, otherwise use yesterday
+day_prev = yesterday(today)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'date' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-02-14', '2021-02-13']
+
+terms = [day_today, day_prev]
+# terms = ['2021-02-19', '2021-02-18']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
