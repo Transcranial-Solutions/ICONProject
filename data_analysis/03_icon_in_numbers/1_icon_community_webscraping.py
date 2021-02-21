@@ -17,7 +17,8 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 import os
-from datetime import date
+from datetime import date, datetime, timedelta
+
 
 # path to save
 currPath = os.getcwd()
@@ -103,7 +104,9 @@ basic_icx_stat = pd.concat([market_cap, circulating_supply,
                             circulation_staked, total_voted], axis=1, sort=False)
 
 # today date
-today = date.today()
+# today = date.today()
+today = datetime.utcnow()
+day_today = today.strftime("%Y-%m-%d")
 day1 = today.strftime("%Y_%m_%d")
 
 # save as csv
