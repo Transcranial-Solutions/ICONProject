@@ -57,13 +57,23 @@ def yesterday(string=False):
         return yesterday.strftime('%Y-%m-%d')
     return yesterday
 
+def prev_yesterday(string=False):
+    prev_yesterday = datetime.utcnow() - timedelta(2)
+    if string:
+        return prev_yesterday.strftime('%Y-%m-%d')
+    return prev_yesterday
+
+
 # today's date
 # today = date.today()
 today = datetime.utcnow()
-day_today = today.strftime("%Y-%m-%d")
+
+# getting the previous day as today here
+day_today = yesterday(today)
+# day_today = today.strftime("%Y-%m-%d")
 
 # to use specific date, otherwise use yesterday
-day_prev = yesterday(today)
+day_prev = prev_yesterday(today)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
