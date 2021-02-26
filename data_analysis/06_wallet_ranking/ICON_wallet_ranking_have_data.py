@@ -34,14 +34,20 @@ if not os.path.exists(outPath):
 resultsPath = os.path.join(outPath, "results")
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
+walletsPath = os.path.join(resultsPath, "wallet_balance")
+if not os.path.exists(walletsPath):
+    os.mkdir(walletsPath)
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Loading wallet info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-fname_now = 'wallet_balance_2021_02_08'
-fname_past = 'wallet_balance_2021_01_22' # for comparison
+fname_now = 'wallet_balance_2021_02_22'
+fname_past = 'wallet_balance_2021_02_08' # for comparison
 
 fdate = fname_now.rsplit('wallet_balance_', 1)[1]
+fdate_past = fname_past.rsplit('wallet_balance_', 1)[1]
+
 
 # for output (tables)
 outputPath = os.path.join(resultsPath, fdate)
@@ -49,9 +55,10 @@ if not os.path.exists(outputPath):
     os.mkdir(outputPath)
 
 fdate = fdate.replace('_','-')
+fdate_past = fdate_past.replace('_','-')
 
-ori_df_now = pd.read_csv(os.path.join(resultsPath, fname_now + '.csv'))
-ori_df_past = pd.read_csv(os.path.join(resultsPath, fname_past + '.csv'))
+ori_df_now = pd.read_csv(os.path.join(walletsPath, fname_now + '.csv'))
+ori_df_past = pd.read_csv(os.path.join(walletsPath, fname_past + '.csv'))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # adding date/datetime info
@@ -215,13 +222,15 @@ def add_count_differences(df_now, df_past, invar, diff_var):
     return df_now
 
 # total
+total_text = '{:,}'.format(df_now['total'].sum().round(0).astype(int)) + ' ICX'
+
 df = add_count_differences(df_now, df_past, invar='total', diff_var='Count')
 
 render_mpl_table(df,
                  header_color='green',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total ICX Owned - " + fdate + "\n (Staking + Unstaking + Balance)")
+                 title="Total ICX Owned - " + fdate + " (Δ since " + fdate_past + ")" + "\n (Staking + Unstaking + Balance)")
 
 plt.savefig(os.path.join(outputPath, "total_balance_" + fdate + ".png"))
 
@@ -235,7 +244,7 @@ render_mpl_table(df,
                  header_color='tab:purple',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total ICX Staked - " + fdate + '\n(Staked but Not delegating: ' + total_staked_but_not_delegated_text + ')')
+                 title="Total ICX Staked - " + fdate + " (Δ since " + fdate_past + ")" + '\n(Staked but Not delegating: ' + total_staked_but_not_delegated_text + ')')
 
 plt.savefig(os.path.join(outputPath, "staking_balance_" + fdate + ".png"))
 
@@ -249,7 +258,7 @@ render_mpl_table(df,
                  header_color='firebrick',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total ICX Unstaking - " + fdate + '\n(' + total_unstake_text + ')')
+                 title="Total ICX Unstaking - " + fdate + " (Δ since " + fdate_past + ")" + '\n(' + total_unstake_text + ')')
 
 plt.savefig(os.path.join(outputPath, "unstaking_balance_" + fdate + ".png"))
 
@@ -263,7 +272,7 @@ render_mpl_table(df,
                  header_color='darkorange',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total I-Score Unclaimed - " + fdate + '\n(' + total_iscore_text + ')')
+                 title="Total I-Score Unclaimed - " + fdate + " (Δ since " + fdate_past + ")" + '\n(' + total_iscore_text + ')')
 
 plt.savefig(os.path.join(outputPath, "iscore_balance_" + fdate + ".png"))
 
