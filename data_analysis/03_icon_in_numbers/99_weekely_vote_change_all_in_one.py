@@ -48,7 +48,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-06', '2021-05']
+terms = ['2021-08', '2021-07']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -565,6 +565,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
     ax.set_xlabel('P-Reps', fontsize=14, weight='bold', labelpad= 10)
     ax.set_ylabel('Δ votes', fontsize=14, weight='bold', labelpad= 10)
     ax.set_title('Weekly Vote Change - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')', fontsize=14, weight='bold')
+    if ymax_val >= 10000000:
+        ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x / 1e6) + ' M'))
     # plt.yscale('symlog')
 
     # manual fix for graphs here
@@ -663,8 +665,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-3000000, ymax_val=5000000, ytick_scale=1000000, # these are actual ylims & tick interval20
-                voter_mult=0.92, voter_diff_mult=1.10, # voter change multiplier
+                ymin_val=-5000000, ymax_val=9000000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                voter_mult=0.90, voter_diff_mult=1.10, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -846,7 +848,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-300, ymax_val=700, ytick_scale=100,
+                    ymin_val=-700, ymax_val=1000, ytick_scale=100,
                     first_time_voter_mult=0.90, new_voter_mult=1.05, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.87,
                     topF_1_mult=0.65, topF_2_mult=0.57)
