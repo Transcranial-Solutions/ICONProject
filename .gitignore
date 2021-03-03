@@ -13,3 +13,4 @@ data_analysis/06_wallet_ranking/wallet_from_address_20201203.csv
 data_analysis/06_wallet_ranking/wallet_from_address_20201207.csv
 data_analysis/06_wallet_ranking/results/wallet_balance_2021_01_22.csv
 data_analysis/06_wallet_ranking/results/wallet_balance_2021_02_08.csv
+data_analysis/output/vote_status_per_day.csv
