@@ -48,7 +48,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-08', '2021-07']
+terms = ['2021-09', '2021-08']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -665,8 +665,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-5000000, ymax_val=9000000, ytick_scale=1000000, # these are actual ylims & tick interval20
-                voter_mult=0.90, voter_diff_mult=1.10, # voter change multiplier
+                ymin_val=-2000000, ymax_val=16000000, ytick_scale=2000000, # these are actual ylims & tick interval20
+                voter_mult=0.70, voter_diff_mult=1.10, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
@@ -848,7 +848,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-700, ymax_val=1000, ytick_scale=100,
+                    ymin_val=-400, ymax_val=800, ytick_scale=100,
                     first_time_voter_mult=0.90, new_voter_mult=1.05, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.87,
                     topF_1_mult=0.65, topF_2_mult=0.57)
@@ -1292,7 +1292,7 @@ SYV_participants_percentages[('vote_percentages_per_prep', 'mean')] = SYV_partic
 
 # this term
 SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])]
-SYV_participants_percentages_this_term.to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_RaffleTickets_' + this_term + '.csv'), index=False)
+# SYV_participants_percentages_this_term.to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_RaffleTickets_' + this_term + '.csv'), index=False)
 
 # for IIN
 SYV_participants_summary = SYV_participants.drop_duplicates(['delegator',measuring_interval])\
@@ -1360,13 +1360,15 @@ SYV_participants_summary_agg_merged['vote_diff'] = np.where(SYV_participants_sum
 SYV_participants_summary_agg_merged['vote_diff'] = ' (' + SYV_participants_summary_agg_merged['vote_diff'] + ')'
 SYV_participants_summary_agg_merged['sum_votes'] = SYV_participants_summary_agg_merged['sum_votes'] + SYV_participants_summary_agg_merged['vote_diff']
 
-SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.sort_values(by='NumPReps_bin')\
-    [['NumPReps_bin','raffle_tickets', 'delegator', 'sum_raffle_tickets', 'sum_votes']]
+# SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.sort_values(by='NumPReps_bin')\
+#     [['NumPReps_bin','raffle_tickets', 'delegator', 'sum_raffle_tickets', 'sum_votes']]
 
+SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.sort_values(by='NumPReps_bin')\
+    [['NumPReps_bin', 'delegator', 'sum_votes']]
 
 SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.\
-    rename(columns={'NumPReps_bin': 'No. of P-Reps Voted', 'raffle_tickets': 'No. of Raffle Tickets \n Per Wallet',
-                    'delegator': 'No. of Wallets',  'sum_raffle_tickets': "Total No. of \n Raffle Tickets",'sum_votes':'Total Votes (ICX)'})
+    rename(columns={'NumPReps_bin': 'No. of P-Reps Voted',
+                    'delegator': 'No. of Wallets','sum_votes':'Total Votes (ICX)'})
 
 import six
 
@@ -1378,7 +1380,7 @@ def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=12,
         size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
         fig, ax = plt.subplots(figsize=size)
         ax.axis('off')
-        ax.set_title("'Spread Your Votes!'" + ' Participants (' + insert_week(this_term, 4) + ')', fontsize=15,
+        ax.set_title('Vote Spreading (11+ P-Reps) (' + insert_week(this_term, 4) + ')', fontsize=15,
                      weight='bold', pad=30)
         plt.tight_layout()
 
@@ -1399,27 +1401,21 @@ def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=12,
 render_mpl_table(SYV_participants_summary_agg_merged, header_columns=0, col_width=2.4)
 
 # saving
-plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_spread_your_votes_participants.png"))
+plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_vote_spreading.png"))
 
+
+################################################ LUCKY DRAW TURNED OFF BECAUSE IT'S BEEN DISCONTINUED ##########################################
 # for lucky draw
-SYV_participants_luckydraw_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
-SYV_participants_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
-SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.groupby(['delegator',measuring_interval]).\
-    head(SYV_participants_this_term['raffle_tickets'])[['delegator', measuring_interval, 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets']]
-SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.sort_values(by='how_many_prep_voted', ascending=False)
-SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_LuckyDraw_' + this_term + '.csv'), index=False)
-
-
-# import random
-# random_number = random.randint(1, 10000)
-# print(random_number)
-# SYV_participants_luckydraw.sample(frac=1, random_state=random_number).head(1)
-
+# SYV_participants_luckydraw_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
+# SYV_participants_this_term = SYV_participants[SYV_participants[measuring_interval].isin([this_term])]
+# SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.groupby(['delegator',measuring_interval]).\
+#     head(SYV_participants_this_term['raffle_tickets'])[['delegator', measuring_interval, 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets']]
+# SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.sort_values(by='how_many_prep_voted', ascending=False)
+# SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_LuckyDraw_' + this_term + '.csv'), index=False)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # checking if the range for the data is complete (just by looking at the dates)
 print(unique_date[-1:])
-
-
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
