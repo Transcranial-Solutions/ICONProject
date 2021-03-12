@@ -975,10 +975,68 @@ plt.axis('equal')
 plt.show()
 plt.tight_layout()
 
-
-
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '03_' + measuring_interval + "_count_wallet_by_vote_size.png"))
+
+
+## extra bin data
+bins = [-1, 0, 1, 1000, 5000, 10000, 15000, 20000,
+        25000, 30000, 35000, 40000, 45000, 50000, 60000, 75000,
+        100000, 150000, 250000, 500000,
+        1000000, 5000000, 10000000, 25000000,
+        50000000, 100000000, 9999999999999]
+
+names = ["0", "1 or less", "1 - 1K", "1K - 5K", "5K - 10K", "10K - 15K", "15K - 20K",
+         "20K - 25K", "25K - 30K", "30K - 35K", "35K - 40K", "40K - 45K", "45K - 50K", "50K - 60K", "60K - 75K",
+         "75K - 100K", "100K - 150K", "150K - 250K", "250K - 500K",
+         "500K - 1M", "1M - 5M", "5M - 10M", "10M - 25M",
+         "25M - 50M", "50M - 100M", "100M +"]
+
+
+# bin based on above list and make a table
+def get_binned_df(df, inVar):
+    binned_df = df[[inVar]].\
+        apply(pd.cut, bins=bins, labels=names).\
+        groupby([inVar])[inVar].\
+        agg('count').\
+        reset_index(name='Count').\
+        sort_values(by=inVar, ascending=False).\
+        rename(columns={inVar: 'Amount (ICX)'}).\
+        reset_index(drop=True)
+
+    one_or_less_index = ~binned_df['Amount (ICX)'].isin(["0", "1 or less"])
+    sum_1_plus = binned_df[one_or_less_index]['Count'].sum()
+
+    binned_df['Percentage (>1 ICX)'] = binned_df['Count'] / sum_1_plus
+    binned_df['Cumulative Percentage (>1 ICX)'] = binned_df['Percentage (>1 ICX)'].cumsum()
+
+    binned_df.loc['Total'] = binned_df.sum(numeric_only=True, axis=0)
+
+    binned_df['Amount (ICX)'] = np.where(
+        binned_df['Amount (ICX)'].isna(), 'Total',
+        binned_df['Amount (ICX)'])
+
+    one_or_less_index = ~binned_df['Amount (ICX)'].isin(["0", "1 or less", "Total"])
+    percentage_sum = binned_df[one_or_less_index]['Percentage (>1 ICX)'].sum()
+    binned_df['Percentage (>1 ICX)'] = np.where(binned_df['Amount (ICX)'] == 'Total', percentage_sum, binned_df['Percentage (>1 ICX)'])
+    binned_df['Cumulative Percentage (>1 ICX)'] = binned_df[one_or_less_index]['Cumulative Percentage (>1 ICX)'].map("{:.3%}".format)
+
+    one_or_less_index = ~binned_df['Amount (ICX)'].isin(["0", "1 or less"])
+    binned_df['Percentage (>1 ICX)'] = binned_df[one_or_less_index]['Percentage (>1 ICX)'].map("{:.3%}".format)
+    binned_df['Count'] = binned_df['Count'].astype(int)
+    binned_df = binned_df.fillna('-')
+
+    return(binned_df)
+
+temp_bin_data = total_term_change[total_term_change[measuring_interval].isin([this_term])].sort_values(by='cum_votes', ascending=False)
+temp_bin_data_summary = get_binned_df(temp_bin_data, 'cum_votes')
+
+temp_bin_data = temp_bin_data
+
+temp_bin_data = []
+
+
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -1353,10 +1411,9 @@ SYV_participants_percentages[('vote_percentages_per_prep', 'mean')] = SYV_partic
 
 # this term
 SYV_participants_percentages_this_term = SYV_participants_percentages[SYV_participants_percentages[measuring_interval].isin([this_term])].reset_index(drop=True)
-
 disqualified_wallets = SYV_participants_percentages_this_term[SYV_participants_percentages_this_term['Qualified'] != "yes"]['delegator'].reset_index(drop=True)
 
-SYV_participants_percentages_this_term.to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_RaffleTickets_' + this_term + '.csv'), index=False)
+# SYV_participants_percentages_this_term.to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_RaffleTickets_' + this_term + '.csv'), index=False)
 
 # for IIN
 SYV_participants_summary = SYV_participants.drop_duplicates(['delegator',measuring_interval])\
@@ -1424,14 +1481,19 @@ SYV_participants_summary_agg_merged['vote_diff'] = np.where(SYV_participants_sum
 SYV_participants_summary_agg_merged['vote_diff'] = ' (' + SYV_participants_summary_agg_merged['vote_diff'] + ')'
 SYV_participants_summary_agg_merged['sum_votes'] = SYV_participants_summary_agg_merged['sum_votes'] + SYV_participants_summary_agg_merged['vote_diff']
 
-SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.sort_values(by='NumPReps_bin')\
-    [['NumPReps_bin','raffle_tickets', 'delegator', 'sum_raffle_tickets', 'sum_votes']]
+# SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.sort_values(by='NumPReps_bin')\
+#     [['NumPReps_bin','raffle_tickets', 'delegator', 'sum_raffle_tickets', 'sum_votes']]
 
+SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.sort_values(by='NumPReps_bin')\
+    [['NumPReps_bin', 'delegator', 'sum_votes']]
+
+# SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.\
+#     rename(columns={'NumPReps_bin': 'No. of P-Reps Voted', 'raffle_tickets': 'No. of Raffle Tickets \n Per Wallet',
+#                     'delegator': 'No. of Wallets',  'sum_raffle_tickets': "Total No. of \n Raffle Tickets",'sum_votes':'Total Votes (ICX)'})
 
 SYV_participants_summary_agg_merged = SYV_participants_summary_agg_merged.\
-    rename(columns={'NumPReps_bin': 'No. of P-Reps Voted', 'raffle_tickets': 'No. of Raffle Tickets \n Per Wallet',
-                    'delegator': 'No. of Wallets',  'sum_raffle_tickets': "Total No. of \n Raffle Tickets",'sum_votes':'Total Votes (ICX)'})
-
+    rename(columns={'NumPReps_bin': 'No. of P-Reps Voted',
+                    'delegator': 'No. of Wallets', 'sum_votes':'Total Votes (ICX)'})
 import six
 
 def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=12,
@@ -1442,7 +1504,9 @@ def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=12,
         size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
         fig, ax = plt.subplots(figsize=size)
         ax.axis('off')
-        ax.set_title("'Spread Your Votes!'" + ' Participants (' + insert_week(this_term, 4) + ')', fontsize=15,
+        # ax.set_title("'Spread Your Votes!'" + ' Participants (' + insert_week(this_term, 4) + ')', fontsize=15,
+        ax.set_title('Vote Spreading (11+ P-Reps) (' + insert_week(this_term, 4) + ')', fontsize=15,
+
                      weight='bold', pad=30)
         plt.tight_layout()
 
@@ -1463,7 +1527,7 @@ def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=12,
 render_mpl_table(SYV_participants_summary_agg_merged, header_columns=0, col_width=2.4)
 
 # saving
-plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_spread_your_votes_participants.png"))
+plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_vote_spreading.png"))
 
 
 
@@ -1606,6 +1670,8 @@ plt.tight_layout()
 plt.savefig(os.path.join(resultsPath_interval, '07_' + measuring_interval + "_vote_spreading_time_series.png"))
 
 
+
+## LUCKY DRAW disabled because it's discontinued (temporarily?)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Lucky Draw ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -1623,7 +1689,7 @@ def get_winners(total_prize_money = 400):
     SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.groupby(['delegator',measuring_interval]).\
         head(SYV_participants_luckydraw_this_term['raffle_tickets'])[['delegator', measuring_interval, 'how_many_prep_voted', 'NumPReps_bin', 'raffle_tickets']]
     SYV_participants_luckydraw_this_term = SYV_participants_luckydraw_this_term.sort_values(by='how_many_prep_voted', ascending=False)
-    SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_LuckyDraw_' + this_term + '.csv'), index=False)
+    # SYV_participants_luckydraw_this_term.drop(columns='NumPReps_bin').to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_LuckyDraw_' + this_term + '.csv'), index=False)
 
 
     # this to be removed from small prize -- As wheel or fortune does not work, it has to be programmed
@@ -1737,5 +1803,5 @@ def get_winners(total_prize_money = 400):
 
 all_prize_winners = get_winners()
 
-all_prize_winners.drop(columns='NumPReps_bin').\
-    to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_PrizeWinners_' + this_term + '.csv'), index=False)
+# all_prize_winners.drop(columns='NumPReps_bin').\
+#     to_csv(os.path.join(resultsPath_interval, 'IIN_SpreadYourVotes_PrizeWinners_' + this_term + '.csv'), index=False)
