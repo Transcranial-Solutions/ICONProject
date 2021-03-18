@@ -36,7 +36,8 @@ if not os.path.exists(walletPath):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # using solidwallet
-icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+default_ctz_api = "https://ctz.solidwallet.io/api/v3"
+icon_service = IconService(HTTPProvider(default_ctz_api))
 
 
 ## Creating Wallet if does not exist (only done for the first time)
@@ -105,24 +106,23 @@ for k in json_details:
     page = Request(URL, headers={'User-Agent': 'Mozilla/5.0'})
     try:
         jpage = json.load(urlopen(page))
+        api_endpoint = extract_values(jpage, 'api_endpoint')[0]
+        all_json.append(api_endpoint)
     except:
         print(k + ': Perhaps HTTP Error')
-    try:
-        api_endpoint = extract_values(jpage, 'api_endpoint')[0]
-    except:
-        print(k + "'s API does not exist!")
-    all_json.append(api_endpoint)
     print(k + ' is done.')
 
 # adding https:// if doesn't exist
 all_json_mod = ['http://' + x if x[0] not in 'https' else x for x in all_json]
+all_json_mod = [x + '/api/v3' if x[0] not in '/api/v3' else x for x in all_json_mod]
 
-
+all_json_mod += [default_ctz_api]
+all_json_mod.insert(0, all_json_mod.pop())
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # testing #
 test_prep = all_json_mod[0] # try different address here
-icon_service = IconService(HTTPProvider(test_prep, 3))
+icon_service = IconService(HTTPProvider(test_prep))
 
 
 # icon foundation wallet
