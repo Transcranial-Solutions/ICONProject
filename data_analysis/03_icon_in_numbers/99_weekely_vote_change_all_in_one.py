@@ -48,7 +48,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-09', '2021-08']
+terms = ['2021-11', '2021-10']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -196,14 +196,16 @@ with ThreadPoolExecutor(max_workers=5) as executor:
     for k in range(len(prep_address)):
         all_votes.append(executor.submit(get_votes, prep_address[k], len_prep_address))
 
-temp_df = []
+ori_df = []
 for task in as_completed(all_votes):
-    temp_df.append(task.result())
+    ori_df.append(task.result())
 
 print(f'Time taken: {time() - start}')
 
 # all votes per wallet
-df = pd.concat(temp_df)
+df = pd.concat(ori_df)
+
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Data -- by validator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # concatenate them into a dataframe -- by validator_name
@@ -234,141 +236,159 @@ df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
 df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
 
 
-# pivot wider & longer to get all the longitudinal data
-df_wider = df.pivot_table(index=['validator_name', 'delegator'],
-                          columns=[measuring_interval],
-                          values='votes').reset_index()
+def df_wide_then_long(df, measuring_interval=measuring_interval):
+    # pivot wider & longer to get all the longitudinal data
+    df_wider = df.pivot_table(index=['validator_name', 'delegator'],
+                              columns=[measuring_interval],
+                              values='votes').reset_index()
 
-df_longer = df_wider.melt(id_vars=['validator_name', 'delegator'], var_name=[measuring_interval], value_name='votes')
-df_longer = df_longer.sort_values(by=['validator_name', 'delegator', measuring_interval, 'votes']).reset_index(drop=True)
+    df_longer = df_wider.melt(id_vars=['validator_name', 'delegator'], var_name=[measuring_interval], value_name='votes')
+    df_longer = df_longer.sort_values(by=['validator_name', 'delegator', measuring_interval, 'votes']).reset_index(drop=True)
+    return df_longer
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# removing NaN to first non-NaN
-df_longer.loc[df_longer.groupby(['validator_name', 'delegator'])[measuring_interval].cumcount()==0,'remove_this']= '1'
-df_longer.loc[df_longer.groupby(['validator_name', 'delegator'])['votes'].apply(pd.Series.first_valid_index), 'remove_this'] = '2'
-df_longer['remove_this'] = df_longer['remove_this'].ffill()
-df_longer = df_longer[df_longer['remove_this'] != '1'].drop(columns='remove_this').reset_index(drop=True)
+df_longer = df_wide_then_long(df, measuring_interval=measuring_interval)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# getting the duration of interest (so that the data does not get cut off)
-df_longer = df_longer[df_longer[measuring_interval] <= this_term]
+def add_vote_status_and_prep_voted(df, measuring_interval=measuring_interval, this_term=this_term):
 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # removing NaN to first non-NaN
+    df.loc[df.groupby(['validator_name', 'delegator'])[measuring_interval].cumcount()==0,'remove_this']= '1'
+    df.loc[df.groupby(['validator_name', 'delegator'])['votes'].apply(pd.Series.first_valid_index), 'remove_this'] = '2'
+    df['remove_this'] = df['remove_this'].ffill()
+    df = df[df['remove_this'] != '1'].drop(columns='remove_this').reset_index(drop=True)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# vote status -> voted, add cumulative votes & unvoted
-df_longer['cum_votes'] = df_longer.groupby(['delegator', 'validator_name'])['votes'].cumsum()
-df_longer['cum_votes'] = df_longer.groupby(['delegator', 'validator_name'])['cum_votes'].ffill()
-
-# cumulative votes shifting to give proper vote/unvote status
-df_longer['prev_cum_votes'] = df_longer.groupby(['delegator', 'validator_name'])['cum_votes'].shift()
-
-# fill cumulative votes, make between -1e-6 and 1e-6 to zero
-df_longer.loc[df_longer['votes'].between(-1e-6, 1e-6), 'votes'] = 0
-df_longer.loc[df_longer['prev_cum_votes'].between(-1e-6, 1e-6), 'prev_cum_votes'] = 0
-df_longer.loc[df_longer['cum_votes'].between(-1e-6, 1e-6), 'cum_votes'] = 0
-
-# vote/unvote status
-df_longer.loc[df_longer.groupby(['validator_name', 'delegator'])[measuring_interval].cumcount()==0,'vote_status_A']= 'voted'
-df_longer.loc[df_longer['prev_cum_votes'].between(-1e-6, 1e-6) & ~np.isnan(df_longer['votes']), 'vote_status_A']= 'voted'
-df_longer.loc[df_longer['cum_votes'].between(-1e-6, 1e-6) & ~np.isnan(df_longer['votes']), 'vote_status_B'] = 'unvoted'
-
-# getting rid of non-needed rows (rows before first vote & after unvote)
-remove_these = df_longer['cum_votes'].between(-1e-6, 1e-6) & df_longer['prev_cum_votes'].between(-1e-6, 1e-6)
-df_longer = df_longer[~remove_these].drop(columns='prev_cum_votes')
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # getting the duration of interest (so that the data does not get cut off)
+    df = df[df[measuring_interval] <= this_term]
 
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# how many p-rep voted
-## removing 'unvoted' for counting number of p-reps each voter voted per measuring_interval
-a = df_longer['vote_status_B'] != 'unvoted'
-count_voted_prep_per_measuring_interval = df_longer.copy()
-count_voted_prep_per_measuring_interval['vote_status_A'] = count_voted_prep_per_measuring_interval.\
-    groupby(['delegator'])['vote_status_A'].ffill()
-count_voted_prep_per_measuring_interval = count_voted_prep_per_measuring_interval[a].\
-    groupby(['delegator', measuring_interval]).\
-    count()['vote_status_A'].reset_index().\
-    rename(columns={'vote_status_A': 'how_many_prep_voted'})
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # vote status -> voted, add cumulative votes & unvoted
+    df['cum_votes'] = df.groupby(['delegator', 'validator_name'])['votes'].cumsum()
+    df['cum_votes'] = df.groupby(['delegator', 'validator_name'])['cum_votes'].ffill()
+
+    # cumulative votes shifting to give proper vote/unvote status
+    df['prev_cum_votes'] = df.groupby(['delegator', 'validator_name'])['cum_votes'].shift()
+
+    # fill cumulative votes, make between -1e-6 and 1e-6 to zero
+    df.loc[df['votes'].between(-1e-6, 1e-6), 'votes'] = 0
+    df.loc[df['prev_cum_votes'].between(-1e-6, 1e-6), 'prev_cum_votes'] = 0
+    df.loc[df['cum_votes'].between(-1e-6, 1e-6), 'cum_votes'] = 0
+
+    # vote/unvote status
+    df.loc[df.groupby(['validator_name', 'delegator'])[measuring_interval].cumcount()==0,'vote_status_A']= 'voted'
+    df.loc[df['prev_cum_votes'].between(-1e-6, 1e-6) & ~np.isnan(df['votes']), 'vote_status_A']= 'voted'
+    df.loc[df['cum_votes'].between(-1e-6, 1e-6) & ~np.isnan(df['votes']), 'vote_status_B'] = 'unvoted'
+
+    # getting rid of non-needed rows (rows before first vote & after unvote)
+    remove_these = df['cum_votes'].between(-1e-6, 1e-6) & df['prev_cum_votes'].between(-1e-6, 1e-6)
+    df = df[~remove_these].drop(columns='prev_cum_votes')
 
 
-# merge with df_longer
-df_longer = pd.merge(df_longer,
-                     count_voted_prep_per_measuring_interval,
-                     on=['delegator', measuring_interval],
-                     how='left')
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # how many p-rep voted
+    ## removing 'unvoted' for counting number of p-reps each voter voted per measuring_interval
+    a = df['vote_status_B'] != 'unvoted'
+    count_voted_prep_per_measuring_interval = df.copy()
+    count_voted_prep_per_measuring_interval['vote_status_A'] = count_voted_prep_per_measuring_interval.\
+        groupby(['delegator'])['vote_status_A'].ffill()
+    count_voted_prep_per_measuring_interval = count_voted_prep_per_measuring_interval[a].\
+        groupby(['delegator', measuring_interval]).\
+        count()['vote_status_A'].reset_index().\
+        rename(columns={'vote_status_A': 'how_many_prep_voted'})
 
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# new wallet by measuring_interval -- first appearing wallet count
-new_wallet_A = df_longer.sort_values(by = ['delegator', measuring_interval]).groupby('delegator').first().reset_index()
-new_wallet_A = new_wallet_A.drop_duplicates(['delegator', measuring_interval])[['delegator', measuring_interval]]
-new_wallet_A['new_wallet_A'] = 'voted'
+    # merge with df_longer
+    df = pd.merge(df, count_voted_prep_per_measuring_interval, on=['delegator', measuring_interval], how='left')
 
-# merge new_wallet with df_longer
-df_longer = pd.merge(df_longer, new_wallet_A, on=['delegator', measuring_interval], how='left')
+    return df
+
+df_longer = add_vote_status_and_prep_voted(df_longer, measuring_interval=measuring_interval, this_term=this_term)
 
 
-# adding new_wallet_B which shows unvoted & left
-df_longer.loc[df_longer['how_many_prep_voted'].isnull(), 'unvoted_and_left'] = 1
+def add_vote_unvote_status(df, measuring_interval=measuring_interval):
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # new wallet by measuring_interval -- first appearing wallet count
+    new_wallet_A = df.sort_values(by = ['delegator', measuring_interval]).groupby('delegator').first().reset_index()
+    new_wallet_A = new_wallet_A.drop_duplicates(['delegator', measuring_interval])[['delegator', measuring_interval]]
+    new_wallet_A['new_wallet_A'] = 'voted'
 
-# adding cumulative unvoted_and_left
-cum_unvoted_and_left = df_longer.drop_duplicates(['delegator', measuring_interval, 'unvoted_and_left'])[['delegator', measuring_interval, 'unvoted_and_left']].\
-    dropna().sort_values(by=['delegator', measuring_interval], ascending=True).reset_index(drop=True)
-cum_unvoted_and_left['cum_unvoted_and_left'] = cum_unvoted_and_left.groupby(['delegator'])['unvoted_and_left'].transform('cumsum')
-cum_unvoted_and_left = cum_unvoted_and_left.drop(columns=['unvoted_and_left'])
-df_longer = pd.merge(df_longer, cum_unvoted_and_left, on=['delegator', measuring_interval], how='left')
-
-
-# getting last time_interval (for those who left permanently)
-df_longer = df_longer.sort_values(by = ['delegator', measuring_interval], ascending=True) # not by validator_name here!
-lasts = df_longer.groupby(['delegator'])[measuring_interval].last().reset_index().rename(columns={measuring_interval: 'last_interval'})
-df_longer = pd.merge(df_longer, lasts, on=['delegator'], how='left')
-
-# having unvoted temporarily (who left and came back) and unvoted permanently (up to the date chosen) who never came back
-df_longer.loc[~df_longer['unvoted_and_left'].isnull(), 'stopped_voting'] = 'unvoted'
-df_longer.loc[(df_longer[measuring_interval] != df_longer['last_interval']) & (~df_longer['stopped_voting'].isnull()), 'stopped_voting_status'] = 'temporary'
-df_longer.loc[(df_longer[measuring_interval] == df_longer['last_interval']) & (~df_longer['stopped_voting'].isnull()), 'stopped_voting_status'] = 'permanent'
-df_longer.loc[(df_longer[measuring_interval] == df_longer['last_interval']) & (~df_longer['stopped_voting'].isnull()), 'new_wallet_B'] = 'unvoted' # last disappearing wallet count (A -> B), separately for counting
-df_longer = df_longer.drop(columns=['last_interval'])
+    # merge new_wallet with df
+    df = pd.merge(df, new_wallet_A, on=['delegator', measuring_interval], how='left')
 
 
-# adding returned voting (after leaving temporarily) -- note that it also includes first voting
-df_longer['lag_stopped_voting_status'] = df_longer.groupby('delegator')['stopped_voting_status'].shift()
-df_longer['lag_cum_unvoted_and_left'] = df_longer.groupby('delegator')['cum_unvoted_and_left'].shift()
+    # adding new_wallet_B which shows unvoted & left
+    df.loc[df['how_many_prep_voted'].isnull(), 'unvoted_and_left'] = 1
 
-v = df_longer['new_wallet_A'] == 'voted'
+    # adding cumulative unvoted_and_left
+    cum_unvoted_and_left = df.drop_duplicates(['delegator', measuring_interval, 'unvoted_and_left'])[['delegator', measuring_interval, 'unvoted_and_left']].\
+        dropna().sort_values(by=['delegator', measuring_interval], ascending=True).reset_index(drop=True)
+    cum_unvoted_and_left['cum_unvoted_and_left'] = cum_unvoted_and_left.groupby(['delegator'])['unvoted_and_left'].transform('cumsum')
+    cum_unvoted_and_left = cum_unvoted_and_left.drop(columns=['unvoted_and_left'])
+    df = pd.merge(df, cum_unvoted_and_left, on=['delegator', measuring_interval], how='left')
 
-rv = ((df_longer['vote_status_A'] == 'voted') &
-      (df_longer['lag_stopped_voting_status'] == 'temporary') &
-      (df_longer['how_many_prep_voted'].notna()))
 
-rv2 = ((df_longer['vote_status_A'] == 'voted') &
-       (df_longer['vote_status_B'] == 'unvoted') &
-       (df_longer['how_many_prep_voted'].isnull()) &
-       (df_longer['lag_stopped_voting_status'] == 'temporary') &
-       (df_longer['lag_cum_unvoted_and_left'] != df_longer['cum_unvoted_and_left']))
+    # getting last time_interval (for those who left permanently)
+    df = df.sort_values(by=['delegator', measuring_interval], ascending=True) # not by validator_name here!
+    lasts = df.groupby(['delegator'])[measuring_interval].last().reset_index().rename(columns={measuring_interval: 'last_interval'})
+    df = pd.merge(df, lasts, on=['delegator'], how='left')
 
-df_longer.loc[(v)|(rv)|(rv2), 'returned_voting'] = 'voted'
-df_longer.loc[v, 'returned_voting_status'] = 'first'
-df_longer.loc[(rv)|(rv2), 'returned_voting_status'] = 'returned'
-# df_longer.loc[rv2, 'returned_voting_status'] = 'returned_left'
-df_longer['returned_voting'] = df_longer.groupby(['delegator', measuring_interval])['returned_voting'].ffill()
-df_longer['returned_voting_status'] = df_longer.groupby(['delegator', measuring_interval])['returned_voting_status'].ffill()
-df_longer = df_longer.drop(columns=['lag_stopped_voting_status', 'lag_cum_unvoted_and_left'])
+    # having unvoted temporarily (who left and came back) and unvoted permanently (up to the date chosen) who never came back
+    df.loc[~df['unvoted_and_left'].isnull(), 'stopped_voting'] = 'unvoted'
+    df.loc[(df[measuring_interval] != df['last_interval']) & (~df['stopped_voting'].isnull()), 'stopped_voting_status'] = 'temporary'
+    df.loc[(df[measuring_interval] == df['last_interval']) & (~df['stopped_voting'].isnull()), 'stopped_voting_status'] = 'permanent'
+    df.loc[(df[measuring_interval] == df['last_interval']) & (~df['stopped_voting'].isnull()), 'new_wallet_B'] = 'unvoted' # last disappearing wallet count (A -> B), separately for counting
+    df = df.drop(columns=['last_interval'])
 
-# just to have the number without decimals
-def remove_decimal_with_int(df, inVar):
-    df[inVar] = df[inVar].fillna(0).astype(int).astype(object).where(df[inVar].notnull())
 
-# list to convert
-lst = ['how_many_prep_voted' , 'unvoted_and_left', 'cum_unvoted_and_left']
-for x in lst:
-    remove_decimal_with_int(df_longer, x)
+    # adding returned voting (after leaving temporarily) -- note that it also includes first voting
+    df['lag_stopped_voting_status'] = df.groupby('delegator')['stopped_voting_status'].shift()
+    df['lag_cum_unvoted_and_left'] = df.groupby('delegator')['cum_unvoted_and_left'].shift()
 
-df_longer = df_longer[['validator_name', 'delegator', measuring_interval, 'votes', 'cum_votes',
-                       'vote_status_A', 'vote_status_B', 'returned_voting', 'stopped_voting', 'returned_voting_status', 'stopped_voting_status',
-                       'new_wallet_A', 'new_wallet_B', 'unvoted_and_left', 'cum_unvoted_and_left', 'how_many_prep_voted']]
+    v = df['new_wallet_A'] == 'voted'
 
-# pd.crosstab(df_longer['unvoted_and_left'].fillna('missing'), df_longer['vote_status_B'].fillna('missing'), margins=True)
+    rv = ((df['vote_status_A'] == 'voted') &
+          (df['lag_stopped_voting_status'] == 'temporary') &
+          (df['how_many_prep_voted'].notna()))
+
+    rv2 = ((df['vote_status_A'] == 'voted') &
+           (df['vote_status_B'] == 'unvoted') &
+           (df['how_many_prep_voted'].isnull()) &
+           (df['lag_stopped_voting_status'] == 'temporary') &
+           (df['lag_cum_unvoted_and_left'] != df['cum_unvoted_and_left']))
+
+    df.loc[(v)|(rv)|(rv2), 'returned_voting'] = 'voted'
+    df.loc[v, 'returned_voting_status'] = 'first'
+    df.loc[(rv)|(rv2), 'returned_voting_status'] = 'returned'
+    # df.loc[rv2, 'returned_voting_status'] = 'returned_left'
+    df['returned_voting'] = df.groupby(['delegator', measuring_interval])['returned_voting'].ffill()
+    df['returned_voting_status'] = df.groupby(['delegator', measuring_interval])['returned_voting_status'].ffill()
+    df = df.drop(columns=['lag_stopped_voting_status', 'lag_cum_unvoted_and_left'])
+
+    return df
+
+df_longer = add_vote_unvote_status(df_longer, measuring_interval=measuring_interval)
+
+def clean_up_df(df, measuring_interval=measuring_interval):
+
+    # just to have the number without decimals
+    def remove_decimal_with_int(df, inVar):
+        df[inVar] = df[inVar].fillna(0).astype(int).astype(object).where(df[inVar].notnull())
+
+    # list to convert
+    lst = ['how_many_prep_voted' , 'unvoted_and_left', 'cum_unvoted_and_left']
+    for x in lst:
+        remove_decimal_with_int(df, x)
+
+    df = df[['validator_name', 'delegator', measuring_interval, 'votes', 'cum_votes',
+                           'vote_status_A', 'vote_status_B', 'returned_voting', 'stopped_voting', 'returned_voting_status', 'stopped_voting_status',
+                           'new_wallet_A', 'new_wallet_B', 'unvoted_and_left', 'cum_unvoted_and_left', 'how_many_prep_voted']]
+
+    # pd.crosstab(df_longer['unvoted_and_left'].fillna('missing'), df_longer['vote_status_B'].fillna('missing'), margins=True)
+
+    return df
+
+df_longer = clean_up_df(df_longer, measuring_interval=measuring_interval)
 
 ##################### SAVE HERE?
 
@@ -381,46 +401,52 @@ df_longer = df_longer[['validator_name', 'delegator', measuring_interval, 'votes
 # df_longer = df_longer[df_longer[measuring_interval] <= this_term]
 # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+def get_vote_status_count(df, measuring_interval=measuring_interval):
+    # Voter count table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    vote_status_count = df.groupby(['validator_name', measuring_interval]).agg('count').reset_index()
+    vote_status_count = vote_status_count.\
+        drop(columns=['delegator', 'votes', 'cum_votes', 'how_many_prep_voted', 'unvoted_and_left',
+                      'cum_unvoted_and_left']).\
+        rename(columns={'vote_status_A': 'Voted', 'vote_status_B': 'Unvoted',
+                        'returned_voting': 'U_Voted', 'stopped_voting': 'U_Unvoted', ## these are for counts per week overall
+                        'new_wallet_A': 'new_wallet_Voted', 'new_wallet_B': 'new_wallet_Unvoted'})
 
-# Voter count table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-vote_status_count = df_longer.groupby(['validator_name', measuring_interval]).agg('count').reset_index()
-vote_status_count = vote_status_count.\
-    drop(columns=['delegator', 'votes', 'cum_votes', 'how_many_prep_voted', 'unvoted_and_left',
-                  'cum_unvoted_and_left']).\
-    rename(columns={'vote_status_A': 'Voted', 'vote_status_B': 'Unvoted',
-                    'returned_voting': 'U_Voted', 'stopped_voting': 'U_Unvoted', ## these are for counts per week overall
-                    'new_wallet_A': 'new_wallet_Voted', 'new_wallet_B': 'new_wallet_Unvoted'})
+    vote_status_count['Voter_diff'] = vote_status_count['Voted'] - vote_status_count['Unvoted']
+    # vote_status_count['U_Voter_diff'] = vote_status_count['U_Voted'] - vote_status_count['U_Unvoted']
+    vote_status_count['new_Voter_diff'] = vote_status_count['new_wallet_Voted'] - vote_status_count['new_wallet_Unvoted']
 
-vote_status_count['Voter_diff'] = vote_status_count['Voted'] - vote_status_count['Unvoted']
-# vote_status_count['U_Voter_diff'] = vote_status_count['U_Voted'] - vote_status_count['U_Unvoted']
-vote_status_count['new_Voter_diff'] = vote_status_count['new_wallet_Voted'] - vote_status_count['new_wallet_Unvoted']
+    # cumulative sum function
+    def cum_sum(df, inVar, outVar, group_by):
+        df[outVar] = df.groupby([group_by])[inVar].cumsum()
 
-# cumulative sum function
-def cum_sum(df, inVar, outVar, group_by):
-    df[outVar] = df.groupby([group_by])[inVar].cumsum()
+    # over lists
+    inVar_lst = ['Voted', 'Unvoted', 'Voter_diff',
+                 # 'U_Voted', 'U_Unvoted', 'U_Voter_diff',
+                 'new_wallet_Voted', 'new_wallet_Unvoted', 'new_Voter_diff']
+    outVar_lst = ['cum_Voted', 'cum_Unvoted', 'cum_n_Voter',
+                  # 'cum_U_Voted', 'cum_U_Unvoted','cum_n_U_Voter',
+                  'cum_new_wallet_Voted', 'cum_new_wallet_Unvoted', 'cum_n_new_Voter']
 
-# over lists
-inVar_lst = ['Voted', 'Unvoted', 'Voter_diff',
-             # 'U_Voted', 'U_Unvoted', 'U_Voter_diff',
-             'new_wallet_Voted', 'new_wallet_Unvoted', 'new_Voter_diff']
-outVar_lst = ['cum_Voted', 'cum_Unvoted', 'cum_n_Voter',
-              # 'cum_U_Voted', 'cum_U_Unvoted','cum_n_U_Voter',
-              'cum_new_wallet_Voted', 'cum_new_wallet_Unvoted', 'cum_n_new_Voter']
+    for x, y in zip(inVar_lst, outVar_lst):
+        cum_sum(vote_status_count, x, y, 'validator_name')
 
-for x, y in zip(inVar_lst, outVar_lst):
-    cum_sum(vote_status_count, x, y, 'validator_name')
+    vote_status_count['pct_change_Voter'] = vote_status_count['Voter_diff'] / (vote_status_count.groupby('validator_name')['cum_n_Voter'].shift(1))
+    # vote_status_count['pct_change_U_Voter'] = vote_status_count['U_Voter_diff'] / (vote_status_count.groupby('validator_name')['cum_n_U_Voter'].shift(1))
+    vote_status_count['pct_change_new_Voter'] = vote_status_count['new_Voter_diff'] / (vote_status_count.groupby('validator_name')['cum_n_new_Voter'].shift(1))
 
-vote_status_count['pct_change_Voter'] = vote_status_count['Voter_diff'] / (vote_status_count.groupby('validator_name')['cum_n_Voter'].shift(1))
-# vote_status_count['pct_change_U_Voter'] = vote_status_count['U_Voter_diff'] / (vote_status_count.groupby('validator_name')['cum_n_U_Voter'].shift(1))
-vote_status_count['pct_change_new_Voter'] = vote_status_count['new_Voter_diff'] / (vote_status_count.groupby('validator_name')['cum_n_new_Voter'].shift(1))
+    # vote_status_count = vote_status_count.replace(np.inf, np.nan)
+    return vote_status_count
 
-# vote_status_count = vote_status_count.replace(np.inf, np.nan)
+vote_status_count = get_vote_status_count(df_longer, measuring_interval=measuring_interval)
 
-# Votes table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-votes_sum = df_longer.groupby(['validator_name', measuring_interval]).agg('sum').reset_index()
-votes_sum['pct_change_votes'] = votes_sum['votes'] / (votes_sum.groupby('validator_name')['cum_votes'].shift(1))
-# votes_sum = votes_sum.replace(np.inf, np.nan)
+def get_votes_sum(df, measuring_interval=measuring_interval):
+    # Votes table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    votes_sum = df.groupby(['validator_name', measuring_interval]).agg('sum').reset_index()
+    votes_sum['pct_change_votes'] = votes_sum['votes'] / (votes_sum.groupby('validator_name')['cum_votes'].shift(1))
+    # votes_sum = votes_sum.replace(np.inf, np.nan)
+    return votes_sum
 
+votes_sum = get_votes_sum(df_longer, measuring_interval=measuring_interval)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
@@ -452,69 +478,69 @@ def add_ranking(df, what_rank, sortings, meas,
 
     df.drop(columns=[Top_10, Place], inplace=True)
 
+def add_ranking_wrapper(measuring_interval=measuring_interval):
+    # Voters -- vote status count
+    add_ranking(df=vote_status_count,
+                what_rank='win_rank_Voter',
+                meas='Voter_diff',
+                sortings=[measuring_interval, 'Voter_diff', 'Voted', 'pct_change_Voter', 'cum_n_Voter', 'cum_Voted'],
+                descendings=False,
+                Top_10='Top_10_win_Voter',
+                Consecutive_Top_10='Consecutive_Top_10_win_Voter',
+                Longest_Streak_Top_10='Longest_Top_10_win_Voter',
+                ascendings=True,
+                Place='First_Place_Voter',
+                Consecutive_Place='Consecutive_First_Place_Voter',
+                Longest_Streak_Place = 'Longest_First_Place_Voter')
 
-# Voters -- vote status count
-add_ranking(df=vote_status_count,
-            what_rank='win_rank_Voter',
-            meas='Voter_diff',
-            sortings=[measuring_interval, 'Voter_diff', 'Voted', 'pct_change_Voter', 'cum_n_Voter', 'cum_Voted'],
-            descendings=False,
-            Top_10='Top_10_win_Voter',
-            Consecutive_Top_10='Consecutive_Top_10_win_Voter',
-            Longest_Streak_Top_10='Longest_Top_10_win_Voter',
-            ascendings=True,
-            Place='First_Place_Voter',
-            Consecutive_Place='Consecutive_First_Place_Voter',
-            Longest_Streak_Place = 'Longest_First_Place_Voter')
+    add_ranking(df=vote_status_count,
+                what_rank='loss_rank_Voter',
+                meas='Voter_diff',
+                sortings=[measuring_interval, 'Voter_diff', 'Voted', 'pct_change_Voter', 'cum_n_Voter', 'cum_Voted'],
+                descendings=True,
+                Top_10='Top_10_loss_Voter',
+                Consecutive_Top_10='Consecutive_Top_10_loss_Voter',
+                Longest_Streak_Top_10='Longest_Top_10_loss_Voter',
+                ascendings=False,
+                Place='Last_Place_Voter',
+                Consecutive_Place='Consecutive_Last_Place_Voter',
+                Longest_Streak_Place='Longest_Last_Place_Voter')
 
-add_ranking(df=vote_status_count,
-            what_rank='loss_rank_Voter',
-            meas='Voter_diff',
-            sortings=[measuring_interval, 'Voter_diff', 'Voted', 'pct_change_Voter', 'cum_n_Voter', 'cum_Voted'],
-            descendings=True,
-            Top_10='Top_10_loss_Voter',
-            Consecutive_Top_10='Consecutive_Top_10_loss_Voter',
-            Longest_Streak_Top_10='Longest_Top_10_loss_Voter',
-            ascendings=False,
-            Place='Last_Place_Voter',
-            Consecutive_Place='Consecutive_Last_Place_Voter',
-            Longest_Streak_Place='Longest_Last_Place_Voter')
+    # Votes -- amount of votes
+    add_ranking(df=votes_sum,
+                what_rank='win_rank_votes',
+                meas='votes',
+                sortings=[measuring_interval, 'votes', 'pct_change_votes', 'cum_votes'],
+                descendings=False,
+                Top_10='Top_10_win_votes',
+                Consecutive_Top_10='Consecutive_Top_10_win_votes',
+                Longest_Streak_Top_10='Longest_Top_10_win_votes',
+                ascendings=True,
+                Place='First_Place_votes',
+                Consecutive_Place='Consecutive_First_Place_votes',
+                Longest_Streak_Place='Longest_First_Place_votes')
 
-# Votes -- amount of votes
-add_ranking(df=votes_sum,
-            what_rank='win_rank_votes',
-            meas='votes',
-            sortings=[measuring_interval, 'votes', 'pct_change_votes', 'cum_votes'],
-            descendings=False,
-            Top_10='Top_10_win_votes',
-            Consecutive_Top_10='Consecutive_Top_10_win_votes',
-            Longest_Streak_Top_10='Longest_Top_10_win_votes',
-            ascendings=True,
-            Place='First_Place_votes',
-            Consecutive_Place='Consecutive_First_Place_votes',
-            Longest_Streak_Place='Longest_First_Place_votes')
+    add_ranking(df=votes_sum,
+                what_rank='loss_rank_votes',
+                meas='votes',
+                sortings=[measuring_interval, 'votes', 'pct_change_votes', 'cum_votes'],
+                descendings=True,
+                Top_10='Top_10_loss_votes',
+                Consecutive_Top_10='Consecutive_Top_10_loss_votes',
+                Longest_Streak_Top_10='Longest_Top_10_loss_votes',
+                ascendings=False,
+                Place='Last_Place_votes',
+                Consecutive_Place='Consecutive_Last_Place_votes',
+                Longest_Streak_Place='Longest_Last_Place_votes')
+    return vote_status_count, votes_sum
 
-add_ranking(df=votes_sum,
-            what_rank='loss_rank_votes',
-            meas='votes',
-            sortings=[measuring_interval, 'votes', 'pct_change_votes', 'cum_votes'],
-            descendings=True,
-            Top_10='Top_10_loss_votes',
-            Consecutive_Top_10='Consecutive_Top_10_loss_votes',
-            Longest_Streak_Top_10='Longest_Top_10_loss_votes',
-            ascendings=False,
-            Place='Last_Place_votes',
-            Consecutive_Place='Consecutive_Last_Place_votes',
-            Longest_Streak_Place='Longest_Last_Place_votes')
+vote_status_count,  votes_sum = add_ranking_wrapper()
 
 combined_df = pd.merge(vote_status_count, votes_sum, how = 'outer', on = ['validator_name', measuring_interval])
-
 
 # for combined
 term_change_comb = combined_df[combined_df[measuring_interval].isin(terms)]
 this_term_change_comb = combined_df[combined_df[measuring_interval].isin([this_term])]
-
-
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -665,13 +691,13 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-2000000, ymax_val=16000000, ytick_scale=2000000, # these are actual ylims & tick interval20
-                voter_mult=0.70, voter_diff_mult=1.10, # voter change multiplier
+                ymin_val=-2000000, ymax_val=22000000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                voter_mult=0.70, voter_diff_mult=1.30, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
 
 # saving
-plt.savefig(os.path.join(resultsPath_interval, '01_' + measuring_interval + "_vote_change.png"))
+plt.savefig(os.path.join(resultsPath_interval, '01a_' + measuring_interval + "_vote_change.png"))
 # plt.savefig(os.path.join(resultsPath_interval, '01_' + measuring_interval + "_vote_change_neoply.png"))
 
 
@@ -848,12 +874,13 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-400, ymax_val=800, ytick_scale=100,
+                    ymin_val=-400, ymax_val=900, ytick_scale=100,
                     first_time_voter_mult=0.90, new_voter_mult=1.05, ## change these
                     top10_1_mult=0.95, top10_2_mult=0.87,
                     topF_1_mult=0.65, topF_2_mult=0.57)
 # saving
-plt.savefig(os.path.join(resultsPath_interval, '02_' + measuring_interval + "_voter_change.png"))
+plt.savefig(os.path.join(resultsPath_interval, '02a_' + measuring_interval + "_voter_change.png"))
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -865,8 +892,10 @@ total_term_change = df_longer.groupby(['delegator', measuring_interval])[['votes
 def bin_votes(row):
     if row['cum_votes'] < 1:
         val = '< 1'
-    elif 1 <= row['cum_votes'] <= 1000:
-        val = '1-1000'
+    elif 1 <= row['cum_votes'] <= 500:
+        val = '1-500'
+    elif 500 < row['cum_votes'] <= 1000:
+        val = '500-1000'
     elif 1000 < row['cum_votes'] <= 10000:
         val = '1000-10K'
     elif 10000 < row['cum_votes'] <= 100000:
@@ -880,7 +909,6 @@ def bin_votes(row):
         # val = -1
     return val
 
-
 total_term_change['cum_votes_bin'] = total_term_change.apply(bin_votes, axis=1)
 
 # binning data into categories
@@ -892,7 +920,7 @@ vote_pct = vote_pct[vote_pct[measuring_interval].isin([this_term])].\
 vote_pct['sum_votes'] = vote_pct['cum_votes'].sum()
 vote_pct['pct_votes'] = (vote_pct['cum_votes'] / vote_pct['sum_votes']).map("{:.2%}".format)
 vote_pct = vote_pct.set_index(list(vote_pct)[0])
-vote_pct = vote_pct.reindex(['< 1', '1-1000', '1000-10K', '10K-100K', '100K-1M', '1M +']).reset_index()
+vote_pct = vote_pct.reindex(['< 1', '1-500', '500-1000', '1000-10K', '10K-100K', '100K-1M', '1M +']).reset_index()
 # print(vote_pct)
 
 grand_total_votes_text = 'Total Votes: ' + '{:,}'.format(vote_pct['sum_votes'][0].astype(int)) + ' ICX'
@@ -902,7 +930,7 @@ count_vote_bin = count_vote_bin.groupby(['cum_votes_bin', measuring_interval]).a
 count_vote_bin = count_vote_bin[count_vote_bin[measuring_interval].isin([this_term])].\
     drop(columns=[measuring_interval]).reset_index(drop=True)
 count_vote_bin = count_vote_bin.set_index(list(count_vote_bin)[0])
-count_vote_bin = count_vote_bin.reindex(['< 1', '1-1000', '1000-10K', '10K-100K', '100K-1M', '1M +']).reset_index()
+count_vote_bin = count_vote_bin.reindex(['< 1', '1-500', '500-1000', '1000-10K', '10K-100K', '100K-1M', '1M +']).reset_index()
 
 porcent = 100.*count_vote_bin['delegator']/count_vote_bin['delegator'].sum() # for plotting (legend)
 porcet_vote = vote_pct['pct_votes'].to_list()
@@ -1543,5 +1571,719 @@ for i in range(len(total)):
 plt.tight_layout()
 
 plt.savefig(os.path.join(resultsPath_interval, '07_' + measuring_interval + "_vote_spreading_time_series.png"))
+
+
+
+
+###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~###
+
+
+run_this = 0
+
+if run_this == 1:
+
+    ## ICONFI
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # voters change this week (without ICONFi)
+    voter_rank = combined_df.copy()
+    voter_rank = voter_rank[voter_rank[measuring_interval].isin([this_term])]
+    voter_rank['prep_ranking'] = voter_rank.sort_values([measuring_interval, 'cum_votes'], ascending=False) \
+        .groupby(measuring_interval)['cum_votes'].rank(method='first', ascending=False).astype(int)
+    voter_rank = voter_rank[['validator_name','prep_ranking']]
+
+    df_longer_this_term = df_longer[df_longer[measuring_interval].isin([this_term])]
+    df_longer_this_term = pd.merge(df_longer_this_term, voter_rank, on='validator_name', how='left')
+
+    # should be voting more than 40 p-reps
+    iconfi_addresses = df_longer_this_term[df_longer_this_term['how_many_prep_voted'] > 40]
+    iconfi_addresses = iconfi_addresses[['delegator','how_many_prep_voted']].drop_duplicates()
+    # and I suppose more than 50 to qualify
+    iconfi_addresses['counts'] = iconfi_addresses.groupby(['how_many_prep_voted']).transform('count')
+    iconfi_addresses = iconfi_addresses[iconfi_addresses['counts'] >= 50][['delegator']]
+
+
+    # original df
+    df = pd.concat(ori_df)
+
+    # here we remove iconfi wallets
+    df = df[~df['delegator'].isin(iconfi_addresses['delegator'])]
+
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Data -- by validator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # concatenate them into a dataframe -- by validator_name
+    unique_date = df.drop_duplicates(['year', 'month', 'week', 'date', 'day'])[['year', 'month', 'week', 'date', 'day']].sort_values('date')
+
+    # get unique interval
+    unique_interval = df.drop_duplicates(measuring_interval)[[measuring_interval]].sort_values(measuring_interval).reset_index(drop=True)
+
+    df = df.groupby(['validator_name', 'delegator', measuring_interval]).agg('sum').reset_index()
+    df = df.sort_values(by=['validator_name', 'delegator', measuring_interval]).reset_index(drop=True)
+
+
+    def shorten_prep_name(df, contains_name, change_to_name):
+        index_prep = df['validator_name'].str.contains(contains_name, case=False, regex=True, na=False)
+        df.loc[index_prep, 'validator_name'] = change_to_name
+        return df
+
+    # hope you don't mind, just shortening your names
+    df = shorten_prep_name(df, "ICONLEO", "ICONLEO")
+    df = shorten_prep_name(df, "ICONIST VOTE WISELY", "ICONIST VOTE WISELY")
+    df = shorten_prep_name(df, "Piconbello", "Piconbello")
+    df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
+    # df = shorten_prep_name(df, "Gilga Capital (NEW - LETS GROW ICON)", "Gilga Capital (NEW)")
+
+    # df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
+    # df.loc[df['validator_name'] == 'Piconbello { You Pick We Build }', 'validator_name'] = 'Piconbello'
+    # df.loc[df['validator_name'] == 'UNBLOCK {ICX GROWTH INCUBATOR}', 'validator_name'] = 'UNBLOCK'
+    df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
+
+
+    def df_wide_then_long(df, measuring_interval=measuring_interval):
+        # pivot wider & longer to get all the longitudinal data
+        df_wider = df.pivot_table(index=['validator_name', 'delegator'],
+                                  columns=[measuring_interval],
+                                  values='votes').reset_index()
+
+        df_longer = df_wider.melt(id_vars=['validator_name', 'delegator'], var_name=[measuring_interval], value_name='votes')
+        df_longer = df_longer.sort_values(by=['validator_name', 'delegator', measuring_interval, 'votes']).reset_index(drop=True)
+        return df_longer
+
+    df_longer = df_wide_then_long(df, measuring_interval=measuring_interval)
+
+    def add_vote_status_and_prep_voted(df, measuring_interval=measuring_interval, this_term=this_term):
+
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # removing NaN to first non-NaN
+        df.loc[df.groupby(['validator_name', 'delegator'])[measuring_interval].cumcount()==0,'remove_this']= '1'
+        df.loc[df.groupby(['validator_name', 'delegator'])['votes'].apply(pd.Series.first_valid_index), 'remove_this'] = '2'
+        df['remove_this'] = df['remove_this'].ffill()
+        df = df[df['remove_this'] != '1'].drop(columns='remove_this').reset_index(drop=True)
+
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # getting the duration of interest (so that the data does not get cut off)
+        df = df[df[measuring_interval] <= this_term]
+
+
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # vote status -> voted, add cumulative votes & unvoted
+        df['cum_votes'] = df.groupby(['delegator', 'validator_name'])['votes'].cumsum()
+        df['cum_votes'] = df.groupby(['delegator', 'validator_name'])['cum_votes'].ffill()
+
+        # cumulative votes shifting to give proper vote/unvote status
+        df['prev_cum_votes'] = df.groupby(['delegator', 'validator_name'])['cum_votes'].shift()
+
+        # fill cumulative votes, make between -1e-6 and 1e-6 to zero
+        df.loc[df['votes'].between(-1e-6, 1e-6), 'votes'] = 0
+        df.loc[df['prev_cum_votes'].between(-1e-6, 1e-6), 'prev_cum_votes'] = 0
+        df.loc[df['cum_votes'].between(-1e-6, 1e-6), 'cum_votes'] = 0
+
+        # vote/unvote status
+        df.loc[df.groupby(['validator_name', 'delegator'])[measuring_interval].cumcount()==0,'vote_status_A']= 'voted'
+        df.loc[df['prev_cum_votes'].between(-1e-6, 1e-6) & ~np.isnan(df['votes']), 'vote_status_A']= 'voted'
+        df.loc[df['cum_votes'].between(-1e-6, 1e-6) & ~np.isnan(df['votes']), 'vote_status_B'] = 'unvoted'
+
+        # getting rid of non-needed rows (rows before first vote & after unvote)
+        remove_these = df['cum_votes'].between(-1e-6, 1e-6) & df['prev_cum_votes'].between(-1e-6, 1e-6)
+        df = df[~remove_these].drop(columns='prev_cum_votes')
+
+
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # how many p-rep voted
+        ## removing 'unvoted' for counting number of p-reps each voter voted per measuring_interval
+        a = df['vote_status_B'] != 'unvoted'
+        count_voted_prep_per_measuring_interval = df.copy()
+        count_voted_prep_per_measuring_interval['vote_status_A'] = count_voted_prep_per_measuring_interval.\
+            groupby(['delegator'])['vote_status_A'].ffill()
+        count_voted_prep_per_measuring_interval = count_voted_prep_per_measuring_interval[a].\
+            groupby(['delegator', measuring_interval]).\
+            count()['vote_status_A'].reset_index().\
+            rename(columns={'vote_status_A': 'how_many_prep_voted'})
+
+
+        # merge with df_longer
+        df = pd.merge(df, count_voted_prep_per_measuring_interval, on=['delegator', measuring_interval], how='left')
+
+        return df
+
+    df_longer = add_vote_status_and_prep_voted(df_longer, measuring_interval=measuring_interval, this_term=this_term)
+
+
+    def add_vote_unvote_status(df, measuring_interval=measuring_interval):
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # new wallet by measuring_interval -- first appearing wallet count
+        new_wallet_A = df.sort_values(by = ['delegator', measuring_interval]).groupby('delegator').first().reset_index()
+        new_wallet_A = new_wallet_A.drop_duplicates(['delegator', measuring_interval])[['delegator', measuring_interval]]
+        new_wallet_A['new_wallet_A'] = 'voted'
+
+        # merge new_wallet with df
+        df = pd.merge(df, new_wallet_A, on=['delegator', measuring_interval], how='left')
+
+
+        # adding new_wallet_B which shows unvoted & left
+        df.loc[df['how_many_prep_voted'].isnull(), 'unvoted_and_left'] = 1
+
+        # adding cumulative unvoted_and_left
+        cum_unvoted_and_left = df.drop_duplicates(['delegator', measuring_interval, 'unvoted_and_left'])[['delegator', measuring_interval, 'unvoted_and_left']].\
+            dropna().sort_values(by=['delegator', measuring_interval], ascending=True).reset_index(drop=True)
+        cum_unvoted_and_left['cum_unvoted_and_left'] = cum_unvoted_and_left.groupby(['delegator'])['unvoted_and_left'].transform('cumsum')
+        cum_unvoted_and_left = cum_unvoted_and_left.drop(columns=['unvoted_and_left'])
+        df = pd.merge(df, cum_unvoted_and_left, on=['delegator', measuring_interval], how='left')
+
+
+        # getting last time_interval (for those who left permanently)
+        df = df.sort_values(by=['delegator', measuring_interval], ascending=True) # not by validator_name here!
+        lasts = df.groupby(['delegator'])[measuring_interval].last().reset_index().rename(columns={measuring_interval: 'last_interval'})
+        df = pd.merge(df, lasts, on=['delegator'], how='left')
+
+        # having unvoted temporarily (who left and came back) and unvoted permanently (up to the date chosen) who never came back
+        df.loc[~df['unvoted_and_left'].isnull(), 'stopped_voting'] = 'unvoted'
+        df.loc[(df[measuring_interval] != df['last_interval']) & (~df['stopped_voting'].isnull()), 'stopped_voting_status'] = 'temporary'
+        df.loc[(df[measuring_interval] == df['last_interval']) & (~df['stopped_voting'].isnull()), 'stopped_voting_status'] = 'permanent'
+        df.loc[(df[measuring_interval] == df['last_interval']) & (~df['stopped_voting'].isnull()), 'new_wallet_B'] = 'unvoted' # last disappearing wallet count (A -> B), separately for counting
+        df = df.drop(columns=['last_interval'])
+
+
+        # adding returned voting (after leaving temporarily) -- note that it also includes first voting
+        df['lag_stopped_voting_status'] = df.groupby('delegator')['stopped_voting_status'].shift()
+        df['lag_cum_unvoted_and_left'] = df.groupby('delegator')['cum_unvoted_and_left'].shift()
+
+        v = df['new_wallet_A'] == 'voted'
+
+        rv = ((df['vote_status_A'] == 'voted') &
+              (df['lag_stopped_voting_status'] == 'temporary') &
+              (df['how_many_prep_voted'].notna()))
+
+        rv2 = ((df['vote_status_A'] == 'voted') &
+               (df['vote_status_B'] == 'unvoted') &
+               (df['how_many_prep_voted'].isnull()) &
+               (df['lag_stopped_voting_status'] == 'temporary') &
+               (df['lag_cum_unvoted_and_left'] != df['cum_unvoted_and_left']))
+
+        df.loc[(v)|(rv)|(rv2), 'returned_voting'] = 'voted'
+        df.loc[v, 'returned_voting_status'] = 'first'
+        df.loc[(rv)|(rv2), 'returned_voting_status'] = 'returned'
+        # df.loc[rv2, 'returned_voting_status'] = 'returned_left'
+        df['returned_voting'] = df.groupby(['delegator', measuring_interval])['returned_voting'].ffill()
+        df['returned_voting_status'] = df.groupby(['delegator', measuring_interval])['returned_voting_status'].ffill()
+        df = df.drop(columns=['lag_stopped_voting_status', 'lag_cum_unvoted_and_left'])
+
+        return df
+
+    df_longer = add_vote_unvote_status(df_longer, measuring_interval=measuring_interval)
+
+    def clean_up_df(df, measuring_interval=measuring_interval):
+
+        # just to have the number without decimals
+        def remove_decimal_with_int(df, inVar):
+            df[inVar] = df[inVar].fillna(0).astype(int).astype(object).where(df[inVar].notnull())
+
+        # list to convert
+        lst = ['how_many_prep_voted' , 'unvoted_and_left', 'cum_unvoted_and_left']
+        for x in lst:
+            remove_decimal_with_int(df, x)
+
+        df = df[['validator_name', 'delegator', measuring_interval, 'votes', 'cum_votes',
+                               'vote_status_A', 'vote_status_B', 'returned_voting', 'stopped_voting', 'returned_voting_status', 'stopped_voting_status',
+                               'new_wallet_A', 'new_wallet_B', 'unvoted_and_left', 'cum_unvoted_and_left', 'how_many_prep_voted']]
+
+        # pd.crosstab(df_longer['unvoted_and_left'].fillna('missing'), df_longer['vote_status_B'].fillna('missing'), margins=True)
+
+        return df
+
+    df_longer = clean_up_df(df_longer, measuring_interval=measuring_interval)
+
+    ##################### SAVE HERE?
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Table for Count ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # Main table
+
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # # getting the duration of interest (so that the data does not get cut off)
+    # df_longer = df_longer[df_longer[measuring_interval] <= this_term]
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def get_vote_status_count(df, measuring_interval=measuring_interval):
+        # Voter count table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+        vote_status_count = df.groupby(['validator_name', measuring_interval]).agg('count').reset_index()
+        vote_status_count = vote_status_count.\
+            drop(columns=['delegator', 'votes', 'cum_votes', 'how_many_prep_voted', 'unvoted_and_left',
+                          'cum_unvoted_and_left']).\
+            rename(columns={'vote_status_A': 'Voted', 'vote_status_B': 'Unvoted',
+                            'returned_voting': 'U_Voted', 'stopped_voting': 'U_Unvoted', ## these are for counts per week overall
+                            'new_wallet_A': 'new_wallet_Voted', 'new_wallet_B': 'new_wallet_Unvoted'})
+
+        vote_status_count['Voter_diff'] = vote_status_count['Voted'] - vote_status_count['Unvoted']
+        # vote_status_count['U_Voter_diff'] = vote_status_count['U_Voted'] - vote_status_count['U_Unvoted']
+        vote_status_count['new_Voter_diff'] = vote_status_count['new_wallet_Voted'] - vote_status_count['new_wallet_Unvoted']
+
+        # cumulative sum function
+        def cum_sum(df, inVar, outVar, group_by):
+            df[outVar] = df.groupby([group_by])[inVar].cumsum()
+
+        # over lists
+        inVar_lst = ['Voted', 'Unvoted', 'Voter_diff',
+                     # 'U_Voted', 'U_Unvoted', 'U_Voter_diff',
+                     'new_wallet_Voted', 'new_wallet_Unvoted', 'new_Voter_diff']
+        outVar_lst = ['cum_Voted', 'cum_Unvoted', 'cum_n_Voter',
+                      # 'cum_U_Voted', 'cum_U_Unvoted','cum_n_U_Voter',
+                      'cum_new_wallet_Voted', 'cum_new_wallet_Unvoted', 'cum_n_new_Voter']
+
+        for x, y in zip(inVar_lst, outVar_lst):
+            cum_sum(vote_status_count, x, y, 'validator_name')
+
+        vote_status_count['pct_change_Voter'] = vote_status_count['Voter_diff'] / (vote_status_count.groupby('validator_name')['cum_n_Voter'].shift(1))
+        # vote_status_count['pct_change_U_Voter'] = vote_status_count['U_Voter_diff'] / (vote_status_count.groupby('validator_name')['cum_n_U_Voter'].shift(1))
+        vote_status_count['pct_change_new_Voter'] = vote_status_count['new_Voter_diff'] / (vote_status_count.groupby('validator_name')['cum_n_new_Voter'].shift(1))
+
+        # vote_status_count = vote_status_count.replace(np.inf, np.nan)
+        return vote_status_count
+
+    vote_status_count = get_vote_status_count(df_longer, measuring_interval=measuring_interval)
+
+    def get_votes_sum(df, measuring_interval=measuring_interval):
+        # Votes table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+        votes_sum = df.groupby(['validator_name', measuring_interval]).agg('sum').reset_index()
+        votes_sum['pct_change_votes'] = votes_sum['votes'] / (votes_sum.groupby('validator_name')['cum_votes'].shift(1))
+        # votes_sum = votes_sum.replace(np.inf, np.nan)
+        return votes_sum
+
+    votes_sum = get_votes_sum(df_longer, measuring_interval=measuring_interval)
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
+    # Get ranks, Top 10, Top 1
+    def add_ranking(df, what_rank, sortings, meas,
+                    descendings, Top_10, Consecutive_Top_10, Longest_Streak_Top_10,
+                    ascendings, Place, Consecutive_Place, Longest_Streak_Place):
+
+        df[what_rank] = df.sort_values(sortings, ascending=descendings) \
+            .groupby(measuring_interval)[meas].rank(method='first', ascending=descendings).astype(int)
+
+        # top 10 ranking for consecutive
+        df.loc[df[what_rank] <= 10, Top_10] = '1'
+        s = df.groupby('validator_name')[Top_10].apply(lambda x:(x!=x.shift()).cumsum())  # counter with condition
+        df[Consecutive_Top_10] = df.sort_values(['validator_name', measuring_interval], ascending=ascendings).\
+            groupby(['validator_name', s]).cumcount().add(1)  # if not consecutive (NaN), resets
+        df.loc[df[Top_10].isnull(), Consecutive_Top_10] = df[Top_10] # NaN if NaN
+        df[Longest_Streak_Top_10] = df.groupby(['validator_name'])[Consecutive_Top_10].transform('max')
+        df[Longest_Streak_Top_10] = df[Longest_Streak_Top_10].fillna(0).astype(int).astype(object).where(df[Longest_Streak_Top_10].notnull())
+
+        # place for consecutive
+        df.loc[df[what_rank] == 1, Place] = '1'
+        s = df.groupby('validator_name')[Place].apply(lambda x: (x != x.shift()).cumsum())  # counter with condition
+        df[Consecutive_Place] = df.sort_values(['validator_name', measuring_interval], ascending=ascendings). \
+            groupby(['validator_name', s]).cumcount().add(1)  # if not consecutive (NaN), resets
+        df.loc[df[Place].isnull(), Consecutive_Place] = df[Place]  # NaN if NaN
+        df[Longest_Streak_Place] = df.groupby(['validator_name'])[Consecutive_Place].transform('max')
+        df[Longest_Streak_Place] = df[Longest_Streak_Place].fillna(0).astype(int).astype(object).where(df[Longest_Streak_Place].notnull())
+
+        df.drop(columns=[Top_10, Place], inplace=True)
+
+    def add_ranking_wrapper(measuring_interval=measuring_interval):
+        # Voters -- vote status count
+        add_ranking(df=vote_status_count,
+                    what_rank='win_rank_Voter',
+                    meas='Voter_diff',
+                    sortings=[measuring_interval, 'Voter_diff', 'Voted', 'pct_change_Voter', 'cum_n_Voter', 'cum_Voted'],
+                    descendings=False,
+                    Top_10='Top_10_win_Voter',
+                    Consecutive_Top_10='Consecutive_Top_10_win_Voter',
+                    Longest_Streak_Top_10='Longest_Top_10_win_Voter',
+                    ascendings=True,
+                    Place='First_Place_Voter',
+                    Consecutive_Place='Consecutive_First_Place_Voter',
+                    Longest_Streak_Place = 'Longest_First_Place_Voter')
+
+        add_ranking(df=vote_status_count,
+                    what_rank='loss_rank_Voter',
+                    meas='Voter_diff',
+                    sortings=[measuring_interval, 'Voter_diff', 'Voted', 'pct_change_Voter', 'cum_n_Voter', 'cum_Voted'],
+                    descendings=True,
+                    Top_10='Top_10_loss_Voter',
+                    Consecutive_Top_10='Consecutive_Top_10_loss_Voter',
+                    Longest_Streak_Top_10='Longest_Top_10_loss_Voter',
+                    ascendings=False,
+                    Place='Last_Place_Voter',
+                    Consecutive_Place='Consecutive_Last_Place_Voter',
+                    Longest_Streak_Place='Longest_Last_Place_Voter')
+
+        # Votes -- amount of votes
+        add_ranking(df=votes_sum,
+                    what_rank='win_rank_votes',
+                    meas='votes',
+                    sortings=[measuring_interval, 'votes', 'pct_change_votes', 'cum_votes'],
+                    descendings=False,
+                    Top_10='Top_10_win_votes',
+                    Consecutive_Top_10='Consecutive_Top_10_win_votes',
+                    Longest_Streak_Top_10='Longest_Top_10_win_votes',
+                    ascendings=True,
+                    Place='First_Place_votes',
+                    Consecutive_Place='Consecutive_First_Place_votes',
+                    Longest_Streak_Place='Longest_First_Place_votes')
+
+        add_ranking(df=votes_sum,
+                    what_rank='loss_rank_votes',
+                    meas='votes',
+                    sortings=[measuring_interval, 'votes', 'pct_change_votes', 'cum_votes'],
+                    descendings=True,
+                    Top_10='Top_10_loss_votes',
+                    Consecutive_Top_10='Consecutive_Top_10_loss_votes',
+                    Longest_Streak_Top_10='Longest_Top_10_loss_votes',
+                    ascendings=False,
+                    Place='Last_Place_votes',
+                    Consecutive_Place='Consecutive_Last_Place_votes',
+                    Longest_Streak_Place='Longest_Last_Place_votes')
+        return vote_status_count, votes_sum
+
+    vote_status_count,  votes_sum = add_ranking_wrapper()
+
+    combined_df = pd.merge(vote_status_count, votes_sum, how = 'outer', on = ['validator_name', measuring_interval])
+
+    # for combined
+    term_change_comb = combined_df[combined_df[measuring_interval].isin(terms)]
+    this_term_change_comb = combined_df[combined_df[measuring_interval].isin([this_term])]
+
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    ## votes change this week
+
+    # overall vote change (turning them into texts)
+    total_term_change = term_change_comb.groupby([measuring_interval])[['votes','cum_votes']].agg('sum').reset_index()
+    total_term_change['pct_change_votes'] = total_term_change['votes'] / (total_term_change['cum_votes'].shift(1))
+    total_term_change = total_term_change[total_term_change[measuring_interval].isin([this_term])].drop(columns=measuring_interval)
+    change_symbol = total_term_change['votes'].apply(lambda x: "+" if x>0 else '').values[0] # for voter count
+    face_color = total_term_change['votes'].apply(lambda x: "green" if x>0 else 'firebrick').values[0] # this is for box color
+
+    total_cum_text = "Total votes: " + round(total_term_change['cum_votes']).apply('{:,}'.format).values[0].split('.', 1)[0] + " ICX"
+    total_text = "Weekly change: " + change_symbol + round(total_term_change['votes']).apply('{:,}'.format).values[0].split('.', 1)[0] + " ICX"
+    total_pct_change_text = change_symbol + "{:.2%}".format(total_term_change['pct_change_votes'].values[0])
+
+    # total_text = total_cum_vote_text + '\n' + total_vote_text + ' (' + total_pct_change_text + ')'
+    total_change = total_text + ' (' + total_pct_change_text + ')'
+
+
+    # vote change by p-reps
+    this_term_change = this_term_change_comb.sort_values(by=['win_rank_votes'], ascending=True)
+    temp_this_term_change = this_term_change[this_term_change['win_rank_votes'].between(1,10) \
+        | this_term_change['loss_rank_votes'].between(1,10)]
+
+    # temporary
+    # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
+
+    def insert_week(string, index):
+        return string[:index] + ' week' + string[index:]
+
+    # plotting
+    def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
+                        ymin_val=-800000, ymax_val=700000, ytick_scale=200000,
+                        voter_mult=0.9, voter_diff_mult=1.01,
+                        top10_1_mult=0.9, top10_2_mult=0.8,
+                        topF_1_mult=0.48, topF_2_mult=0.38):
+
+        # plotting
+        sns.set(style="ticks")
+        plt.style.use(['dark_background'])
+        f, ax = plt.subplots(figsize=(10, 8))
+        sns.barplot(x=temp_this_term_change['validator_name'],
+                    y=temp_this_term_change['votes'], palette="RdYlGn_r", ax=ax,
+                          edgecolor="grey")
+        ax.axhline(0, color="w", clip_on=False)
+        ax.set_xlabel('P-Reps', fontsize=14, weight='bold', labelpad= 10)
+        ax.set_ylabel('Δ votes', fontsize=14, weight='bold', labelpad= 10)
+        ax.set_title('Weekly Vote Change (without ICONFi) - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')', fontsize=14, weight='bold')
+        if ymax_val >= 10000000:
+            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x / 1e6) + ' M'))
+        # plt.yscale('symlog')
+
+        # manual fix for graphs here
+        ###############################################################
+        xmin, xmax = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
+        ymin_set = ymin*ymin_mult
+        ymax_set = ymax*ymax_mult
+        ax.set_ylim([ymin_set, ymax_set])
+        ax.yaxis.set_ticks(np.arange(ymin_val, ymax_val, ytick_scale))
+        ################################################################
+
+        sns.despine(offset=10, trim=True)
+        plt.tight_layout()
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
+        ax.grid(False)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+
+        # adding voter count (plus minus)
+        voter_diff = temp_this_term_change['Voter_diff']
+        voter_diff_text = temp_this_term_change['Voter_diff'].apply(lambda x: "+" + str(x) if x>0 else x)
+        # voted_count = '+ ' + temp_this_term_change_votes['Voted'].astype(str)
+        # unvoted_count = '- ' + temp_this_term_change_votes['Unvoted'].astype(str)
+        # voter_count = voted_count.str.cat(unvoted_count, join='left', sep='\n')
+
+        # adjust color based on total change (green: positive, red: negative)
+        temp_df = pd.DataFrame(voter_diff)
+        temp_df['color'] = np.where(temp_df['Voter_diff'] < 0, 'red', 'green')
+        temp_df['color'] = np.where(temp_df['Voter_diff'] == 0, 'white', temp_df['color'])
+        font_col = temp_df.iloc[:,1]
+
+        # change ymin*xx here
+        for (p,t,c) in zip(ax.patches,voter_diff_text,font_col):
+            # height = p.get_height()
+            height = ymin*voter_diff_mult
+            ax.text(p.get_x() + p.get_width() / 2.,
+                    height,
+                    t,
+                    color=c,
+                    fontsize=12,
+                    weight='bold',
+                    ha="center")
+
+        ax.text(-0.2, ymin*voter_mult, '( Δ voters )',
+                color='white', fontsize=10)
+
+        props = dict(boxstyle='round', facecolor=face_color, alpha=1)
+        ax.text(xmax, ymax_set*0.9, total_cum_text + '\n' + total_change,
+                linespacing = 1.5,
+                horizontalalignment='right',
+                verticalalignment='top', bbox=props,
+                color='white', fontsize=12)
+
+        # longest streak (top 3)
+        header_top_10_steak = 'Winning Streak (weeks)'
+        top_10_streak = this_term_change_comb.\
+            sort_values(by=['Longest_Top_10_win_votes','cum_votes'], ascending=False)[['validator_name', 'Longest_Top_10_win_votes']].\
+            reset_index(drop=True).\
+            head(3).to_string(index=False, header=False)
+
+        ax.text(xmax, ymax*top10_1_mult, header_top_10_steak,
+                linespacing = 1.4,
+                horizontalalignment='right',
+                verticalalignment='top',
+                color='green', fontsize=10, weight='bold')
+
+        # change ymax*xx here
+        ax.text(xmax, ymax*top10_2_mult, top_10_streak,
+                linespacing = 1.4,
+                horizontalalignment='right',
+                verticalalignment='top',
+                color='white', fontsize=10)
+
+        # 1st place streak
+        header_first_streak = '1st Place Winning Streak (weeks)'
+        first_streak = this_term_change_comb.\
+            sort_values(by=['Longest_First_Place_votes','cum_votes'], ascending=False)[['validator_name', 'Longest_First_Place_votes']].\
+            reset_index(drop=True).\
+            head(3).to_string(index=False, header=False)
+
+        # change ymax*xx here
+        ax.text(xmax, ymax*topF_1_mult, header_first_streak,
+                linespacing = 1.4,
+                horizontalalignment='right',
+                verticalalignment='top',
+                color='green', fontsize=10, weight='bold')
+
+        ax.text(xmax, ymax*topF_2_mult, first_streak,
+                linespacing = 1.4,
+                horizontalalignment='right',
+                verticalalignment='top',
+                color='white', fontsize=10)
+
+        plt.tight_layout()
+
+    # adjust these numbers to get proper plot
+    plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
+                    ymin_val=-2000000, ymax_val=22000000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                    voter_mult=0.70, voter_diff_mult=1.30, # voter change multiplier
+                    top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
+                    topF_1_mult=0.55, topF_2_mult=0.47) # where top first locates
+
+    # saving
+    plt.savefig(os.path.join(resultsPath_interval, '01b_' + measuring_interval + "_vote_change.png"))
+    # plt.savefig(os.path.join(resultsPath_interval, '01_' + measuring_interval + "_vote_change_neoply.png"))
+
+
+    # adding top 10 ranking - voter
+    # this_term_change = this_term_change_comb.sort_values(by=['win_rank_Voter'], ascending=True)
+    # this_term_change = this_term_change[this_term_change['win_rank_Voter'].between(1,10) \
+    #     | this_term_change['loss_rank_Voter'].between(1,10)]
+
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    ## voters change this week
+
+    # overall voter change (turning them into texts)
+
+    # getting voted, unvoted and difference count and cumulative count -- by measuring interval
+    def wallet_count(df, A, B, meas):
+        voted_A = df[df[A] == 'voted']
+        voted_A = voted_A.drop_duplicates(['delegator', meas, A])[['delegator', meas, A]].\
+            dropna().drop(columns='delegator')
+        voted_A = voted_A.groupby([meas]).agg('count').reset_index()
+
+        unvoted_B = df[df[B] == 'unvoted']
+        unvoted_B = unvoted_B.drop_duplicates(['delegator', meas, B])[['delegator', meas, B]].\
+            dropna().drop(columns='delegator')
+        unvoted_B = unvoted_B.groupby([meas]).agg('count').reset_index()
+
+        all_voted = voted_A.merge(unvoted_B,on=[meas])
+
+        all_voted['diff_AB'] = all_voted[A] - all_voted[B]
+        all_voted['cum_A'] = all_voted[A].cumsum()
+        all_voted['cum_B'] = all_voted[B].cumsum()
+        all_voted['diff_cum_AB'] = all_voted['cum_A'] - all_voted['cum_B']
+
+        return(all_voted)
+
+    voting_unique_inc_return = wallet_count(df_longer, 'returned_voting', 'stopped_voting', measuring_interval)
+    voting_unique_first_last = wallet_count(df_longer, 'new_wallet_A', 'new_wallet_B', measuring_interval)
+
+    voting_unique_inc_return['pct_change_voters'] = voting_unique_inc_return['diff_AB'] / (voting_unique_inc_return['diff_cum_AB'].shift(1))
+    total_term_change = voting_unique_inc_return[voting_unique_inc_return[measuring_interval].isin([this_term])].drop(columns=measuring_interval)
+    change_symbol = total_term_change['diff_AB'].apply(lambda x: "+" if x>0 else '').values[0] # for voter count
+    face_color = total_term_change['diff_AB'].apply(lambda x: "green" if x>0 else 'firebrick').values[0] # this is for box color
+
+    total_cum_text = "Total voters: " + round(total_term_change['diff_cum_AB']).apply('{:,}'.format).values[0].split('.', 1)[0]
+    total_text = "Weekly change: " + change_symbol + round(total_term_change['diff_AB']).apply('{:,}'.format).values[0].split('.', 1)[0]
+    total_pct_change_text = change_symbol + "{:.2%}".format(total_term_change['pct_change_voters'].values[0])
+    total_change = total_text + ' (' + total_pct_change_text + ')'
+
+
+    # voter change by p-reps
+    this_term_change = this_term_change_comb.sort_values(by=['win_rank_Voter'], ascending=True)
+    temp_this_term_change = this_term_change[this_term_change['win_rank_Voter'].between(1,10) \
+        | this_term_change['loss_rank_Voter'].between(1,10)]
+
+
+    def insert_week(string, index):
+        return string[:index] + ' week' + string[index:]
+
+
+    # plotting
+    def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
+                        ymin_val=-20, ymax_val=35, ytick_scale=5,
+                        first_time_voter_mult=0.97, new_voter_mult=1.1,
+                        top10_1_mult=0.94, top10_2_mult=0.86,
+                        topF_1_mult=0.65, topF_2_mult=0.57):
+
+        # plotting
+        sns.set(style="ticks")
+        plt.style.use(['dark_background'])
+        f, ax = plt.subplots(figsize=(10, 8))
+        sns.barplot(x=temp_this_term_change['validator_name'],
+                    y=temp_this_term_change['Voter_diff'], palette="RdYlGn_r", ax=ax,
+                          edgecolor="grey")
+        ax.axhline(0, color="w", clip_on=False)
+        ax.set_xlabel('P-Reps', fontsize=14, weight='bold', labelpad= 10)
+        ax.set_ylabel('Δ voters', fontsize=14, weight='bold', labelpad= 10)
+        ax.set_title('Weekly Voter Change (without ICONFi) - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')', fontsize=14, weight='bold')
+        # plt.yscale('symlog')
+
+        # manual fix for graphs here
+        ###############################################################
+        xmin, xmax = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
+        ymin_set = ymin * ymin_mult
+        ymax_set = ymax * ymax_mult
+        ax.set_ylim([ymin_set, ymax_set])
+        ax.yaxis.set_ticks(np.arange(ymin_val, ymax_val, ytick_scale))
+        ################################################################
+
+        sns.despine(offset=10, trim=True)
+        plt.tight_layout()
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
+        ax.grid(False)
+        plt.xticks(fontsize=12)
+        plt.yticks(fontsize=12)
+
+        # adding voter count (plus minus)
+        new_voter = temp_this_term_change['new_wallet_Voted']
+        new_voter_text = temp_this_term_change['new_wallet_Voted'].apply(lambda x: "+" + str(x) if x>0 else x)
+        # voted_count = '+ ' + temp_this_term_change_votes['Voted'].astype(str)
+        # unvoted_count = '- ' + temp_this_term_change_votes['Unvoted'].astype(str)
+        # voter_count = voted_count.str.cat(unvoted_count, join='left', sep='\n')
+
+        # adjust color based on total change (green: positive, red: negative)
+        temp_df = pd.DataFrame(new_voter)
+        temp_df['color'] = np.where(temp_df['new_wallet_Voted'] < 0, 'red', 'green')
+        temp_df['color'] = np.where(temp_df['new_wallet_Voted'] == 0, 'white', temp_df['color'])
+        font_col = temp_df.iloc[:,1]
+
+        for (p,t,c) in zip(ax.patches,new_voter_text,font_col):
+            # height = p.get_height()
+            height = ymin*new_voter_mult
+            ax.text(p.get_x() + p.get_width() / 2.,
+                    height,
+                    t,
+                    color=c,
+                    fontsize=12,
+                    weight='bold',
+                    ha="center")
+
+        ax.text(-0.2, ymin*first_time_voter_mult, '( First-time Voters )',
+                color='white', fontsize=10)
+
+        props = dict(boxstyle='round', facecolor=face_color, alpha=1)
+        ax.text(xmax, ymax_set*0.9, total_cum_text + '\n' + total_change,
+                linespacing = 1.5,
+                horizontalalignment='right',
+                verticalalignment='top', bbox=props,
+                color='white', fontsize=12)
+
+        # longest streak (top 3)
+        header_top_10_steak = 'Winning Streak (weeks)'
+        top_10_streak = this_term_change_comb.\
+            sort_values(by=['Longest_Top_10_win_Voter','cum_n_Voter','cum_Voted'], ascending=False)[['validator_name', 'Longest_Top_10_win_Voter']].\
+            reset_index(drop=True).\
+            head(3).to_string(index=False, header=False)
+
+        ax.text(xmax, ymax*top10_1_mult, header_top_10_steak,
+                linespacing = 1.4,
+                horizontalalignment='right',
+                verticalalignment='top',
+                color='green', fontsize=10, weight='bold')
+
+        ax.text(xmax, ymax*top10_2_mult, top_10_streak,
+                linespacing = 1.4,
+                horizontalalignment='right',
+                verticalalignment='top',
+                color='white', fontsize=10)
+
+        # 1st place streak
+        header_first_streak = '1st Place Winning Streak (weeks)'
+        first_streak = this_term_change_comb.\
+            sort_values(by=['Longest_First_Place_Voter','cum_n_Voter','cum_Voted'], ascending=False)[['validator_name', 'Longest_First_Place_Voter']].\
+            reset_index(drop=True).\
+            head(3).to_string(index=False, header=False)
+
+        ax.text(xmax, ymax*topF_1_mult, header_first_streak,
+                linespacing = 1.4,
+                horizontalalignment='right',
+                verticalalignment='top',
+                color='green', fontsize=10, weight='bold')
+
+        ax.text(xmax, ymax*topF_2_mult, first_streak,
+                linespacing = 1.4,
+                horizontalalignment='right',
+                verticalalignment='top',
+                color='white', fontsize=10)
+
+        plt.tight_layout()
+
+
+
+    plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
+                        ymin_val=-60, ymax_val=140, ytick_scale=10,
+                        first_time_voter_mult=0.90, new_voter_mult=1.05, ## change these
+                        top10_1_mult=0.95, top10_2_mult=0.87,
+                        topF_1_mult=0.65, topF_2_mult=0.57)
+    # saving
+    plt.savefig(os.path.join(resultsPath_interval, '02b_' + measuring_interval + "_voter_change.png"))
 
 
