@@ -42,8 +42,8 @@ if not os.path.exists(walletsPath):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Loading wallet info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-fname_now = 'wallet_balance_2021_02_22'
-fname_past = 'wallet_balance_2021_02_08' # for comparison
+fname_now = 'wallet_balance_2021_03_11'
+fname_past = 'wallet_balance_2021_02_22' # for comparison
 
 fdate = fname_now.rsplit('wallet_balance_', 1)[1]
 fdate_past = fname_past.rsplit('wallet_balance_', 1)[1]
