@@ -874,7 +874,7 @@ plt.show()
 
 
 
-this_title = "Today's IRC-2 Token Transfer Breakdown"
+this_title = "IRC-2 Token Transfer Breakdown" + " (" + title_date + ")"
 table = concat_df.copy()
 table = table[['symbol','amount']].groupby(['symbol']).amount.agg(['sum', 'count']).reset_index()
 table['sum'] = table['sum'].astype(float).round(2).astype(int).apply('{:,}'.format).astype(str)
