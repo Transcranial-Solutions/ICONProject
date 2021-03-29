@@ -78,13 +78,13 @@ use_specified_date = 0 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2021_03_23"; day_2 = "2021_03_24"
+    day_1 = "2021_03_04"; day_2 = "2021_03_27"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2021_03_24"
+   day_1 = "2021_03_23"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -96,31 +96,32 @@ if date_is_range == 0 and use_specified_date == 0:
 
 
 # wallet of interest
-# this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
+this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'hx1729b35b690d51e9944b2e94075acff986ea0675' # Binance cold
 # this_address = 'hx54d6f19c3d16b2ef23c09c885ca1ba776aaa80e2' #ubik
 # this_address = 'hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2' #velic
 # this_address = 'hxa224bb59e9ba930f3919b57feef7656f1139d24b' # catalyst
 # this_address = 'hx2f3fb9a9ff98df2145936d2bfcaa3837a289496b'# transcranial sol
-this_address = 'hx6332c8a8ce376a5fc7f976d1bc4805a5d8bf1310' # upbit 1
+# this_address = 'hx6332c8a8ce376a5fc7f976d1bc4805a5d8bf1310' # upbit 1
 
 # this_address = 'cx0000000000000000000000000000000000000000' # governance
 # this_address = 'hxf1ea3eb337432bddb4e01e0b926c671eff297af9'
 # this_address = 'hx81d4f834b91569b43cde903ec241eb1fce64a171'
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
-# this_address = 'cx75e584ffe40cf361b3daa00fa6593198d47505d5'
+# this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
 
-# this_address = 'hxa527f96d8b988a31083167f368105fc0f2ab1143' #
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
-
+rm_exch = 0
+rm_known = 0
 # from wallet or into the wallet
 tx_flow = 'both' # 'in', 'out', 'both'
 tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet)', 'token_txlist (token that has been xferred), 'token_list'
 
-# this is for getting only 1 interaction (WOI <-> wallet_x)
-first_degree = 1
+
+first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
+further_degree = 1 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
@@ -526,14 +527,10 @@ if tx_type in ['normal', 'internal']:
 
     if first_degree == 0:
 
-        # unique addresses found in the initial data -- this would be 'first degree' data
-        running_addresses = get_unique_addresses(df=collected_df, tx_flow=tx_flow)
-        collected_df = []
-
         # get exchange wallets
         def get_exchange_wallets(df, NW_EW=NW_EW, from_to_address='from_address'):
             """ used for outputting potential wallet exchanges -- number of wallets transacted set by NW_EW """
-            if len(df) != 0:
+            if any(df):
                 df = df[df['from_address'].str.startswith('hx')].reset_index(drop=True)
                 df = df[df['dest_address'].str.startswith('hx')].reset_index(drop=True)
                 wallet_exch = df.groupby([from_to_address, 'date']).count().reset_index()
@@ -541,8 +538,28 @@ if tx_type in ['normal', 'internal']:
                 wallet_exch = wallet_exch[from_to_address].to_list()
                 return wallet_exch
 
+        # FIRST running address
+        # unique addresses found in the initial data -- this would be 'first degree' data
+        running_addresses = get_unique_addresses(df=collected_df, tx_flow=tx_flow)
+        # option to add known addresses
+        if rm_known == 1:
+            known_address = known_address_exception['from_address'].to_list()
+            running_addresses = list(set(running_addresses) - set(known_address))
+
+        from_wallet_exch = get_exchange_wallets(collected_df, NW_EW, from_to_address='from_address')
+        to_wallet_exch = get_exchange_wallets(collected_df, NW_EW, from_to_address='dest_address')
+        possible_exchange_wallets = sorted(np.unique(from_wallet_exch + to_wallet_exch))
+
+        if rm_exch == 1:
+            # remove those addresses that look like exchanges
+            running_addresses = list(set(running_addresses) - set(possible_exchange_wallets))
+
+        collected_df = []
+
+
+
         # get wallet address to loop
-        def get_wallet_addresses_to_loop(df, tx_type=tx_type, tx_flow=tx_flow, NW_EW=NW_EW, running_addresses=running_addresses):
+        def get_wallet_addresses_to_loop(df, tx_type=tx_type, tx_flow=tx_flow, NW_EW=NW_EW, running_addresses=running_addresses, rm_exch=0, rm_known=0):
             """ if unknown address, it will find those addresses so that they can be added to extract data """
             # if len(df) != 0:
             if any(df):
@@ -580,9 +597,16 @@ if tx_type in ['normal', 'internal']:
                         ('binance\nsweeper','funnel','facilitator'), na=False))# & ~df_after_destination['from_address'].isin([this_address])
                     add_to_loop = pd.Series(temp_df[is_nan].from_address.unique())
 
-                # adding possible exchange to the addresses we don't want to add
+                # adding possible exchange to the addresses we loop through
                 running_addresses.extend(possible_exchange_wallets)
                 running_addresses = list(set(running_addresses))
+
+                if rm_exch == 1:
+                    # remove those addresses that look like exchanges
+                    running_addresses = list(set(running_addresses) - set(possible_exchange_wallets))
+                if rm_known == 1:
+                    known_address = known_address_exception['from_address'].to_list()
+                    running_addresses = list(set(running_addresses) - set(known_address))
 
                 add_to_loop = add_to_loop[~add_to_loop.isin(running_addresses)].to_list()     # if already exists then do not add
 
@@ -604,7 +628,7 @@ if tx_type in ['normal', 'internal']:
             df = pd.concat(temp_df).drop_duplicates().reset_index(drop=True)
             print(f'Time taken: {time() - start}')
 
-            possible_exchange_wallets, add_to_loop = get_wallet_addresses_to_loop(df)
+            possible_exchange_wallets, add_to_loop = get_wallet_addresses_to_loop(df, rm_exch=rm_exch, rm_known=rm_known)
 
             return possible_exchange_wallets, add_to_loop, df
 
@@ -614,11 +638,13 @@ if tx_type in ['normal', 'internal']:
         running_address_history = running_addresses.copy()
         add_to_loop = running_addresses.copy()
 
+        # adding additional degree
+        i = 0
         # while loop to stop collecting when there is no more address to add in loops
         while len(add_to_loop) != 0:
+            i = i + 1
             possible_exchange_wallets, add_to_loop, df = collect_data_via_multithreading(running_addresses=add_to_loop,
                                                                                          tx_type='normal', date_of_interest=date_of_interest)
-
             # adding wallets that have not been found
             add_to_loop = list(set(add_to_loop).difference(running_address_history))
 
@@ -627,10 +653,16 @@ if tx_type in ['normal', 'internal']:
             all_possible_exchange_wallets.extend(possible_exchange_wallets)
             all_df.append(df)
 
+
+            if further_degree != 0 and i == further_degree:
+                break
+            print(i)
+
         after_destination_all = pd.concat(all_df)
         after_destination_all = get_wallet_info(after_destination_all)
         after_destination_all = after_destination_all.drop_duplicates()
         after_destination_all = after_destination_all.sort_values(by=['datetime','from_address','dest_address'])
+
 
     # if first degree == 1
     else:
@@ -912,7 +944,7 @@ if any(after_destination_all):
         title_date = date_of_interest[0]
 
     if tx_flow == 'both':
-        in_out_text = 'transacted with'
+        in_out_text = 'transacted with '
     elif tx_flow == 'out':
         in_out_text = 'flow from'
     elif tx_flow == 'in':
