@@ -872,14 +872,12 @@ plt.legend(loc='center left', bbox_to_anchor=(1.15, 0.5), prop={'size': 7})
 plt.show()
 
 
-
-
 this_title = "IRC-2 Token Transfer Breakdown" + " (" + title_date + ")"
 table = concat_df.copy()
 table = table[['symbol','amount']].groupby(['symbol']).amount.agg(['sum', 'count']).reset_index()
+table = table.sort_values(by='count', ascending=False).reset_index(drop=True)
 table['sum'] = table['sum'].astype(float).round(2).astype(int).apply('{:,}'.format).astype(str)
 table['count'] = table['count'].astype(float).round(2).astype(int).apply('{:,}'.format).astype(str)
-table = table.sort_values(by='count', ascending=False).reset_index(drop=True)
 table = table.rename(columns={'symbol': 'IRC-2 Token', 'sum': 'Amount', 'count': 'No. of Transactions'})
 
 import six
