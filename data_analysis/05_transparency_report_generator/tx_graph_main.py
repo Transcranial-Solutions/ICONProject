@@ -110,7 +110,6 @@ this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
 
-
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
 rm_exch = 0
@@ -1068,9 +1067,9 @@ if any(after_destination_all):
     table['TX count'] = table.groupby('dest_address')['dest_address'].transform('count')
     table['amount'] = table['amount'].astype(float)
     table = table.rename(columns={'dest_address': 'Address count', 'amount': 'Amount (ICX)'})
-
     table = table.groupby("TX count").agg({"Amount (ICX)": np.sum, "Address count": pd.Series.nunique})
-    table['Address count'] = table['Address count'].astype(str)
+    table['Address count'] = table['Address count'].astype(int).apply('{:,}'.format).astype(str)
+    table['Amount (ICX)'] = table['Amount (ICX)'].astype(float).round(2).astype(int).apply('{:,}'.format).astype(str)
     table = table.reset_index()
 
     import six
