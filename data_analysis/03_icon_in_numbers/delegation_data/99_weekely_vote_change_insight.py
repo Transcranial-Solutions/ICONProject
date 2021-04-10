@@ -1,6 +1,6 @@
 #########################################################################
 ## Project: ICON in Numbers                                            ##
-## Date: July 2020 (updated Oct 2020)                                  ##
+## Date: January 2021                                                  ##
 ## Author: Tono / Sung Wook Chung (Transcranial Solutions)             ##
 ## transcranial.solutions@gmail.com                                    ##
 ##                                                                     ##
@@ -13,7 +13,7 @@
 # This is for 'ICON in Numbers' weekly series.
 # It is an automated figure generator based on the time of your choosing (mainly tailored for weekly).
 # Terms will require the timeframe to have finished (e.g. this may not work as intended if week 25 is still on-going).
-# This will webscrape iconvotemonitor.com by Everstake and also P-Rep information from ICON Foundation site.
+# This will extract data from Insight's database and also P-Rep information from ICON Foundation site.
 # It will then do data manipulation, recoding, calculation, aggregation and generate multiple figures.
 # Please note that depending on the amount of vote change, the scale may be off, and needs to be manually modified (ylim mostly).
 
@@ -25,14 +25,16 @@ import pandas as pd
 import numpy as np
 import os
 import ast
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import psycopg2
 from time import time
+import datetime
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
 desired_width=320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
+pd.set_option('display.max_colwidth', None)
 
 # making path for saving
 currPath = os.getcwd()
@@ -54,10 +56,10 @@ terms = ['2020-47', '2020-46']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
 
+alternating_biweek = 2 # starting from first week or 2nd week
+
 this_term = terms[0]
 last_term = terms[1]
-# this_week = weeks[0]
-# this_month = months[0]
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 resultsPath_interval = os.path.join(resultsPath, this_term)
@@ -125,8 +127,59 @@ prep_df = pd.concat([prep_df_reg, prep_df_unreg]).reset_index(drop=True)
 prep_address = prep_df['address']
 len_prep_address = len(prep_address)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-#load insight data
-temp_votes = pd.read_csv(os.path.join(inDataPath, 'icx_delegation_20201129.csv'))
+
+# #load insight data
+# temp_votes = pd.read_csv(os.path.join(inDataPath, 'icx_delegation_20201129.csv'))
+
+# # PostgreSQL query (data from insight database)
+start = time()
+try:
+    connection = psycopg2.connect(user="transcranial01",
+                                  password="transcranial01",
+                                  host="icon-analytics-main-prod.c8awcgz3p3lg.us-east-1.rds.amazonaws.com",
+                                  port="5432",
+                                  database="postgres")
+
+    cursor = connection.cursor()
+
+    # postgreSQL_select_Query = "SELECT from_address, timestamp, data FROM public.transactions WHERE data like '%setDelegation%' ORDER BY hash ASC LIMIT 500"
+    # postgreSQL_select_Query = "SELECT from_address, timestamp, data FROM public.transactions WHERE data like '%setDelegation%'"
+
+
+    # postgreSQL_select_Query = "REFRESH MATERIALIZED VIEW public.voting_data"
+
+    # postgreSQL_select_Query = "REFRESH MATERIALIZED VIEW voting_data; REFRESH MATERIALIZED VIEW wallet_address;"
+
+    # cursor.execute(postgreSQL_select_Query)
+
+    postgreSQL_select_Query = "SELECT hash, from_address, timestamp, transaction_data FROM public.voting_data"
+    cursor.execute(postgreSQL_select_Query)
+
+    print("Selecting Voting Data")
+    voting_records = cursor.fetchall()
+
+except (Exception, psycopg2.Error) as error:
+    print("Error while connecting to PostgreSQL", error)
+
+finally:
+    #closing database connection.
+        if(connection):
+            cursor.close()
+            connection.close()
+            print("PostgreSQL connection is closed")
+
+print(f'Time taken: {time() - start}' + ' - SQL')
+
+# dataframe the vote data
+temp_votes = pd.DataFrame(voting_records, columns=['tx', 'from_address', 'timestamp', 'data'])
+voting_records = []
+
+# check = temp_votes[temp_votes['from_address'].isin(['hx1a9f13afc22503d0d921d3946cce6041ecabb1f9'])]\
+#     .reset_index(drop=True)
+# check.to_csv(os.path.join(currPath, 'weird.csv'), index=False)
+
+
+start = time()
 
 # jsonise
 temp_votes['data'] = temp_votes['data'].apply(ast.literal_eval)
@@ -139,196 +192,344 @@ votes_df = pd.concat([temp_votes, delegation_df], axis=1)
 votes_df = votes_df.drop(columns='data')
 votes_df = votes_df.rename(columns={'from_address': 'delegator'})
 
+temp_votes = []
+delegation_df = []
+
 # extract each variable
 votes_df['validator'] = votes_df.apply(lambda x: extract_values(x['delegations'], 'address'), axis=1)
 votes_df['votes'] = votes_df.apply(lambda x: extract_values(x['delegations'], 'value'), axis=1)
 votes_df = votes_df.drop(columns='delegations')
-votes_df = votes_df.explode('validator')
-votes_df = votes_df.explode('votes')
-votes_df = votes_df.reset_index(drop=True)
 
-test = votes_df.copy()
+# sorting to fill values
+votes_df = votes_df.sort_values(by=['delegator','timestamp']).reset_index(drop=True)
+
+# getting 'voted' flags
+def add_unvoted(x) -> bool:
+    return x.str.get(0).isnull()
+
+# condition
+vote_flag = add_unvoted(votes_df['votes'])
+
+# giving vote status flag
+votes_df['vote_status'] = np.where(vote_flag, 0, 1)  # 1 = voted, 0 = unvoted
+
+# shifting vars by group
+def shift_vars(df, groupvar, invar):
+    return df.groupby([groupvar])[invar].shift()
+
+def fill_unvoted(df, groupvar, invar):
+
+    df['tempvar_by_group'] = shift_vars(df, groupvar, invar)
+
+    # replacing last votes when unvoted everything
+    df[invar] = np.where(vote_flag, df['tempvar_by_group'], df[invar])
+    df = df.drop(columns=['tempvar_by_group'])
+    return df
+
+votes_df = fill_unvoted(votes_df, 'delegator', 'votes')
+votes_df = fill_unvoted(votes_df, 'delegator', 'validator')
+
+# remove bad data (governance address? / empty data)
+def remove_bad_data(df):
+    bad_validator = df.astype(str)['validator'].str.startswith("['cx")
+    empty_validator = df.astype(str)['validator'] == '[]'
+    empty_votes_1 = df.astype(str)['votes'] == 'nan'
+    empty_votes_2 = df.astype(str)['votes'] == '[]'
+    bad_data = (bad_validator | empty_validator | empty_votes_1 | empty_votes_2)
+    return df[~bad_data].reset_index(drop=True)
+
+votes_df = remove_bad_data(votes_df)
+vote_flag = []
+
+# getting those wallets that are still voting
+def still_voting(df):
+    unvoted_all_1 = (df['validator'].str.len() == 1) & (df['votes'].str[0] == '0x0')
+    unvoted_all_2 = df['vote_status']==0
+    unvoted_all_3 = df['votes'].str[0].isna()
+    unvoted_all = (unvoted_all_1 | unvoted_all_2 | unvoted_all_3)
+    still_voting = np.where(unvoted_all, 0, 1)
+    return still_voting
+
+votes_df['still_voting_by_wallet'] = still_voting(votes_df)
+
+print(f'Time taken: {time() - start}' + ' - jsonise and cleaning')
 
 
-
-test = test.drop_duplicates(['votes'])[['delegator','votes']].sort_values(by='votes')
-
-
-check = test['votes'].apply(int, base=16)
-
-int(test['votes'][3], 0)
-
-int('140a21d7818002', 16)
-
-int('0x1.feb851eb851ecp+1', 16)
-
-import struct
-def double_to_hex(f):
-    return hex(struct.unpack('<Q', struct.pack('<d', f))[0])
-
-double_to_hex(3.99)
-
-(3.99).hex()
-
-test['votes'][3]
-
-
-
-int(check)
-
-
-votes_df['votes'] = int(votes_df['votes'].astype(str), 16)
-
-checks = votes_df[votes_df['delegator'] == 'hxe4fe7f4ca8ea5994d1993e938622809b3e1be504']
-
-checks['votes'] = checks['votes'].apply(int, base=16)
-
-checks2 = votes_df[votes_df['delegator'] == 'hx93862a2eb9f1eb94b2d1077d6ff90d16c9cbb7b3']
-checks2 = temp_votes[temp_votes['from_address'] == 'hx93862a2eb9f1eb94b2d1077d6ff90d16c9cbb7b3']
-
-
-
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Extraction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-count = 0
-def get_votes(prep_address, len_prep_address):
-    global count
-
-    # Request url, no limit here
-    req = Request('https://api.iconvotemonitor.com/delegations?validators=' + prep_address, headers={'User-Agent': 'Mozilla/5.0'})
-
-    # req = Request('https://api.iconvotemonitor.com/delegations?validators='+ prep_address[k] + '&limit=' + str(max_extract_count),
-    #               headers={'User-Agent': 'Mozilla/5.0'})
-
-    jreq = json.load(urlopen(req))
-
-    # extracting data by labels
-    # block_id = extract_values(jreq, 'block_id')
-    delegator = extract_values(jreq, 'delegator')
-    # validator = extract_values(jreq, 'validator')
-    votes = extract_values(jreq, 'amount')
-    created_at = extract_values(jreq, 'created_at')
-    validator_name = extract_values(jreq, 'validator_name')
-
-    # combining strings into list
-    d = {# 'block_id': block_id,
-         'delegator': delegator,
-         # 'validator': validator,
-         'validator_name': validator_name,
-         'votes': votes,
-         'created_at': created_at}
-
-    # convert into dataframe
-    df = pd.DataFrame(data=d)
-
-    # convert timestamp into Year & measuring_interval (Week/Month), and summarise data by year + measuring_interval
-    # df['datetime'] = pd.to_datetime(df['created_at'], unit = 's').dt.strftime("%Y-%m-%d %H:%M:%S")
-    df['year'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y")
-    df['month'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m")
-    df['week'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%U")
-    df['date'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%m-%d")
-    df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%Y-%U-%a")
-
-    # if measuring_interval == 'week':
-    #     df[measuring_interval] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%U")
-    # elif measuring_interval == 'month':
-    #     df[measuring_interval] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%m")
-
-    # df['day'] = pd.to_datetime(df['created_at'], unit='s').dt.strftime("%a")
-    df.drop(columns=['created_at'], inplace=True)
-
-    df['votes'] = pd.to_numeric(df['votes'])
-
-    df = df.groupby(['validator_name', 'delegator', 'year', 'month', 'week', 'date', 'day']).agg('sum').reset_index()
-    # df = df.groupby(['validator_name', 'delegator', 'year', measuring_interval]).agg('sum').reset_index()
-
-    try:
-       print("Votes for " + validator_name[0] + ": Done - " + str(count) + " out of " + str(len_prep_address))
-    except:
-       print("An exception occurred - Possibly a new P-Rep without votes")
-
-    count += 1
-
-    return(df)
-
-# threading
 start = time()
+# make vote data longer
+# separating 'data' columns and putting them back together
+def extract_vote_df(df):
+    temp_validator = df.explode('validator').drop(columns='votes')
+    temp_votes = df.explode('votes')[['votes']]
 
-all_votes = []
-with ThreadPoolExecutor(max_workers=5) as executor:
-    for k in range(len(prep_address)):
-        all_votes.append(executor.submit(get_votes, prep_address[k], len_prep_address))
+    return pd.concat([temp_validator, temp_votes], axis=1).reset_index(drop=True)
 
-temp_df = []
-for task in as_completed(all_votes):
-    temp_df.append(task.result())
+votes_df = extract_vote_df(votes_df)
 
-print(f'Time taken: {time() - start}')
 
-# all votes per wallet
-df = pd.concat(temp_df)
+# adding latest time stamp - this is used for interpolating data
+current_timestamp = max(votes_df['timestamp'])
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Data -- by validator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# concatenate them into a dataframe -- by validator_name
-unique_date = df.drop_duplicates(['year', 'month', 'week', 'date', 'day'])[['year', 'month', 'week', 'date', 'day']].sort_values('date')
 
-# get unique interval
-unique_interval = df.drop_duplicates(measuring_interval)[[measuring_interval]].sort_values(measuring_interval).reset_index(drop=True)
+## takes too long
+# def add_row(x):
+#     last_row = x.iloc[-1]
+#     if (last_row['still_voting_by_wallet'] == 1) & (last_row['timestamp'] != current_timestamp):
+#         last_row['timestamp'] = current_timestamp
+#         return x.append(last_row)
+#     return x
+#
+# votes_df = votes_df.groupby(['delegator','validator']).apply(add_row).reset_index(drop=True)
 
-df = df.groupby(['validator_name', 'delegator', measuring_interval]).agg('sum').reset_index()
-df = df.sort_values(by=['validator_name', 'delegator', measuring_interval]).reset_index(drop=True)
+
+def add_row(df):
+    lastRowIndex = df.groupby(['delegator','validator']).timestamp.idxmax()
+    rows = votes_df.loc[lastRowIndex]
+    not_these_rows = (rows['votes'] == "0x0") | (rows['timestamp'] == current_timestamp)
+    rows = rows[~not_these_rows]
+    rows['timestamp'] = current_timestamp
+    df = pd.concat([df,rows], ignore_index=True)
+    df = df.sort_values(by = ['delegator', 'validator', 'timestamp'], ascending=True)
+    return df
+
+
+votes_df = add_row(votes_df)
+
+print(f'Time taken: {time() - start}' + ' - exploding and adding rows')
+
+
+start = time()
+# replace 'votes' variable that is meant to be 'unvoted' and hence 0 icx
+# this make it consistent throughout the data since the 'unvoted' flag is currently giving
+# actual ICX value, and not '0' while change in vote shows actual value (when vote_status == 1)
+votes_df['votes'] = np.where(votes_df['vote_status'] == 0, '0x0', votes_df['votes'])
+
+# convert hex into ICX
+def hex_to_icx(x):
+    return int(x, base=16)/1000000000000000000
+
+votes_df['votes'] = votes_df['votes'].apply(hex_to_icx)
+
+
+# convert timestamp to datetime
+def timestamp_to_date(df, timestamp, dateformat):
+    return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
+
+def get_date_etc(df):
+    df = df.copy()
+    df = df[['timestamp']]
+    df['date'] = timestamp_to_date(df, 'timestamp', '%Y-%m-%d')
+    df['week'] = timestamp_to_date(df, 'timestamp', '%Y-%U')
+    df['month'] = timestamp_to_date(df, 'timestamp', '%Y-%m')
+    df['year'] = timestamp_to_date(df, 'timestamp', '%Y')
+    df = df.drop(columns='timestamp')
+    df = df.drop_duplicates('date').sort_values(by='date').reset_index(drop=True)
+
+    # fix week (week-00 into previous year week (week-52))
+    fix_week = df['week'].str.contains("-00")
+    df['temp_week'] = np.where(fix_week, df['year'].astype(int) - 1, df['week'])
+    df['temp_week'] = np.where(fix_week, df['temp_week'].astype(str) + '-52', df['week'])
+    df = df.drop(columns=['week']).rename(columns={'temp_week': 'week'})
+    return df
+
+# getting biweekly timeframe
+def biweekly_timeframe(df, alternating_biweek):
+    # making biweekly logic here - alternating 1
+    unique_week = df.drop_duplicates(['week'])[['week']].sort_values('week').reset_index(drop=True)
+    unique_week['week1'] = np.where(unique_week['week'].isin(unique_week.iloc[::2,0]), unique_week['week'], unique_week['week'].shift())
+    unique_week['week2'] = np.where(unique_week['week'].isin(unique_week.iloc[1::2,0]), unique_week['week'], unique_week['week'].shift(-1))
+    unique_week['biweek1'] = unique_week['week1'].fillna(unique_week['week2']) + ' & ' + unique_week['week2'].fillna(unique_week['week1'])
+    unique_week = unique_week[['week','biweek1']].reset_index(drop=True)
+
+    # making biweekly logic here - alternating 2
+    unique_week['week1'] = np.where(unique_week['week'].isin(unique_week.iloc[1::2,0]), unique_week['week'], unique_week['week'].shift())
+    unique_week['week2'] = np.where(unique_week['week'].isin(unique_week.iloc[2::2,0]), unique_week['week'], unique_week['week'].shift(-1))
+
+   # fixing first entry
+    unique_week['week1'][0] = unique_week['week'][0]
+    unique_week['week2'][0] = unique_week['week'][0]
+    unique_week['biweek2'] = unique_week['week1'].fillna(unique_week['week2']) + ' & ' + unique_week['week2'].fillna(unique_week['week1'])
+    unique_week = unique_week[['week', 'biweek1', 'biweek2']].reset_index(drop=True)
+
+    if (alternating_biweek == 1):
+        unique_week['biweek'] = unique_week['biweek1']
+    else:
+        unique_week['biweek'] = unique_week['biweek2']
+
+    return pd.merge(df, unique_week, on='week', how='left')
+
+# merge here
+temp_date = biweekly_timeframe(get_date_etc(votes_df), alternating_biweek)
+
+# adding date and datetime for following logics
+votes_df['date'] = timestamp_to_date(votes_df, 'timestamp', '%Y-%m-%d')
+votes_df['datetime'] = timestamp_to_date(votes_df, 'timestamp', '%Y-%m-%d %H:%M:%S')
+
+# getting p-rep name
+votes_df = pd.merge(votes_df, prep_df[['address','name']], how='left', left_on='validator', right_on='address')\
+    [['validator', 'name','delegator','votes','vote_status', 'still_voting_by_wallet', 'date','datetime']]\
+    .sort_values(by=['delegator','datetime'])\
+    .rename(columns={'name':'validator_name'})
 
 # hope you don't mind, just shortening your names
-df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
-df.loc[df['validator_name'] == 'Piconbello { You Pick We Build }', 'validator_name'] = 'Piconbello'
-df.loc[df['validator_name'] == 'UNBLOCK {ICX GROWTH INCUBATOR}', 'validator_name'] = 'UNBLOCK'
-df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
+votes_df.loc[votes_df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
+votes_df.loc[votes_df['validator_name'] == 'Piconbello { You Pick We Build }', 'validator_name'] = 'Piconbello'
+votes_df.loc[votes_df['validator_name'] == 'UNBLOCK {ICX GROWTH INCUBATOR}', 'validator_name'] = 'UNBLOCK'
+votes_df.loc[votes_df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
+
+print(f'Time taken: {time() - start}' + ' - adding dates')
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
-# pivot wider & longer to get all the longitudinal data
-df_wider = df.pivot_table(index=['validator_name', 'delegator'],
-                          columns=[measuring_interval],
-                          values='votes').reset_index()
 
-df_longer = df_wider.melt(id_vars=['validator_name', 'delegator'], var_name=[measuring_interval], value_name='votes')
-df_longer = df_longer.sort_values(by=['validator_name', 'delegator', measuring_interval, 'votes']).reset_index(drop=True)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# removing NaN to first non-NaN
-df_longer.loc[df_longer.groupby(['validator_name', 'delegator'])[measuring_interval].cumcount()==0,'remove_this']= '1'
-df_longer.loc[df_longer.groupby(['validator_name', 'delegator'])['votes'].apply(pd.Series.first_valid_index), 'remove_this'] = '2'
-df_longer['remove_this'] = df_longer['remove_this'].ffill()
-df_longer = df_longer[df_longer['remove_this'] != '1'].drop(columns='remove_this').reset_index(drop=True)
+
+
+
+
+
+
+check2 = votes_df[votes_df['delegator'] == 'hx414742cdbec72d48568077742998810433afad1e']
+check2 = extract_vote_df(check2)
+check2 = check2[check2['date'] == '2021-01-14']
+# check2 = check2[check2['week'] =='2021-02']
+# votes_df['date'] = timestamp_to_date(votes_df, 'timestamp', '%Y-%m-%d')
+# check2['week'] = timestamp_to_date(check2, 'timestamp', '%Y-%U')
+
+
+
+
+
+
+
+
+
+start = time()
+
+votes_df_longer = votes_df.copy()
+votes_df_longer = votes_df_longer[['validator_name','delegator','votes','date','datetime','still_voting_by_wallet']]
+votes_df_longer = votes_df_longer\
+    .sort_values(by=['delegator','validator_name','datetime'])\
+    .groupby(['delegator','validator_name','date'])\
+    .last()\
+    .drop(columns=['datetime'])\
+    .reset_index()
+
+votes_df = []
+
+def remove_zero_start_value(df):
+    # remove those balance that starts with zero by group
+    temp_df = df.copy()
+    temp_df['votes_f'] = temp_df.groupby(['delegator','validator_name'])['votes'].shift()
+    remove_these_1 = (temp_df['votes_f'].isnull()) & (temp_df['votes'] == 0)
+    remove_these_2 = (temp_df['votes_f'] == 0) & (temp_df['votes'] == 0)
+    remove_these = remove_these_1|remove_these_2
+    temp_df = temp_df[~remove_these].drop(columns='votes_f')
+    return temp_df
+
+votes_df_longer = remove_zero_start_value(votes_df_longer)
+
+# convert character date into date date
+votes_df_longer['date'] = pd.to_datetime(votes_df_longer.date)
+
+
+## interpolating date
+# using the last value of the date by group
+
+def create_params(df):
+    return (df.groupby(['delegator', 'validator_name'])['date']
+            .agg(['min', 'max']).sort_index().reset_index())
+
+def create_multiindex(df, params):
+    min_date = min(df['date'])
+    max_date = max(df['date'])
+    all_dates = pd.date_range(start=min_date, end=max_date, freq='D')
+    midx = (
+        (row.delegator, row.validator_name, d)
+        for row in params.itertuples()
+        for d in all_dates[(row.min <= all_dates) & (all_dates <= row.max)])
+    return pd.MultiIndex.from_tuples(midx, names=['delegator', 'validator_name', 'date'])
+
+def apply_mulitindex(df, midx):
+    return df.set_index(['delegator', 'validator_name', 'date']).reindex(midx)
+
+def new_pipeline(df):
+    params = create_params(df)
+    midx = create_multiindex(df, params)
+    return apply_mulitindex(df, midx)
+
+votes_df_longer = new_pipeline(votes_df_longer).sort_index().ffill(axis=0).reset_index()
+
+# turning date date into character date
+votes_df_longer['date'] = votes_df_longer.date.dt.strftime('%Y-%m-%d')
+
+# re-applying removing those balance that starts with zero by group
+votes_df_longer = remove_zero_start_value(votes_df_longer)
+
+print(f'Time taken: {time() - start}' + ' - making data longer (filling dates)')
+
+
+# merge with dates
+votes_df_longer = pd.merge(votes_df_longer,
+                     temp_date,
+                     on=['date'],
+                     how='left')
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Subset data by measuring interval ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+votes_df_longer = votes_df_longer\
+    .sort_values(by=['delegator', 'validator_name', 'date'])\
+    .groupby(['delegator', 'validator_name', measuring_interval])\
+    .last()\
+    .reset_index()
+
+# keeping relevant time interval
+votes_df_longer = votes_df_longer[['delegator', 'validator_name', measuring_interval, 'votes', 'still_voting_by_wallet']]
+
+# re-applying removing those balance that starts with zero by group
+votes_df_longer = remove_zero_start_value(votes_df_longer)
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Subset data by measuring interval ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
+# adding vote status (voted or unvoted)
+votes_df_longer['vote_status'] = np.where(votes_df_longer['votes'] != 0, 'voted', 'unvoted')
+
+
+
+voted_bool = votes_df_longer['vote_status'] == 'voted'
+
+count_voted_prep_per_measuring_interval = votes_df_longer.copy()
+count_voted_prep_per_measuring_interval = count_voted_prep_per_measuring_interval[voted_bool].\
+    groupby(['delegator', measuring_interval]).\
+    count()['vote_status'].reset_index().\
+    rename(columns={'vote_status': 'how_many_prep_voted'})
+
+
+count_voted_prep_per_measuring_interval[count_voted_prep_per_measuring_interval['how_many_prep_voted'] > 100]
+
+
+check2 = temp_votes[temp_votes['delegator'] == 'hx414742cdbec72d48568077742998810433afad1e']
+
+check = votes_df_longer[votes_df_longer['delegator'] == 'hx414742cdbec72d48568077742998810433afad1e']
+
+check = check[check[measuring_interval] == '2021-02']
+
+
+
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # getting the duration of interest (so that the data does not get cut off)
-df_longer = df_longer[df_longer[measuring_interval] <= this_term]
+df_longer = votes_df_longer[votes_df_longer[measuring_interval] <= this_term]
 
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# vote status -> voted, add cumulative votes & unvoted
-df_longer['cum_votes'] = df_longer.groupby(['delegator', 'validator_name'])['votes'].cumsum()
-df_longer['cum_votes'] = df_longer.groupby(['delegator', 'validator_name'])['cum_votes'].ffill()
-
-# cumulative votes shifting to give proper vote/unvote status
-df_longer['prev_cum_votes'] = df_longer.groupby(['delegator', 'validator_name'])['cum_votes'].shift()
-
-# fill cumulative votes, make between -1e-6 and 1e-6 to zero
-df_longer.loc[df_longer['votes'].between(-1e-6, 1e-6), 'votes'] = 0
-df_longer.loc[df_longer['prev_cum_votes'].between(-1e-6, 1e-6), 'prev_cum_votes'] = 0
-df_longer.loc[df_longer['cum_votes'].between(-1e-6, 1e-6), 'cum_votes'] = 0
-
-# vote/unvote status
-df_longer.loc[df_longer.groupby(['validator_name', 'delegator'])[measuring_interval].cumcount()==0,'vote_status_A']= 'voted'
-df_longer.loc[df_longer['prev_cum_votes'].between(-1e-6, 1e-6) & ~np.isnan(df_longer['votes']), 'vote_status_A']= 'voted'
-df_longer.loc[df_longer['cum_votes'].between(-1e-6, 1e-6) & ~np.isnan(df_longer['votes']), 'vote_status_B'] = 'unvoted'
-
-# getting rid of non-needed rows (rows before first vote & after unvote)
-remove_these = df_longer['cum_votes'].between(-1e-6, 1e-6) & df_longer['prev_cum_votes'].between(-1e-6, 1e-6)
-df_longer = df_longer[~remove_these].drop(columns='prev_cum_votes')
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
