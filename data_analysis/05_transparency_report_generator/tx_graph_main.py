@@ -78,7 +78,7 @@ use_specified_date = 0 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2021_03_04"; day_2 = "2021_03_27"
+    day_1 = "2021_03_01"; day_2 = "2021_04_08"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
@@ -109,6 +109,7 @@ this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'hx81d4f834b91569b43cde903ec241eb1fce64a171'
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
+this_address = 'hx6d14b2b77a9e73c5d5804d43c7e3c3416648ae3d'
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
@@ -118,9 +119,9 @@ rm_known = 0
 tx_flow = 'both' # 'in', 'out', 'both'
 tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet)', 'token_txlist (token that has been xferred), 'token_list'
 
-
+# does not work with range
 first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
-further_degree = 1 # this is for the next and beyond (so if it's 1, it means 2 in total)
+further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
@@ -153,7 +154,7 @@ add_dict_if_noexist('hx94a7cd360a40cbf39e92ac91195c2ee3c81940a6', jknown_address
 
 add_dict_if_noexist('hxe5327aade005b19cb18bc993513c5cfcacd159e9', jknown_address, 'unkEx_d1')
 
-add_dict_if_noexist('hxddec6fb21f9618b537e930eaefd7eda5682d9dc8', jknown_address, 'unkEx_e1')
+add_dict_if_noexist('hxddec6fb21f9618b537e930eaefd7eda5682d9dc8', jknown_address, 'ex_intermediary')
 
 add_dict_if_noexist('hx294c5d0699615fc8d92abfe464a2601612d11bf7', jknown_address, 'funnel_1')
 add_dict_if_noexist('hx44c0d5fab0c81fe01a052f5ffb83fd152e505202', jknown_address, 'facilitator_1')
