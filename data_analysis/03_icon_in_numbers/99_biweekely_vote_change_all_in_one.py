@@ -51,7 +51,7 @@ measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day
 
 alternating_biweek = 2 # starting from first week or 2nd week
 
-terms = ['2021-11 & 2021-12', '2021-09 & 2021-10']
+terms = ['2021-13 & 2021-14', '2021-11 & 2021-12']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -256,6 +256,8 @@ df = shorten_prep_name(df, "ICONLEO", "ICONLEO")
 df = shorten_prep_name(df, "ICONIST VOTE WISELY", "ICONIST VOTE WISELY")
 df = shorten_prep_name(df, "Piconbello", "Piconbello")
 df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
+df = shorten_prep_name(df, "ICXburners", "ICXburners")
+
 # df = shorten_prep_name(df, "Gilga Capital", "Gilga Capital")
 df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
 
@@ -731,8 +733,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-2000000, ymax_val=24000000, ytick_scale=2000000, # these are actual ylims & tick interval20
-                voter_mult=0.55, voter_diff_mult=1.10, # voter change multiplier
+                ymin_val=-2000000, ymax_val=7000000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                voter_mult=0.85, voter_diff_mult=1.05, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47,
                 title=my_title) # where top first locates
@@ -912,10 +914,10 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-1000, ymax_val=1200, ytick_scale=200,
+                    ymin_val=-800, ymax_val=1200, ytick_scale=200,
                     first_time_voter_mult=0.95, new_voter_mult=1.10, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.83,
-                    topF_1_mult=0.60, topF_2_mult=0.53,
+                    topF_1_mult=0.50, topF_2_mult=0.43,
                     title=my_title)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02a_' + measuring_interval + "_voter_change.png"))
@@ -1938,6 +1940,7 @@ if run_this == 1:
     df = shorten_prep_name(df, "ICONIST VOTE WISELY", "ICONIST VOTE WISELY")
     df = shorten_prep_name(df, "Piconbello", "Piconbello")
     df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
+    df = shorten_prep_name(df, "ICXburners", "ICXburners")
     # df = shorten_prep_name(df, "Gilga Capital (NEW - LETS GROW ICON)", "Gilga Capital (NEW)")
 
     # df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
@@ -2010,9 +2013,9 @@ if run_this == 1:
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
     plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,  # these multiplier to change ylims
-                    ymin_val=-2000000, ymax_val=24000000, ytick_scale=2000000,
+                    ymin_val=-2000000, ymax_val=7000000, ytick_scale=1000000,
                     # these are actual ylims & tick interval20
-                    voter_mult=0.55, voter_diff_mult=1.10,  # voter change multiplier
+                    voter_mult=0.85, voter_diff_mult=1.05,  # voter change multiplier
                     top10_1_mult=0.92, top10_2_mult=0.85,  # where top 10 streak locates
                     topF_1_mult=0.55, topF_2_mult=0.47,
                     title=my_title)  # where top first locates
@@ -2063,8 +2066,8 @@ if run_this == 1:
 
     # plotting
     plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                     ymin_val=-150, ymax_val=300, ytick_scale=50,
-                     first_time_voter_mult=0.95, new_voter_mult=1.10,  ## change these
+                     ymin_val=-200, ymax_val=900, ytick_scale=100,
+                     first_time_voter_mult=0.95, new_voter_mult=1.25,  ## change these
                      top10_1_mult=0.90, top10_2_mult=0.83,
                      topF_1_mult=0.60, topF_2_mult=0.53,
                      title=my_title)
