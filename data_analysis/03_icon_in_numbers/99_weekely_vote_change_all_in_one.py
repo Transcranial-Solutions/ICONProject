@@ -48,7 +48,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-12', '2021-11']
+terms = ['2021-14', '2021-13']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -228,6 +228,7 @@ df = shorten_prep_name(df, "ICONLEO", "ICONLEO")
 df = shorten_prep_name(df, "ICONIST VOTE WISELY", "ICONIST VOTE WISELY")
 df = shorten_prep_name(df, "Piconbello", "Piconbello")
 df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
+df = shorten_prep_name(df, "ICXburners", "ICXburners")
 # df = shorten_prep_name(df, "Gilga Capital (NEW - LETS GROW ICON)", "Gilga Capital (NEW)")
 
 # df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
@@ -693,8 +694,8 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-800000, ymax_val=900000, ytick_scale=200000, # these are actual ylims & tick interval20
-                voter_mult=0.90, voter_diff_mult=1.00, # voter change multiplier
+                ymin_val=-1500000, ymax_val=3500000, ytick_scale=500000, # these are actual ylims & tick interval20
+                voter_mult=0.90, voter_diff_mult=1.05, # voter change multiplier
                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47,
                 title=my_title) # where top first locates
@@ -878,10 +879,10 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-900, ymax_val=900, ytick_scale=100,
-                    first_time_voter_mult=0.90, new_voter_mult=1.05, ## change these
-                    top10_1_mult=0.95, top10_2_mult=0.87,
-                    topF_1_mult=0.65, topF_2_mult=0.57,
+                    ymin_val=-200, ymax_val=900, ytick_scale=100,
+                    first_time_voter_mult=0.85, new_voter_mult=1.10, ## change these
+                    top10_1_mult=0.90, top10_2_mult=0.80,
+                    topF_1_mult=0.50, topF_2_mult=0.40,
                  title=my_title)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02a_' + measuring_interval + "_voter_change.png"))
@@ -1586,7 +1587,6 @@ plt.savefig(os.path.join(resultsPath_interval, '07_' + measuring_interval + "_vo
 run_this = 0
 
 if run_this == 1:
-
     ## ICONFI
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     # voters change this week (without ICONFi)
@@ -1630,6 +1630,7 @@ if run_this == 1:
     df = shorten_prep_name(df, "ICONIST VOTE WISELY", "ICONIST VOTE WISELY")
     df = shorten_prep_name(df, "Piconbello", "Piconbello")
     df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
+    df = shorten_prep_name(df, "ICXburners", "ICXburners")
     # df = shorten_prep_name(df, "Gilga Capital (NEW - LETS GROW ICON)", "Gilga Capital (NEW)")
 
     # df.loc[df['validator_name'] == 'ICONIST VOTE WISELY - twitter.com/info_prep', 'validator_name'] = 'ICONIST VOTE WISELY'
@@ -1704,9 +1705,8 @@ if run_this == 1:
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
     plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,  # these multiplier to change ylims
-                    ymin_val=-800000, ymax_val=900000, ytick_scale=200000,
-                    # these are actual ylims & tick interval20
-                    voter_mult=0.90, voter_diff_mult=1.00,  # voter change multiplier
+                    ymin_val=-1500000, ymax_val=3500000, ytick_scale=500000,  # these are actual ylims & tick interval20
+                    voter_mult=0.90, voter_diff_mult=1.05,  # voter change multiplier
                     top10_1_mult=0.92, top10_2_mult=0.85,  # where top 10 streak locates
                     topF_1_mult=0.55, topF_2_mult=0.47,
                     title=my_title)  # where top first locates
@@ -1756,8 +1756,8 @@ if run_this == 1:
 
     # plotting
     plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                     ymin_val=-80, ymax_val=200, ytick_scale=20,
-                     first_time_voter_mult=0.95, new_voter_mult=1.10,  ## change these
+                     ymin_val=-80, ymax_val=400, ytick_scale=40,
+                     first_time_voter_mult=0.95, new_voter_mult=1.25,  ## change these
                      top10_1_mult=0.90, top10_2_mult=0.83,
                      topF_1_mult=0.60, topF_2_mult=0.53,
                      title=my_title)
