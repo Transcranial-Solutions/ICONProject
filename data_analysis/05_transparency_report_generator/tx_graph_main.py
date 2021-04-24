@@ -109,7 +109,7 @@ this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'hx81d4f834b91569b43cde903ec241eb1fce64a171'
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
-this_address = 'hx6d14b2b77a9e73c5d5804d43c7e3c3416648ae3d'
+# this_address = 'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8' #velic_stav
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
@@ -450,7 +450,8 @@ def collect_data(tx_type=tx_type, date_of_interest=date_of_interest, this_addres
 def get_wallet_info(df,
                     known_address_details_from=known_address_details_from,
                     known_address_details_to=known_address_details_to):
-    if len(df) != 0:
+    # if len(df) != 0:
+    if any(df):
         """ attaching known address information to the data frame"""
         # attaching address info (definition)
         temp_df = pd.merge(df, known_address_details_from, how='left', on='from_address')
@@ -461,29 +462,29 @@ def get_wallet_info(df,
 def get_unique_addresses(df, tx_flow=tx_flow,
                          known_address_exception=known_address_exception,
                          this_address=this_address):
+    if any(df):
+        temp_df = get_wallet_info(df)
 
-    temp_df = get_wallet_info(df)
+        # this is for in and out
+        if tx_flow == 'both':
+            u_address = pd.Series(temp_df['dest_address'].append(temp_df['from_address']).unique())
 
-    # this is for in and out
-    if tx_flow == 'both':
-        u_address = pd.Series(temp_df['dest_address'].append(temp_df['from_address']).unique())
+        # this is for out
+        elif tx_flow == 'out':
+            temp_df = temp_df[temp_df.dest_address != this_address]
+            u_address = pd.Series(temp_df['dest_address'].unique())
 
-    # this is for out
-    elif tx_flow == 'out':
-        temp_df = temp_df[temp_df.dest_address != this_address]
-        u_address = pd.Series(temp_df['dest_address'].unique())
+        # this is for in
+        elif tx_flow == 'in':
+            temp_df = temp_df[temp_df.from_address != this_address]
+            u_address = pd.Series(temp_df['from_address'].unique())
 
-    # this is for in
-    elif tx_flow == 'in':
-        temp_df = temp_df[temp_df.from_address != this_address]
-        u_address = pd.Series(temp_df['from_address'].unique())
+        u_address = u_address.unique().tolist()
 
-    u_address = u_address.unique().tolist()
-
-    # removing known address from the list -- putting back current address in case its one of the known list
-    # known_address = known_address_exception['from_address'].to_list()
-    # u_address = u_address[~u_address.isin(known_address)].append(pd.Series([this_address])).unique().tolist()
-    return(u_address)
+        # removing known address from the list -- putting back current address in case its one of the known list
+        # known_address = known_address_exception['from_address'].to_list()
+        # u_address = u_address[~u_address.isin(known_address)].append(pd.Series([this_address])).unique().tolist()
+        return(u_address)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Token transfer Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
@@ -524,161 +525,160 @@ if tx_type in ['normal', 'internal']:
 
 
     # add condition here if exist collected df
+    if collected_df is not None:
 
-    if first_degree == 0:
+        if first_degree == 0:
 
-        # get exchange wallets
-        def get_exchange_wallets(df, NW_EW=NW_EW, from_to_address='from_address'):
-            """ used for outputting potential wallet exchanges -- number of wallets transacted set by NW_EW """
-            if any(df):
-                df = df[df['from_address'].str.startswith('hx')].reset_index(drop=True)
-                df = df[df['dest_address'].str.startswith('hx')].reset_index(drop=True)
-                wallet_exch = df.groupby([from_to_address, 'date']).count().reset_index()
-                wallet_exch = wallet_exch[wallet_exch['amount'] > NW_EW]
-                wallet_exch = wallet_exch[from_to_address].to_list()
-                return wallet_exch
+            # get exchange wallets
+            def get_exchange_wallets(df, NW_EW=NW_EW, from_to_address='from_address'):
+                """ used for outputting potential wallet exchanges -- number of wallets transacted set by NW_EW """
+                if any(df):
+                    df = df[df['from_address'].str.startswith('hx')].reset_index(drop=True)
+                    df = df[df['dest_address'].str.startswith('hx')].reset_index(drop=True)
+                    wallet_exch = df.groupby([from_to_address, 'date']).count().reset_index()
+                    wallet_exch = wallet_exch[wallet_exch['amount'] > NW_EW]
+                    wallet_exch = wallet_exch[from_to_address].to_list()
+                    return wallet_exch
 
-        # FIRST running address
-        # unique addresses found in the initial data -- this would be 'first degree' data
-        running_addresses = get_unique_addresses(df=collected_df, tx_flow=tx_flow)
-        # option to add known addresses
-        if rm_known == 1:
-            known_address = known_address_exception['from_address'].to_list()
-            running_addresses = list(set(running_addresses) - set(known_address))
+            # FIRST running address
+            # unique addresses found in the initial data -- this would be 'first degree' data
+            running_addresses = get_unique_addresses(df=collected_df, tx_flow=tx_flow)
+            # option to add known addresses
+            if rm_known == 1:
+                known_address = known_address_exception['from_address'].to_list()
+                running_addresses = list(set(running_addresses) - set(known_address))
 
-        from_wallet_exch = get_exchange_wallets(collected_df, NW_EW, from_to_address='from_address')
-        to_wallet_exch = get_exchange_wallets(collected_df, NW_EW, from_to_address='dest_address')
-        possible_exchange_wallets = sorted(np.unique(from_wallet_exch + to_wallet_exch))
+            from_wallet_exch = get_exchange_wallets(collected_df, NW_EW, from_to_address='from_address')
+            to_wallet_exch = get_exchange_wallets(collected_df, NW_EW, from_to_address='dest_address')
+            possible_exchange_wallets = sorted(np.unique(from_wallet_exch + to_wallet_exch))
 
-        if rm_exch == 1:
-            # remove those addresses that look like exchanges
-            running_addresses = list(set(running_addresses) - set(possible_exchange_wallets))
+            if rm_exch == 1:
+                # remove those addresses that look like exchanges
+                running_addresses = list(set(running_addresses) - set(possible_exchange_wallets))
 
-        collected_df = []
+            collected_df = []
 
+            # get wallet address to loop
+            def get_wallet_addresses_to_loop(df, tx_type=tx_type, tx_flow=tx_flow, NW_EW=NW_EW, running_addresses=running_addresses, rm_exch=0, rm_known=0):
+                """ if unknown address, it will find those addresses so that they can be added to extract data """
+                # if len(df) != 0:
+                if any(df):
 
+                    # attaching address info (definition)
+                    temp_df = get_wallet_info(df)
 
-        # get wallet address to loop
-        def get_wallet_addresses_to_loop(df, tx_type=tx_type, tx_flow=tx_flow, NW_EW=NW_EW, running_addresses=running_addresses, rm_exch=0, rm_known=0):
-            """ if unknown address, it will find those addresses so that they can be added to extract data """
-            # if len(df) != 0:
-            if any(df):
+                    if tx_type == tx_type:
+                        # getting possible exchange wallet addresses (NW_EW (number of wallets to determined exchange wallet) diff address in 100 pages (per day))
+                        from_wallet_exch = get_exchange_wallets(temp_df, NW_EW, from_to_address='from_address')
+                        to_wallet_exch = get_exchange_wallets(temp_df, NW_EW, from_to_address='dest_address')
 
-                # attaching address info (definition)
-                temp_df = get_wallet_info(df)
+                        possible_exchange_wallets = sorted(np.unique(from_wallet_exch + to_wallet_exch))
 
-                if tx_type == tx_type:
-                    # getting possible exchange wallet addresses (NW_EW (number of wallets to determined exchange wallet) diff address in 100 pages (per day))
-                    from_wallet_exch = get_exchange_wallets(temp_df, NW_EW, from_to_address='from_address')
-                    to_wallet_exch = get_exchange_wallets(temp_df, NW_EW, from_to_address='dest_address')
+                    # removing data depending on in or out flow
+                    # nan (or binance sweeper/exception) would continue to loop and add to the list
+                    # this is for in and out
+                    if tx_flow == 'both':
+                        is_nan_in = temp_df['from_def'].isna() | \
+                                 temp_df['from_def'].str.startswith(('binance\nsweeper','funnel','facilitator'), na=False)
+                        is_nan_out = temp_df['dest_def'].isna() | \
+                                 temp_df['dest_def'].str.startswith(('binance\nsweeper','funnel','facilitator'), na=False)
+                        add_to_loop = pd.Series(temp_df[is_nan_in].from_address.append(temp_df[is_nan_out].dest_address).unique())
 
-                    possible_exchange_wallets = sorted(np.unique(from_wallet_exch + to_wallet_exch))
+                    # THESE NEED TO BE FIXED -- also need to be dependent on previous running addresses
+                    if tx_flow == 'out':
+                        temp_df = temp_df[temp_df.dest_address != this_address]
+                        is_nan = (temp_df['dest_def'].isna() | temp_df['dest_def'].str.startswith(
+                            ('binance\nsweeper','funnel','facilitator'), na=False))
+                        add_to_loop = pd.Series(temp_df[is_nan].dest_address.unique())
 
-                # removing data depending on in or out flow
-                # nan (or binance sweeper/exception) would continue to loop and add to the list
-                # this is for in and out
-                if tx_flow == 'both':
-                    is_nan_in = temp_df['from_def'].isna() | \
-                             temp_df['from_def'].str.startswith(('binance\nsweeper','funnel','facilitator'), na=False)
-                    is_nan_out = temp_df['dest_def'].isna() | \
-                             temp_df['dest_def'].str.startswith(('binance\nsweeper','funnel','facilitator'), na=False)
-                    add_to_loop = pd.Series(temp_df[is_nan_in].from_address.append(temp_df[is_nan_out].dest_address).unique())
+                    if tx_flow == 'in':
+                        temp_df = temp_df[temp_df.from_address != this_address]
+                        is_nan = (temp_df['from_def'].isna() | temp_df['from_def'].str.startswith(
+                            ('binance\nsweeper','funnel','facilitator'), na=False))# & ~df_after_destination['from_address'].isin([this_address])
+                        add_to_loop = pd.Series(temp_df[is_nan].from_address.unique())
 
-                # THESE NEED TO BE FIXED -- also need to be dependent on previous running addresses
-                if tx_flow == 'out':
-                    temp_df = temp_df[temp_df.dest_address != this_address]
-                    is_nan = (temp_df['dest_def'].isna() | temp_df['dest_def'].str.startswith(
-                        ('binance\nsweeper','funnel','facilitator'), na=False))
-                    add_to_loop = pd.Series(temp_df[is_nan].dest_address.unique())
+                    # adding possible exchange to the addresses we loop through
+                    running_addresses.extend(possible_exchange_wallets)
+                    running_addresses = list(set(running_addresses))
 
-                if tx_flow == 'in':
-                    temp_df = temp_df[temp_df.from_address != this_address]
-                    is_nan = (temp_df['from_def'].isna() | temp_df['from_def'].str.startswith(
-                        ('binance\nsweeper','funnel','facilitator'), na=False))# & ~df_after_destination['from_address'].isin([this_address])
-                    add_to_loop = pd.Series(temp_df[is_nan].from_address.unique())
+                    if rm_exch == 1:
+                        # remove those addresses that look like exchanges
+                        running_addresses = list(set(running_addresses) - set(possible_exchange_wallets))
+                    if rm_known == 1:
+                        known_address = known_address_exception['from_address'].to_list()
+                        running_addresses = list(set(running_addresses) - set(known_address))
 
-                # adding possible exchange to the addresses we loop through
-                running_addresses.extend(possible_exchange_wallets)
-                running_addresses = list(set(running_addresses))
+                    add_to_loop = add_to_loop[~add_to_loop.isin(running_addresses)].to_list()     # if already exists then do not add
 
-                if rm_exch == 1:
-                    # remove those addresses that look like exchanges
-                    running_addresses = list(set(running_addresses) - set(possible_exchange_wallets))
-                if rm_known == 1:
-                    known_address = known_address_exception['from_address'].to_list()
-                    running_addresses = list(set(running_addresses) - set(known_address))
+                    return possible_exchange_wallets, add_to_loop
 
-                add_to_loop = add_to_loop[~add_to_loop.isin(running_addresses)].to_list()     # if already exists then do not add
+            def collect_data_via_multithreading(running_addresses=running_addresses, tx_type='normal', date_of_interest=date_of_interest):
 
-                return possible_exchange_wallets, add_to_loop
+                # collecting data within date of interest using multithreading
+                start = time()
+                tx_all = []
+                with ThreadPoolExecutor(max_workers=5) as executor:
+                    for k in tqdm(running_addresses, desc="workers"):
+                        tx_all.append(executor.submit(collect_data, tx_type=tx_type,date_of_interest=date_of_interest, this_address=k))
+                print("workers complete")
 
-        def collect_data_via_multithreading(running_addresses=running_addresses, tx_type='normal', date_of_interest=date_of_interest):
+                temp_df = []
+                for task in tqdm(as_completed(tx_all), desc='collecting data...', total=len(running_addresses)):
+                    temp_df.append(task.result())
+                df = pd.concat(temp_df).drop_duplicates().reset_index(drop=True)
+                print(f'Time taken: {time() - start}')
 
-            # collecting data within date of interest using multithreading
-            start = time()
-            tx_all = []
-            with ThreadPoolExecutor(max_workers=5) as executor:
-                for k in tqdm(running_addresses, desc="workers"):
-                    tx_all.append(executor.submit(collect_data, tx_type=tx_type,date_of_interest=date_of_interest, this_address=k))
-            print("workers complete")
+                possible_exchange_wallets, add_to_loop = get_wallet_addresses_to_loop(df, rm_exch=rm_exch, rm_known=rm_known)
 
-            temp_df = []
-            for task in tqdm(as_completed(tx_all), desc='collecting data...', total=len(running_addresses)):
-                temp_df.append(task.result())
-            df = pd.concat(temp_df).drop_duplicates().reset_index(drop=True)
-            print(f'Time taken: {time() - start}')
+                return possible_exchange_wallets, add_to_loop, df
 
-            possible_exchange_wallets, add_to_loop = get_wallet_addresses_to_loop(df, rm_exch=rm_exch, rm_known=rm_known)
+            all_df=[]
+            all_possible_exchange_wallets=[]
 
-            return possible_exchange_wallets, add_to_loop, df
+            running_address_history = running_addresses.copy()
+            add_to_loop = running_addresses.copy()
 
-        all_df=[]
-        all_possible_exchange_wallets=[]
+            # adding additional degree
+            i = 0
+            # while loop to stop collecting when there is no more address to add in loops
+            while len(add_to_loop) != 0:
+                i = i + 1
+                possible_exchange_wallets, add_to_loop, df = collect_data_via_multithreading(running_addresses=add_to_loop,
+                                                                                             tx_type='normal', date_of_interest=date_of_interest)
+                # adding wallets that have not been found
+                add_to_loop = list(set(add_to_loop).difference(running_address_history))
 
-        running_address_history = running_addresses.copy()
-        add_to_loop = running_addresses.copy()
+                running_address_history.extend(add_to_loop)
+                running_address_history = list(set(running_address_history))
+                all_possible_exchange_wallets.extend(possible_exchange_wallets)
+                all_df.append(df)
 
-        # adding additional degree
-        i = 0
-        # while loop to stop collecting when there is no more address to add in loops
-        while len(add_to_loop) != 0:
-            i = i + 1
-            possible_exchange_wallets, add_to_loop, df = collect_data_via_multithreading(running_addresses=add_to_loop,
-                                                                                         tx_type='normal', date_of_interest=date_of_interest)
-            # adding wallets that have not been found
-            add_to_loop = list(set(add_to_loop).difference(running_address_history))
+                if further_degree != 0 and i == further_degree:
+                    print(i)
+                    print(further_degree)
+                    break
 
-            running_address_history.extend(add_to_loop)
-            running_address_history = list(set(running_address_history))
-            all_possible_exchange_wallets.extend(possible_exchange_wallets)
-            all_df.append(df)
-
-
-            if further_degree != 0 and i == further_degree:
-                break
-            print(i)
-
-        after_destination_all = pd.concat(all_df)
-        after_destination_all = get_wallet_info(after_destination_all)
-        after_destination_all = after_destination_all.drop_duplicates()
-        after_destination_all = after_destination_all.sort_values(by=['datetime','from_address','dest_address'])
+            after_destination_all = pd.concat(all_df)
+            after_destination_all = get_wallet_info(after_destination_all)
+            after_destination_all = after_destination_all.drop_duplicates()
+            after_destination_all = after_destination_all.sort_values(by=['datetime','from_address','dest_address'])
 
 
-    # if first degree == 1
-    else:
-        after_destination_all = get_wallet_info(collected_df)
-        all_possible_exchange_wallets=[]
-        # this is for in and out
-        if tx_flow == 'both':
-            after_destination_all = after_destination_all
+        # if first degree == 1
+        else:
+            after_destination_all = get_wallet_info(collected_df)
+            all_possible_exchange_wallets=[]
+            # this is for in and out
+            if tx_flow == 'both':
+                after_destination_all = after_destination_all
 
-        # this is for out
-        elif tx_flow == 'out':
-            after_destination_all = after_destination_all[after_destination_all.dest_address != this_address]
+            # this is for out
+            elif tx_flow == 'out':
+                after_destination_all = after_destination_all[after_destination_all.dest_address != this_address]
 
-        # this is for in
-        elif tx_flow == 'in':
-            after_destination_all = after_destination_all[after_destination_all.from_address != this_address]
+            # this is for in
+            elif tx_flow == 'in':
+                after_destination_all = after_destination_all[after_destination_all.from_address != this_address]
 
 
 
@@ -721,14 +721,8 @@ if tx_type in ['normal', 'internal']:
 #
 #     concat_df = concat_df.drop_duplicates().reset_index(drop=True)
 
-if any(after_destination_all):
+try:
     concat_df = after_destination_all.copy()
-
-
-
-
-
-
 
     #~~~~~~~~~~ Assign unknown wallet a name (e.g. wallet_1, wallet_2) by appeared date ~~~~~~~~~#
     # get unique address for both from and to transactions
@@ -776,10 +770,6 @@ if any(after_destination_all):
 
     # edges (for gephi?)
     edges = concat_df.groupby(['from_def', 'dest_def']).from_address.agg('count').reset_index().rename(columns={'from_address': 'weight'})
-
-
-
-
 
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -1103,3 +1093,6 @@ if any(after_destination_all):
 
 
     render_mpl_table(table)
+
+except NameError:
+    print('There was no transaction in the given period')
