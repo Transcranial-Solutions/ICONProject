@@ -48,7 +48,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-14', '2021-13']
+terms = ['2021-16', '2021-15']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -576,7 +576,7 @@ def insert_week(string, index):
 
 my_title='Weekly Vote Change - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')'
 # plotting
-def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
+def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
                     ymin_val=-800000, ymax_val=700000, ytick_scale=200000,
                     voter_mult=0.9, voter_diff_mult=1.01,
                     top10_1_mult=0.9, top10_2_mult=0.8,
@@ -692,12 +692,20 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
 
     plt.tight_layout()
 
+# # adjust these numbers to get proper plot
+# plot_vote_change(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
+#                 ymin_val=-1500000, ymax_val=3500000, ytick_scale=500000, # these are actual ylims & tick interval20
+#                 voter_mult=0.90, voter_diff_mult=1.05, # voter change multiplier
+#                 top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
+#                 topF_1_mult=0.55, topF_2_mult=0.47,
+#                 title=my_title) # where top first locates
+
 # adjust these numbers to get proper plot
-plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-1500000, ymax_val=3500000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=0.90, voter_diff_mult=1.05, # voter change multiplier
-                top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
-                topF_1_mult=0.55, topF_2_mult=0.47,
+plot_vote_change(ymin_mult=1.0, ymax_mult=6.4, # these multiplier to change ylims
+                ymin_val=-2500000, ymax_val=2500000, ytick_scale=500000, # these are actual ylims & tick interval20
+                voter_mult=0.93, voter_diff_mult=1.10, # voter change multiplier
+                top10_1_mult=4.22, top10_2_mult=3.55, # where top 10 streak locates
+                topF_1_mult=2.00, topF_2_mult=1.47,
                 title=my_title) # where top first locates
 
 # saving
@@ -765,7 +773,7 @@ def insert_week(string, index):
 
 my_title='Weekly Voter Change - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')'
 # plotting
-def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
+def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
                     ymin_val=-20, ymax_val=35, ytick_scale=5,
                     first_time_voter_mult=0.97, new_voter_mult=1.1,
                     top10_1_mult=0.94, top10_2_mult=0.86,
@@ -878,12 +886,12 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 
-plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-200, ymax_val=900, ytick_scale=100,
-                    first_time_voter_mult=0.85, new_voter_mult=1.10, ## change these
+plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
+                    ymin_val=-900, ymax_val=1000, ytick_scale=100,
+                    first_time_voter_mult=0.95, new_voter_mult=1.10, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.80,
                     topF_1_mult=0.50, topF_2_mult=0.40,
-                 title=my_title)
+                    title=my_title)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02a_' + measuring_interval + "_voter_change.png"))
 
@@ -1687,7 +1695,7 @@ if run_this == 1:
 
     total_cum_text = "Total votes: " + \
                      round(total_term_change['cum_votes']).apply('{:,}'.format).values[0].split('.', 1)[0] + " ICX"
-    total_text = "Biweekly change: " + change_symbol + \
+    total_text = "Weekly change: " + change_symbol + \
                  round(total_term_change['votes']).apply('{:,}'.format).values[0].split('.', 1)[0] + " ICX"
     total_pct_change_text = change_symbol + "{:.2%}".format(total_term_change['pct_change_votes'].values[0])
 
@@ -1699,17 +1707,18 @@ if run_this == 1:
     temp_this_term_change = this_term_change[this_term_change['win_rank_votes'].between(1, 10) \
                                              | this_term_change['loss_rank_votes'].between(1, 10)]
 
-    my_title = 'Biweekly Vote Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
+    my_title = 'Weekly Vote Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
-    plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,  # these multiplier to change ylims
-                    ymin_val=-1500000, ymax_val=3500000, ytick_scale=500000,  # these are actual ylims & tick interval20
-                    voter_mult=0.90, voter_diff_mult=1.05,  # voter change multiplier
-                    top10_1_mult=0.92, top10_2_mult=0.85,  # where top 10 streak locates
-                    topF_1_mult=0.55, topF_2_mult=0.47,
-                    title=my_title)  # where top first locates
+    plot_vote_change(ymin_mult=1.0, ymax_mult=6.4,  # these multiplier to change ylims
+                     ymin_val=-2500000, ymax_val=2500000, ytick_scale=500000,
+                     # these are actual ylims & tick interval20
+                     voter_mult=0.93, voter_diff_mult=1.10,  # voter change multiplier
+                     top10_1_mult=4.22, top10_2_mult=3.55,  # where top 10 streak locates
+                     topF_1_mult=2.00, topF_2_mult=1.47,
+                     title=my_title)  # where top first locates
 
     # saving
     plt.savefig(os.path.join(resultsPath_interval, '01b_' + measuring_interval + "_vote_change.png"))
@@ -1737,12 +1746,12 @@ if run_this == 1:
     total_term_change = voting_unique_inc_return[voting_unique_inc_return[measuring_interval].isin([this_term])].drop(
         columns=measuring_interval)
     change_symbol = total_term_change['diff_AB'].apply(lambda x: "+" if x > 0 else '').values[0]  # for voter count
-    face_color = total_term_change['diff_AB'].apply(lambda x: "green" if x > 0 else 'red').values[
+    face_color = total_term_change['diff_AB'].apply(lambda x: "green" if x > 0 else 'firebrick').values[
         0]  # this is for box color
 
     total_cum_text = "Total voters: " + \
                      round(total_term_change['diff_cum_AB']).apply('{:,}'.format).values[0].split('.', 1)[0]
-    total_text = "Biweekly change: " + change_symbol + \
+    total_text = "Weekly change: " + change_symbol + \
                  round(total_term_change['diff_AB']).apply('{:,}'.format).values[0].split('.', 1)[0]
     total_pct_change_text = change_symbol + "{:.2%}".format(total_term_change['pct_change_voters'].values[0])
     total_change = total_text + ' (' + total_pct_change_text + ')'
@@ -1752,12 +1761,12 @@ if run_this == 1:
     temp_this_term_change = this_term_change[this_term_change['win_rank_Voter'].between(1, 10) \
                                              | this_term_change['loss_rank_Voter'].between(1, 10)]
 
-    my_title = 'Biweekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
+    my_title = 'Weekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
-    plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                     ymin_val=-80, ymax_val=400, ytick_scale=40,
-                     first_time_voter_mult=0.95, new_voter_mult=1.25,  ## change these
+    plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
+                     ymin_val=-90, ymax_val=180, ytick_scale=30,
+                     first_time_voter_mult=1.00, new_voter_mult=1.13,  ## change these
                      top10_1_mult=0.90, top10_2_mult=0.83,
                      topF_1_mult=0.60, topF_2_mult=0.53,
                      title=my_title)
