@@ -51,7 +51,7 @@ measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day
 
 alternating_biweek = 2 # starting from first week or 2nd week
 
-terms = ['2021-13 & 2021-14', '2021-11 & 2021-12']
+terms = ['2021-15 & 2021-16', '2021-13 & 2021-14']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -615,7 +615,7 @@ def insert_week(string, index):
 
 my_title = 'Biweekly Vote Change - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')'
 # plotting
-def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
+def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
                     ymin_val=-800000, ymax_val=700000, ytick_scale=200000,
                     voter_mult=0.9, voter_diff_mult=1.01,
                     top10_1_mult=0.9, top10_2_mult=0.8,
@@ -732,11 +732,11 @@ def plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,
     plt.tight_layout()
 
 # adjust these numbers to get proper plot
-plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4, # these multiplier to change ylims
-                ymin_val=-2000000, ymax_val=7000000, ytick_scale=1000000, # these are actual ylims & tick interval20
-                voter_mult=0.85, voter_diff_mult=1.05, # voter change multiplier
-                top10_1_mult=0.92, top10_2_mult=0.85, # where top 10 streak locates
-                topF_1_mult=0.55, topF_2_mult=0.47,
+plot_vote_change(ymin_mult=1.0, ymax_mult=7.4, # these multiplier to change ylims
+                ymin_val=-6000000, ymax_val=6000000, ytick_scale=1000000, # these are actual ylims & tick interval20
+                voter_mult=1.00, voter_diff_mult=1.10, # voter change multiplier
+                top10_1_mult=5.22, top10_2_mult=4.55, # where top 10 streak locates
+                topF_1_mult=3.00, topF_2_mult=2.47,
                 title=my_title) # where top first locates
 
 # saving
@@ -785,7 +785,7 @@ voting_unique_first_last = wallet_count(df_longer, 'new_wallet_A', 'new_wallet_B
 voting_unique_inc_return['pct_change_voters'] = voting_unique_inc_return['diff_AB'] / (voting_unique_inc_return['diff_cum_AB'].shift(1))
 total_term_change = voting_unique_inc_return[voting_unique_inc_return[measuring_interval].isin([this_term])].drop(columns=measuring_interval)
 change_symbol = total_term_change['diff_AB'].apply(lambda x: "+" if x>0 else '').values[0] # for voter count
-face_color = total_term_change['diff_AB'].apply(lambda x: "green" if x>0 else 'red').values[0] # this is for box color
+face_color = total_term_change['diff_AB'].apply(lambda x: "green" if x>0 else 'firebrick').values[0] # this is for box color
 
 total_cum_text = "Total voters: " + round(total_term_change['diff_cum_AB']).apply('{:,}'.format).values[0].split('.', 1)[0]
 total_text = "Biweekly change: " + change_symbol + round(total_term_change['diff_AB']).apply('{:,}'.format).values[0].split('.', 1)[0]
@@ -800,7 +800,7 @@ temp_this_term_change = this_term_change[this_term_change['win_rank_Voter'].betw
 
 my_title = 'Biweekly Voter Change - Top 10 gained / lost \n ('+ insert_week(this_term, 4) +')'
 # plotting
-def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
+def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
                     ymin_val=-20, ymax_val=35, ytick_scale=5,
                     first_time_voter_mult=0.97, new_voter_mult=1.1,
                     top10_1_mult=0.94, top10_2_mult=0.86,
@@ -913,7 +913,7 @@ def plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
 
 
 
-plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
+plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
                     ymin_val=-800, ymax_val=1200, ytick_scale=200,
                     first_time_voter_mult=0.95, new_voter_mult=1.10, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.83,
@@ -2012,13 +2012,13 @@ if run_this == 1:
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
-    plot_vote_chage(ymin_mult=1.0, ymax_mult=1.4,  # these multiplier to change ylims
-                    ymin_val=-2000000, ymax_val=7000000, ytick_scale=1000000,
-                    # these are actual ylims & tick interval20
-                    voter_mult=0.85, voter_diff_mult=1.05,  # voter change multiplier
-                    top10_1_mult=0.92, top10_2_mult=0.85,  # where top 10 streak locates
-                    topF_1_mult=0.55, topF_2_mult=0.47,
-                    title=my_title)  # where top first locates
+    plot_vote_change(ymin_mult=1.0, ymax_mult=7.4,  # these multiplier to change ylims
+                     ymin_val=-6000000, ymax_val=6000000, ytick_scale=1000000,
+                     # these are actual ylims & tick interval20
+                     voter_mult=1.00, voter_diff_mult=1.10,  # voter change multiplier
+                     top10_1_mult=5.22, top10_2_mult=4.55,  # where top 10 streak locates
+                     topF_1_mult=3.00, topF_2_mult=2.47,
+                     title=my_title)  # where top first locates
 
     # saving
     plt.savefig(os.path.join(resultsPath_interval, '01b_' + measuring_interval + "_vote_change.png"))
@@ -2047,7 +2047,7 @@ if run_this == 1:
     total_term_change = voting_unique_inc_return[voting_unique_inc_return[measuring_interval].isin([this_term])].drop(
         columns=measuring_interval)
     change_symbol = total_term_change['diff_AB'].apply(lambda x: "+" if x > 0 else '').values[0]  # for voter count
-    face_color = total_term_change['diff_AB'].apply(lambda x: "green" if x > 0 else 'red').values[
+    face_color = total_term_change['diff_AB'].apply(lambda x: "green" if x > 0 else 'firebrick').values[
         0]  # this is for box color
 
     total_cum_text = "Total voters: " + \
@@ -2065,9 +2065,9 @@ if run_this == 1:
     my_title = 'Biweekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
-    plot_voter_chage(ymin_mult=1.1, ymax_mult=1.3,
-                     ymin_val=-200, ymax_val=900, ytick_scale=100,
-                     first_time_voter_mult=0.95, new_voter_mult=1.25,  ## change these
+    plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
+                     ymin_val=-200, ymax_val=500, ytick_scale=100,
+                     first_time_voter_mult=0.95, new_voter_mult=1.10,  ## change these
                      top10_1_mult=0.90, top10_2_mult=0.83,
                      topF_1_mult=0.60, topF_2_mult=0.53,
                      title=my_title)
