@@ -74,7 +74,7 @@ def extract_values(obj, key):
 
 # today's date
 date_is_range = 0 # if date is range (1) or is one  date (0)
-use_specified_date = 0 # yes(1) no(0)
+use_specified_date = 1 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
@@ -84,7 +84,7 @@ if date_is_range == 1:
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2021_03_26"
+   day_1 = "2021_04_26"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -806,7 +806,7 @@ ax = plt.gca()
 # ax.set_title('$ICX flow from ' + name_this_address + ' wallet (' + day_today_text + ')')
 
 # to give title different colour
-plt.figtext(0.25, 0.96, "IRC-2", fontsize='large', weight='bold', color='cyan', ha='right')
+plt.figtext(0.25, 0.96, "IRC token", fontsize='large', weight='bold', color='cyan', ha='right')
 plt.figtext(0.255, 0.96, ' transactions ' + '(' + title_date + ')', fontsize='large', color='w', ha='left')
 # plt.figtext(0.25, 0.93, '(' + this_address + ')', fontsize='large', color='deeppink', ha='left')
 
@@ -872,7 +872,7 @@ plt.legend(loc='center left', bbox_to_anchor=(1.15, 0.5), prop={'size': 7})
 plt.show()
 
 
-this_title = "IRC-2 Token Transfer Breakdown" + " (" + title_date + ")"
+this_title = "IRC Token Transfer Breakdown" + " (" + title_date + ")"
 table = concat_df.copy()
 table = table[['symbol','amount']].groupby(['symbol']).amount.agg(['sum', 'count']).reset_index()
 table = table.sort_values(by='count', ascending=False).reset_index(drop=True)
