@@ -74,7 +74,7 @@ def extract_values(obj, key):
 
 # today's date
 date_is_range = 0 # if date is range (1) or is one  date (0)
-use_specified_date = 0 # yes(1) no(0)
+use_specified_date = 1 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
@@ -84,7 +84,7 @@ if date_is_range == 1:
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2021_03_23"
+   day_1 = "2018_03_08"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -110,6 +110,7 @@ this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
 # this_address = 'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8' #velic_stav
+this_address = 'hxcd6f04b2a5184715ca89e523b6c823ceef2f9c3d'
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
@@ -353,8 +354,9 @@ def data_meeting_date_criteria(tx_type=tx_type, date_of_interest=date_of_interes
             elif tx_type in ['normal', 'internal']:
                 d['createDateTime'] = d['createDate']
 
-            date = d['createDate'].split('T', 1)[0]
-            d['createDate'] = date
+            if d['createDate']:
+                date = d['createDate'].split('T', 1)[0]
+                d['createDate'] = date
 
         first_createDate = jtx_url['data'][0]['createDate']
         # print(first_createDate)
