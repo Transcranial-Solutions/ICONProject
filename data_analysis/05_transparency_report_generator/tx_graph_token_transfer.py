@@ -74,7 +74,7 @@ def extract_values(obj, key):
 
 # today's date
 date_is_range = 0 # if date is range (1) or is one  date (0)
-use_specified_date = 1 # yes(1) no(0)
+use_specified_date = 0 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
@@ -84,7 +84,7 @@ if date_is_range == 1:
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2021_04_26"
+   day_1 = "2021_04_29"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -543,12 +543,11 @@ concat_df[['amount']] = concat_df[['amount']].apply(pd.to_numeric, errors='coerc
 # edges = concat_df.groupby(['from_def', 'dest_def']).from_address.agg('count').reset_index().rename(columns={'from_address': 'weight'})
 
 
-
-
-
-
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# FIGURE
+# title based on range or not
+if date_is_range == 1:
+    title_date = date_of_interest[0] + ' ~ ' + date_of_interest[-1]
+else:
+    title_date = date_of_interest[0]
 
 import networkx as nx
 from networkx.drawing.nx_agraph import graphviz_layout
@@ -556,333 +555,386 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure, text
 from matplotlib.offsetbox import AnchoredText
 
+# plot
+plot_figure = 0
+if plot_figure == 1:
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # FIGURE
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-if this_address.startswith('hx'):
-    wallet_or_contact = ' wallet '
+    if this_address.startswith('hx'):
+        wallet_or_contact = ' wallet '
+    else:
+        wallet_or_contact = ' contract '
+
+    # nodesize_ratio = 5
+    # nodesize_ratio = 100
+
+    edge_width_ratio = 5
+    # summarising df
+    temp_df = concat_df.copy()
+    # temp_df['fee'] = temp_df['fee'].astype(float)
+    temp_df = temp_df[['from_def', 'dest_def', 'symbol','amount']].groupby(['from_def', 'dest_def','symbol']).amount.agg(['sum', 'count']).reset_index()
+    temp_df = temp_df.rename(columns={'sum': 'amount', 'count': 'weight'})
+    temp_df['weight_ratio'] = temp_df['weight'] / edge_width_ratio  # to change width of edges based on number of tx
+
+
+    # node colors and size
+    symbol_list = temp_df.groupby('symbol')['weight'].count().reset_index().sort_values(by=['weight','symbol'], ascending=False).reset_index(drop=True)
+
+    import seaborn as sns
+    palette = sns.color_palette("pastel", len(symbol_list))
+    node_colors = palette.as_hex()
+    node_colors = pd.DataFrame(data=node_colors, columns=['node_colors'])
+    symbol_list = pd.concat([symbol_list, node_colors['node_colors']], axis=1)
+    symbol_list_colors = symbol_list[['symbol','node_colors']]
+    temp_df = temp_df.merge(symbol_list_colors, on=['symbol'], how='left')
+
+
+    symbol_from = temp_df.rename(columns={'from_def': 'def'})[['def','node_colors']].drop_duplicates()
+    symbol_dest = temp_df.rename(columns={'dest_def': 'def'})[['def','node_colors']].drop_duplicates()
+    symbol_colors = pd.merge(symbol_from, symbol_dest, on='def', how='outer').fillna(0)
+
+    symbol_colors['node_colors'] = np.where(symbol_colors['node_colors_x'] == symbol_colors['node_colors_y'], symbol_colors['node_colors_x'], 0)
+    symbol_colors['node_colors'] = np.where(symbol_colors['node_colors_x'] != symbol_colors['node_colors_y'], symbol_colors['node_colors_x'], symbol_colors['node_colors'])
+
+    symbol_colors['node_colors'] = np.where(symbol_colors['node_colors_x'] == 0, symbol_colors['node_colors_y'], symbol_colors['node_colors'])
+    symbol_colors['node_colors'] = np.where(symbol_colors['node_colors_y'] == 0, symbol_colors['node_colors_x'], symbol_colors['node_colors'])
+
+
+    # assign random variables for mixed nodes
+    rvalues = ['Choice_1', 'Choice_2', 'Choice_3', 'Choice_4', 'Choice_5', 'Choice_6']
+    rvalues = pd.DataFrame(np.random.choice(rvalues, size=len(symbol_colors)), columns=['order'])
+
+    symbol_colors = symbol_colors.join(rvalues)
+    symbol_colors['order'] = np.where(symbol_colors['def'].str.startswith('w_'), symbol_colors['order'], 1)
+    symbol_colors = symbol_colors.sort_values(by=['def','order'])
+    symbol_colors = symbol_colors[['def','node_colors']]
+    symbol_colors = symbol_colors.\
+        groupby('def').\
+        first()
+
+
+    temp_df = concat_df.copy()
+    # temp_df['fee'] = temp_df['fee'].astype(float)
+    temp_df = temp_df[['from_def', 'dest_def','amount']].groupby(['from_def', 'dest_def']).amount.agg(['sum', 'count']).reset_index()
+    temp_df = temp_df.rename(columns={'sum': 'amount', 'count': 'weight'})
+    temp_df['weight_ratio'] = temp_df['weight'] / edge_width_ratio  # to change width of edges based on number of tx
+
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # node size -- number of times wallet transacted
+    nodesize_from = concat_df.rename(columns={'from_def': 'def'}).groupby(['def'])['amount'].count() # count instead of sum()
+    nodesize_dest = concat_df.rename(columns={'dest_def': 'def'}).groupby(['def'])['amount'].count() # count instead of sum()
+    nodesize = pd.merge(nodesize_from, nodesize_dest, on='def', how='outer').fillna(0)
+
+    nodesize = nodesize.reset_index()
+
+    if tx_flow == 'both':
+        nodesize['total'] = abs(nodesize['amount_y'] - nodesize['amount_x'])
+        nodesize = nodesize[['def', 'total']]
+
+    elif tx_flow == 'out':
+        nodesize['total'] = nodesize['amount_y']
+        nodesize = nodesize[['def', 'total']]
+
+    elif tx_flow == 'in':
+        nodesize['total'] = nodesize['amount_x']
+        nodesize = nodesize[['def', 'total']]
+
+
+    # for largest node label
+    largest_nodesize = nodesize[['def','total']].round(0).sort_values(by=['total','def'], ascending=[False,True]).reset_index(drop=True).head(1)
+
+
+    # ratio is the 0.01% of the largest node
+    nodesize_ratio = largest_nodesize.iloc[0]['total'] * 0.0001
+
+    largest_nodesize['text'] = largest_nodesize['total']
+    largest_nodesize['text'] = largest_nodesize['def'] + ': \n' + largest_nodesize['text'].round(0).astype(int).apply(
+        '{:,}'.format).astype(str) + ' TXs'
+    largest_nodesize = largest_nodesize.drop(columns=['total'])
+
+
+    # node label final
+    node_label = []
+    node_label = nodesize.drop(columns=['total'])
+    node_label = pd.merge(node_label, largest_nodesize, how='left', on='def')
+    node_label['text'] = np.where(node_label['text'].isna(), node_label['def'], node_label['text'])
+
+
+    nodesize = pd.merge(node_label, nodesize, how='left', on='def')
+
+
+    temp_df_fixed_largest_node = pd.merge(temp_df, largest_nodesize, how='left', left_on='from_def', right_on='def')
+    temp_df_fixed_largest_node['from_def'] = np.where(~temp_df_fixed_largest_node['text'].isna(), temp_df_fixed_largest_node['text'], temp_df_fixed_largest_node['from_def'])
+    temp_df_fixed_largest_node = temp_df_fixed_largest_node.drop(columns=['def','text'])
+    temp_df_fixed_largest_node = pd.merge(temp_df_fixed_largest_node, largest_nodesize, how='left', left_on='dest_def', right_on='def')
+    temp_df_fixed_largest_node['dest_def'] = np.where(~temp_df_fixed_largest_node['text'].isna(), temp_df_fixed_largest_node['text'], temp_df_fixed_largest_node['dest_def'])
+    temp_df_fixed_largest_node = temp_df_fixed_largest_node.drop(columns=['def','text'])
+
+
+
+    # edge width
+    if len(node_label) < 50:
+        edge_width = 2
+    else:
+        edge_width = 1
+
+    if len(node_label) > 1000:
+        edge_width = 0.5
+
+    # node label attributes
+    node_label_attr = []
+    node_label_attr = node_label.copy()
+
+    node_label_attr['color'] = np.where(node_label_attr['def'].isin(known_address_exception['from_def']), 'aqua', 'azure')
+    node_label_attr['color'] = np.where(node_label_attr['def'] == largest_nodesize.iloc[0,0], 'firebrick', node_label_attr['color'])
+    node_label_attr['weight'] = np.where(node_label_attr['def'].isin(largest_nodesize['def']), 'heavy', 'normal')
+
+    # making the size of font 0 if more than 100 nodes
+    node_label_attr['fontsize'] = np.where(node_label_attr['def'].str.startswith(('w_', 'binance\nsweeper','funnel','facilitator')), 6, 9)
+    node_label_attr['fontsize'] = np.where(node_label_attr['def'].isin(largest_nodesize['def']), 9, node_label_attr['fontsize'])
+
+    # attaching node color
+    node_label_attr = pd.merge(node_label_attr, symbol_colors, on=['def'], how='left')
+
+    # making the size of font 0 if more than 500 nodes
+
+    if len(node_label) > 100:
+            node_label_attr['fontsize'] = np.where(node_label_attr['text'].str.startswith('w_') & ~node_label['def'].isin(largest_nodesize['def']), 5, node_label_attr['fontsize'])
+    if len(node_label) > 500:
+            node_label_attr['fontsize'] = np.where(node_label_attr['text'].str.startswith('w_') & ~node_label['def'].isin(largest_nodesize['def']), 0, node_label_attr['fontsize'])
+
+
+    # node & edge label into dict
+    node_labeldict = node_label.set_index('def')['text'].to_dict()
+    node_labeldict_ori = node_label.copy()
+    node_labeldict_ori['text'] = node_labeldict_ori['def']
+    node_labeldict_ori = node_label.set_index('def')['text'].to_dict()
+
+    # edge_labeldict = temp_df.drop(columns='weight')
+    # edge_labeldict['amount'] = edge_labeldict['amount'].round(0).astype(int).apply('{:,}'.format).astype(str) + '\n ICX'
+
+
+
+    # adjusting text
+    vmax_val = 0
+    leftright = 100
+    updown = -220
+
+    ## figure
+
+    # if tx_flow == 'both':
+    #     in_out_text = 'transacted with'
+    # elif tx_flow == 'out':
+    #     in_out_text = 'flow from'
+    # elif tx_flow == 'in':
+    #     in_out_text = 'flow into'
+
+
+
+
+    G = nx.from_pandas_edgelist(temp_df_fixed_largest_node, 'from_def', 'dest_def', create_using=nx.MultiDiGraph())
+    pos = nx.nx_pydot.graphviz_layout(G)
+    # pos = nx.spring_layout(G)
+
+
+
+
+    # # rename pos for layout (renaming labels)
+    # def rekey(inp_dict, keys_replace):
+    #     return {keys_replace.get(k, k): v for k, v in inp_dict.items()}
+    # pos = rekey(pos, node_labeldict_ori)
+
+    # node size
+    nodesize = nodesize[['text','total']].set_index('text').squeeze().loc[list(G.nodes)]  # to align the data with G.nodes
+
+    # node text color & weight
+    # node_label_color = node_label_attr[['def','text','color']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
+    # node_label_weight = node_label_attr[['def','text','weight']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
+    # node_label_fontsize = node_label_attr[['def','text','fontsize']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
+    # # node_actual_color = node_label_attr[['def','text','node_colors']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
+    # node_actual_color = node_label_attr[['def','node_colors']].set_index('def').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
+
+
+    # node text color & weight
+    node_label_color = node_label_attr[['text','color']].set_index('text').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
+    node_label_weight = node_label_attr[['text','weight']].set_index('text').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
+    node_label_fontsize = node_label_attr[['text','fontsize']].set_index('text').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
+    # node_actual_color = node_label_attr[['def','text','node_colors']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
+    node_actual_color = node_label_attr[['text','node_colors']].set_index('text').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
+
+
+    edgelist = list(G.edges)
+    edgelist = [el[:2] for el in edgelist]
+
+
+
+    if len(edgelist) == 1:
+        temp_df = temp_df_fixed_largest_node.set_index(['from_def','dest_def']).loc[edgelist]
+    else:
+        temp_df = temp_df_fixed_largest_node.set_index(['from_def','dest_def']).squeeze().loc[edgelist]
+
+
+    color_map_1 = []
+    # for node in G:
+    #     color_map_1.append('steelblue')
+    for node in G:
+        color_map_1.append(node_actual_color[node])
+
+
+    colors = temp_df['weight'].values
+    # cmap = plt.cm.YlGn
+    # cmap = plt.cm.coolwarm
+    cmap = plt.cm.viridis
+    vmin = 0
+
+    if vmax_val == 0:
+        vmax = max(temp_df['weight'].values)
+    else:
+        vmax = vmax_val
+
+
+    plt.style.use(['dark_background'])
+    fig = plt.figure(figsize=(14,10))
+    ax = plt.gca()
+    # ax.set_title('$ICX flow from ' + name_this_address + ' wallet (' + day_today_text + ')')
+
+    # to give title different colour
+    plt.figtext(0.25, 0.96, "IRC token", fontsize='large', weight='bold', color='cyan', ha='right')
+    plt.figtext(0.255, 0.96, ' transactions ' + '(' + title_date + ')', fontsize='large', color='w', ha='left')
+    # plt.figtext(0.25, 0.93, '(' + this_address + ')', fontsize='large', color='deeppink', ha='left')
+
+
+
+    g = nx.draw(G, node_color=color_map_1, pos=pos,
+                with_labels=False, connectionstyle='arc3, rad = 0.15', #labels=node_labeldict,
+                node_size=nodesize / nodesize_ratio, alpha=0.8, arrows=True,
+                font_size=8, font_color='azure', font_weight='normal',
+                edge_color=colors,
+                edge_cmap=cmap,
+                vmin=vmin, vmax=vmax, width=edge_width)
+                #width=temp_df['weight_ratio'])  # fontweight='bold',
+
+
+    # rename pos for layout (renaming labels)
+    # def rekey(inp_dict, keys_replace):
+    #     return {keys_replace.get(k, k): v for k, v in inp_dict.items()}
+    # pos = rekey(pos, node_labeldict)
+
+
+    for node, (x, y) in pos.items():
+        text(x, y, node,
+             color=node_label_color[node],
+             weight=node_label_weight[node],
+             fontsize=node_label_fontsize[node],
+             ha='center', va='center')
+
+    # nx.draw_networkx_edge_labels(G, pos, font_size=6,
+    #                              edge_labels=edge_labeldict_r,
+    #                              label_pos=0.6,
+    #                              font_color='r', bbox=dict(alpha=0))
+    #
+    # nx.draw_networkx_edge_labels(G, pos, font_size=6,
+    #                              edge_labels=edge_labeldict_g,
+    #                              label_pos=0.6,
+    #                              font_color='g', bbox=dict(alpha=0))
+
+
+    box_text = ' (1) Circle size represents total number of transactions \n (2) Arrow thickness/colour represents individual number of transactions'
+    text_box = AnchoredText(box_text, frameon=False, loc=4, pad=0.5)
+    plt.setp(text_box.patch, facecolor='black', alpha=0.5)
+    ax.add_artist(text_box)
+    plt.axis('off')
+    plt.tight_layout()
+    # ax.text(leftright, updown,' (1) Circle size represents amount transacted \n (2) Arrow thickness/colour represents number of transactions')
+
+
+    # # Set Up Colorbar
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
+    sm._A = []
+    clb = plt.colorbar(sm, shrink=0.5)
+    clb.ax.set_title('Number of TX')
+
+    fig.set_facecolor('black')
+
+
+    # legend
+    for v in range(0, len(symbol_list)):
+        plt.scatter([],[], c=symbol_list_colors['node_colors'][v], label=symbol_list_colors['symbol'][v])
+
+    plt.legend(loc='center left', bbox_to_anchor=(1.15, 0.5), prop={'size': 7})
+    plt.show()
+
+
+table_now = concat_df.copy()
+table_now = table_now[['symbol','amount']].groupby(['symbol']).amount.agg(['sum', 'count']).reset_index()
+table_now = table_now.sort_values(by='count', ascending=False).reset_index(drop=True)
+table_now = table_now.rename(columns={'symbol': 'IRC Token', 'sum': 'Amount', 'count': 'No. of Transactions'})
+
+day_today = title_date.replace("-","_")
+day_today_text = title_date.replace("-","/")
+
+# to use specific date, otherwise use yesterday
+use_specific_prev_date = 0
+day_prev = "2021_02_08"
+
+if use_specific_prev_date == 1:
+    day_prev = day_prev
 else:
-    wallet_or_contact = ' contract '
+    today = datetime.utcnow()
+    day_prev = yesterday(today)
+day_prev_text = day_prev.replace("_","/")
 
-# nodesize_ratio = 5
-# nodesize_ratio = 100
+windows_path = "E:/GitHub/Icon/ICONProject/data_analysis/10_token_transfer/results/" + day_today
 
-edge_width_ratio = 5
-# summarising df
-temp_df = concat_df.copy()
-# temp_df['fee'] = temp_df['fee'].astype(float)
-temp_df = temp_df[['from_def', 'dest_def', 'symbol','amount']].groupby(['from_def', 'dest_def','symbol']).amount.agg(['sum', 'count']).reset_index()
-temp_df = temp_df.rename(columns={'sum': 'amount', 'count': 'weight'})
-temp_df['weight_ratio'] = temp_df['weight'] / edge_width_ratio  # to change width of edges based on number of tx
+if not os.path.exists(windows_path):
+    os.makedirs(windows_path)
 
+# saving this term's token transfer
+table_now.to_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + '.csv'), index=False)
 
-# node colors and size
-symbol_list = temp_df.groupby('symbol')['weight'].count().reset_index().sort_values(by=['weight','symbol'], ascending=False).reset_index(drop=True)
 
-import seaborn as sns
-palette = sns.color_palette("pastel", len(symbol_list))
-node_colors = palette.as_hex()
-node_colors = pd.DataFrame(data=node_colors, columns=['node_colors'])
-symbol_list = pd.concat([symbol_list, node_colors['node_colors']], axis=1)
-symbol_list_colors = symbol_list[['symbol','node_colors']]
-temp_df = temp_df.merge(symbol_list_colors, on=['symbol'], how='left')
+# reading previous term data
+windows_path_prev = "E:/GitHub/Icon/ICONProject/data_analysis/10_token_transfer/results/" + day_prev
+table_prev = pd.read_csv(os.path.join(windows_path_prev, 'IRC_token_transfer_' + day_prev + '.csv'))
 
 
-symbol_from = temp_df.rename(columns={'from_def': 'def'})[['def','node_colors']].drop_duplicates()
-symbol_dest = temp_df.rename(columns={'dest_def': 'def'})[['def','node_colors']].drop_duplicates()
-symbol_colors = pd.merge(symbol_from, symbol_dest, on='def', how='outer').fillna(0)
 
-symbol_colors['node_colors'] = np.where(symbol_colors['node_colors_x'] == symbol_colors['node_colors_y'], symbol_colors['node_colors_x'], 0)
-symbol_colors['node_colors'] = np.where(symbol_colors['node_colors_x'] != symbol_colors['node_colors_y'], symbol_colors['node_colors_x'], symbol_colors['node_colors'])
+# reindexing last term's based on this term
+def reindex_df(df_now, df_prev, my_index):
+    df_prev = pd.merge(df_now, df_prev, how='left', on=my_index)
+    df_prev = df_prev.rename(columns={'Amount_y': 'Amount', 'No. of Transactions_y': 'No. of Transactions'}). \
+        drop(columns=['Amount_x', 'No. of Transactions_x'])
+    df_prev['Amount'] = np.where(df_prev['Amount'].isna(), 0, df_prev['Amount'])
+    df_prev['No. of Transactions'] = np.where(df_prev['No. of Transactions'].isna(), 0, df_prev['No. of Transactions'])
+    return df_prev
 
-symbol_colors['node_colors'] = np.where(symbol_colors['node_colors_x'] == 0, symbol_colors['node_colors_y'], symbol_colors['node_colors'])
-symbol_colors['node_colors'] = np.where(symbol_colors['node_colors_y'] == 0, symbol_colors['node_colors_x'], symbol_colors['node_colors'])
+# function to add count difference between before and now
+def add_val_differences(df_now, df_past, diff_var):
+    df_now['diff_val'] = (df_now[diff_var] - df_past[diff_var]).round().astype(int)
+    df_now[diff_var] = df_now[diff_var].round().astype(int).apply('{:,}'.format)
+    df_now['diff_symbol'] = df_now['diff_val'].apply(lambda x: "+" if x>0 else '')
+    df_now['diff_val'] = df_now['diff_val'].apply('{:,}'.format)
+    df_now['diff_val'] = np.where(df_now['diff_val'] == 0, '=', df_now['diff_val'])
+    df_now['diff_val'] = '(' + df_now['diff_symbol'] + df_now['diff_val'].astype(str) + ')'
+    df_now[diff_var] = df_now[diff_var].astype(str) + ' ' + df_now['diff_val']
+    df_now = df_now.drop(columns=['diff_val','diff_symbol'])
+    return df_now
 
+table_prev = reindex_df(table_now, table_prev, 'IRC Token')
 
-# assign random variables for mixed nodes
-rvalues = ['Choice_1', 'Choice_2', 'Choice_3', 'Choice_4', 'Choice_5', 'Choice_6']
-rvalues = pd.DataFrame(np.random.choice(rvalues, size=len(symbol_colors)), columns=['order'])
+table_now = add_val_differences(table_now, table_prev, 'Amount')
+table_now = add_val_differences(table_now, table_prev, 'No. of Transactions')
 
-symbol_colors = symbol_colors.join(rvalues)
-symbol_colors['order'] = np.where(symbol_colors['def'].str.startswith('w_'), symbol_colors['order'], 1)
-symbol_colors = symbol_colors.sort_values(by=['def','order'])
-symbol_colors = symbol_colors[['def','node_colors']]
-symbol_colors = symbol_colors.\
-    groupby('def').\
-    first()
-
-
-temp_df = concat_df.copy()
-# temp_df['fee'] = temp_df['fee'].astype(float)
-temp_df = temp_df[['from_def', 'dest_def','amount']].groupby(['from_def', 'dest_def']).amount.agg(['sum', 'count']).reset_index()
-temp_df = temp_df.rename(columns={'sum': 'amount', 'count': 'weight'})
-temp_df['weight_ratio'] = temp_df['weight'] / edge_width_ratio  # to change width of edges based on number of tx
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# node size -- number of times wallet transacted
-nodesize_from = concat_df.rename(columns={'from_def': 'def'}).groupby(['def'])['amount'].count() # count instead of sum()
-nodesize_dest = concat_df.rename(columns={'dest_def': 'def'}).groupby(['def'])['amount'].count() # count instead of sum()
-nodesize = pd.merge(nodesize_from, nodesize_dest, on='def', how='outer').fillna(0)
-
-nodesize = nodesize.reset_index()
-
-if tx_flow == 'both':
-    nodesize['total'] = abs(nodesize['amount_y'] - nodesize['amount_x'])
-    nodesize = nodesize[['def', 'total']]
-
-elif tx_flow == 'out':
-    nodesize['total'] = nodesize['amount_y']
-    nodesize = nodesize[['def', 'total']]
-
-elif tx_flow == 'in':
-    nodesize['total'] = nodesize['amount_x']
-    nodesize = nodesize[['def', 'total']]
-
-
-# for largest node label
-largest_nodesize = nodesize[['def','total']].round(0).sort_values(by=['total','def'], ascending=[False,True]).reset_index(drop=True).head(1)
-
-
-# ratio is the 0.01% of the largest node
-nodesize_ratio = largest_nodesize.iloc[0]['total'] * 0.0001
-
-largest_nodesize['text'] = largest_nodesize['total']
-largest_nodesize['text'] = largest_nodesize['def'] + ': \n' + largest_nodesize['text'].round(0).astype(int).apply(
-    '{:,}'.format).astype(str) + ' TXs'
-largest_nodesize = largest_nodesize.drop(columns=['total'])
-
-
-# node label final
-node_label = []
-node_label = nodesize.drop(columns=['total'])
-node_label = pd.merge(node_label, largest_nodesize, how='left', on='def')
-node_label['text'] = np.where(node_label['text'].isna(), node_label['def'], node_label['text'])
-
-
-nodesize = pd.merge(node_label, nodesize, how='left', on='def')
-
-
-temp_df_fixed_largest_node = pd.merge(temp_df, largest_nodesize, how='left', left_on='from_def', right_on='def')
-temp_df_fixed_largest_node['from_def'] = np.where(~temp_df_fixed_largest_node['text'].isna(), temp_df_fixed_largest_node['text'], temp_df_fixed_largest_node['from_def'])
-temp_df_fixed_largest_node = temp_df_fixed_largest_node.drop(columns=['def','text'])
-temp_df_fixed_largest_node = pd.merge(temp_df_fixed_largest_node, largest_nodesize, how='left', left_on='dest_def', right_on='def')
-temp_df_fixed_largest_node['dest_def'] = np.where(~temp_df_fixed_largest_node['text'].isna(), temp_df_fixed_largest_node['text'], temp_df_fixed_largest_node['dest_def'])
-temp_df_fixed_largest_node = temp_df_fixed_largest_node.drop(columns=['def','text'])
-
-
-
-# edge width
-if len(node_label) < 50:
-    edge_width = 2
-else:
-    edge_width = 1
-
-if len(node_label) > 1000:
-    edge_width = 0.5
-
-# node label attributes
-node_label_attr = []
-node_label_attr = node_label.copy()
-
-node_label_attr['color'] = np.where(node_label_attr['def'].isin(known_address_exception['from_def']), 'aqua', 'azure')
-node_label_attr['color'] = np.where(node_label_attr['def'] == largest_nodesize.iloc[0,0], 'firebrick', node_label_attr['color'])
-node_label_attr['weight'] = np.where(node_label_attr['def'].isin(largest_nodesize['def']), 'heavy', 'normal')
-
-# making the size of font 0 if more than 100 nodes
-node_label_attr['fontsize'] = np.where(node_label_attr['def'].str.startswith(('w_', 'binance\nsweeper','funnel','facilitator')), 6, 9)
-node_label_attr['fontsize'] = np.where(node_label_attr['def'].isin(largest_nodesize['def']), 9, node_label_attr['fontsize'])
-
-# attaching node color
-node_label_attr = pd.merge(node_label_attr, symbol_colors, on=['def'], how='left')
-
-# making the size of font 0 if more than 500 nodes
-
-if len(node_label) > 100:
-        node_label_attr['fontsize'] = np.where(node_label_attr['text'].str.startswith('w_') & ~node_label['def'].isin(largest_nodesize['def']), 5, node_label_attr['fontsize'])
-if len(node_label) > 500:
-        node_label_attr['fontsize'] = np.where(node_label_attr['text'].str.startswith('w_') & ~node_label['def'].isin(largest_nodesize['def']), 0, node_label_attr['fontsize'])
-
-
-# node & edge label into dict
-node_labeldict = node_label.set_index('def')['text'].to_dict()
-node_labeldict_ori = node_label.copy()
-node_labeldict_ori['text'] = node_labeldict_ori['def']
-node_labeldict_ori = node_label.set_index('def')['text'].to_dict()
-
-# edge_labeldict = temp_df.drop(columns='weight')
-# edge_labeldict['amount'] = edge_labeldict['amount'].round(0).astype(int).apply('{:,}'.format).astype(str) + '\n ICX'
-
-
-
-# adjusting text
-vmax_val = 0
-leftright = 100
-updown = -220
-
-## figure
-
-# title based on range or not
-if date_is_range == 1:
-    title_date = date_of_interest[0] + ' ~ ' + date_of_interest[-1]
-else:
-    title_date = date_of_interest[0]
-
-# if tx_flow == 'both':
-#     in_out_text = 'transacted with'
-# elif tx_flow == 'out':
-#     in_out_text = 'flow from'
-# elif tx_flow == 'in':
-#     in_out_text = 'flow into'
-
-
-
-
-G = nx.from_pandas_edgelist(temp_df_fixed_largest_node, 'from_def', 'dest_def', create_using=nx.MultiDiGraph())
-pos = nx.nx_pydot.graphviz_layout(G)
-# pos = nx.spring_layout(G)
-
-
-
-
-# # rename pos for layout (renaming labels)
-# def rekey(inp_dict, keys_replace):
-#     return {keys_replace.get(k, k): v for k, v in inp_dict.items()}
-# pos = rekey(pos, node_labeldict_ori)
-
-# node size
-nodesize = nodesize[['text','total']].set_index('text').squeeze().loc[list(G.nodes)]  # to align the data with G.nodes
-
-# node text color & weight
-# node_label_color = node_label_attr[['def','text','color']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
-# node_label_weight = node_label_attr[['def','text','weight']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
-# node_label_fontsize = node_label_attr[['def','text','fontsize']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
-# # node_actual_color = node_label_attr[['def','text','node_colors']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
-# node_actual_color = node_label_attr[['def','node_colors']].set_index('def').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
-
-
-# node text color & weight
-node_label_color = node_label_attr[['text','color']].set_index('text').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
-node_label_weight = node_label_attr[['text','weight']].set_index('text').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
-node_label_fontsize = node_label_attr[['text','fontsize']].set_index('text').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
-# node_actual_color = node_label_attr[['def','text','node_colors']].set_index('def').loc[list(G.nodes)].set_index('text').squeeze() # to align the data with G.nodes
-node_actual_color = node_label_attr[['text','node_colors']].set_index('text').loc[list(G.nodes)].squeeze() # to align the data with G.nodes
-
-
-edgelist = list(G.edges)
-edgelist = [el[:2] for el in edgelist]
-
-
-
-if len(edgelist) == 1:
-    temp_df = temp_df_fixed_largest_node.set_index(['from_def','dest_def']).loc[edgelist]
-else:
-    temp_df = temp_df_fixed_largest_node.set_index(['from_def','dest_def']).squeeze().loc[edgelist]
-
-
-color_map_1 = []
-# for node in G:
-#     color_map_1.append('steelblue')
-for node in G:
-    color_map_1.append(node_actual_color[node])
-
-
-colors = temp_df['weight'].values
-# cmap = plt.cm.YlGn
-# cmap = plt.cm.coolwarm
-cmap = plt.cm.viridis
-vmin = 0
-
-if vmax_val == 0:
-    vmax = max(temp_df['weight'].values)
-else:
-    vmax = vmax_val
-
-
-plt.style.use(['dark_background'])
-fig = plt.figure(figsize=(14,10))
-ax = plt.gca()
-# ax.set_title('$ICX flow from ' + name_this_address + ' wallet (' + day_today_text + ')')
-
-# to give title different colour
-plt.figtext(0.25, 0.96, "IRC token", fontsize='large', weight='bold', color='cyan', ha='right')
-plt.figtext(0.255, 0.96, ' transactions ' + '(' + title_date + ')', fontsize='large', color='w', ha='left')
-# plt.figtext(0.25, 0.93, '(' + this_address + ')', fontsize='large', color='deeppink', ha='left')
-
-
-
-g = nx.draw(G, node_color=color_map_1, pos=pos,
-            with_labels=False, connectionstyle='arc3, rad = 0.15', #labels=node_labeldict,
-            node_size=nodesize / nodesize_ratio, alpha=0.8, arrows=True,
-            font_size=8, font_color='azure', font_weight='normal',
-            edge_color=colors,
-            edge_cmap=cmap,
-            vmin=vmin, vmax=vmax, width=edge_width)
-            #width=temp_df['weight_ratio'])  # fontweight='bold',
-
-
-# rename pos for layout (renaming labels)
-# def rekey(inp_dict, keys_replace):
-#     return {keys_replace.get(k, k): v for k, v in inp_dict.items()}
-# pos = rekey(pos, node_labeldict)
-
-
-for node, (x, y) in pos.items():
-    text(x, y, node,
-         color=node_label_color[node],
-         weight=node_label_weight[node],
-         fontsize=node_label_fontsize[node],
-         ha='center', va='center')
-
-# nx.draw_networkx_edge_labels(G, pos, font_size=6,
-#                              edge_labels=edge_labeldict_r,
-#                              label_pos=0.6,
-#                              font_color='r', bbox=dict(alpha=0))
-#
-# nx.draw_networkx_edge_labels(G, pos, font_size=6,
-#                              edge_labels=edge_labeldict_g,
-#                              label_pos=0.6,
-#                              font_color='g', bbox=dict(alpha=0))
-
-
-box_text = ' (1) Circle size represents total number of transactions \n (2) Arrow thickness/colour represents individual number of transactions'
-text_box = AnchoredText(box_text, frameon=False, loc=4, pad=0.5)
-plt.setp(text_box.patch, facecolor='black', alpha=0.5)
-ax.add_artist(text_box)
-plt.axis('off')
-plt.tight_layout()
-# ax.text(leftright, updown,' (1) Circle size represents amount transacted \n (2) Arrow thickness/colour represents number of transactions')
-
-
-# # Set Up Colorbar
-sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=vmin, vmax=vmax))
-sm._A = []
-clb = plt.colorbar(sm, shrink=0.5)
-clb.ax.set_title('Number of TX')
-
-fig.set_facecolor('black')
-
-
-# legend
-for v in range(0, len(symbol_list)):
-    plt.scatter([],[], c=symbol_list_colors['node_colors'][v], label=symbol_list_colors['symbol'][v])
-
-plt.legend(loc='center left', bbox_to_anchor=(1.15, 0.5), prop={'size': 7})
-plt.show()
-
-
-this_title = "IRC Token Transfer Breakdown" + " (" + title_date + ")"
-table = concat_df.copy()
-table = table[['symbol','amount']].groupby(['symbol']).amount.agg(['sum', 'count']).reset_index()
-table = table.sort_values(by='count', ascending=False).reset_index(drop=True)
-table['sum'] = table['sum'].astype(float).round(2).astype(int).apply('{:,}'.format).astype(str)
-table['count'] = table['count'].astype(float).round(2).astype(int).apply('{:,}'.format).astype(str)
-table = table.rename(columns={'symbol': 'IRC-2 Token', 'sum': 'Amount', 'count': 'No. of Transactions'})
 
 import six
+my_title = "IRC Token Transfer Breakdown - " + day_today_text + " (Δ since " + day_prev_text + ")"
 
-def render_mpl_table(data, col_width=2.0, row_height=0.325, font_size=10,
+def render_mpl_table(data, col_width=3.0, row_height=0.325, font_size=10,
                      header_color='#40466e', row_colors=['black', 'black'], edge_color='w',
                      bbox=[0, 0, 1, 1], header_columns=0,
                      ax=None, **kwargs):
@@ -890,7 +942,7 @@ def render_mpl_table(data, col_width=2.0, row_height=0.325, font_size=10,
         size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
         fig, ax = plt.subplots(figsize=size)
         ax.axis('off')
-        ax.set_title(this_title, fontsize=12,
+        ax.set_title(my_title, fontsize=12,
                      weight='bold', pad=30)
         plt.tight_layout()
 
@@ -905,8 +957,10 @@ def render_mpl_table(data, col_width=2.0, row_height=0.325, font_size=10,
             cell.set_text_props(weight='bold', color='w')
             cell.set_facecolor(header_color)
         else:
-            cell.set_facecolor(row_colors[k[0]%len(row_colors) ])
+            cell.set_facecolor(row_colors[k[0]%len(row_colors)])
     return ax
 
+plt.style.use(['dark_background'])
+render_mpl_table(table_now)
 
-render_mpl_table(table)
+plt.savefig(os.path.join(windows_path, "IRC_token_transfer_" + day_today + "_vs_" + day_prev + ".png"))
