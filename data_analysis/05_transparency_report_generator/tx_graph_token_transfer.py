@@ -41,7 +41,7 @@ if not os.path.exists(outPath):
 
 # get yesterday function
 def yesterday(string=False):
-    yesterday = datetime.utcnow() - timedelta(1)
+    yesterday = datetime.utcnow() - timedelta(2)
     if string:
         return yesterday.strftime('%Y_%m_%d')
     return yesterday
@@ -89,7 +89,7 @@ if date_is_range == 0 and use_specified_date == 1:
 
 # today
 if date_is_range == 0 and use_specified_date == 0:
-   today = datetime.utcnow()
+   today = datetime.utcnow() - timedelta(1) #### IMPORTANT -- Note that this is 1 day before!! ###
    day_1 = today.strftime("%Y_%m_%d")
    date_of_interest = [day_to_text(day_1)]
 
@@ -490,7 +490,7 @@ def get_unique_addresses(df, tx_flow=tx_flow,
 # getting token_txlist information from icon transaction page
 # page_count = []
 # tx_count = []
-# page_count, tx_count = get_page_tx_count(tx_type='token_txlist')
+# page_count, tx_count = get_page_tx_count(tx_typde='token_txlist')
 # extract data within the date of interest
 
 if tx_type in ['token_txlist']:
@@ -885,7 +885,7 @@ day_prev = "2021_02_08"
 if use_specific_prev_date == 1:
     day_prev = day_prev
 else:
-    today = datetime.utcnow()
+    today = datetime.utcnow() - timedelta(1) ### IMPORTANT !! NOTE THAT THIS IS 1 DAY BEFORE !!!
     day_prev = yesterday(today)
 day_prev_text = day_prev.replace("_","/")
 
