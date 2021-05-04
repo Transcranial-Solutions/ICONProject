@@ -48,7 +48,7 @@ if not os.path.exists(resultsPath):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-16', '2021-15']
+terms = ['2021-17', '2021-16']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -701,11 +701,11 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
 #                 title=my_title) # where top first locates
 
 # adjust these numbers to get proper plot
-plot_vote_change(ymin_mult=1.0, ymax_mult=6.4, # these multiplier to change ylims
-                ymin_val=-2500000, ymax_val=2500000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=0.93, voter_diff_mult=1.10, # voter change multiplier
-                top10_1_mult=4.22, top10_2_mult=3.55, # where top 10 streak locates
-                topF_1_mult=2.00, topF_2_mult=1.47,
+plot_vote_change(ymin_mult=1.0, ymax_mult=15.4, # these multiplier to change ylims
+                ymin_val=-3500000, ymax_val=4000000, ytick_scale=500000, # these are actual ylims & tick interval20
+                voter_mult=0.93, voter_diff_mult=1.05, # voter change multiplier
+                top10_1_mult=10.22, top10_2_mult=9.45, # where top 10 streak locates
+                topF_1_mult=6.00, topF_2_mult=5.20,
                 title=my_title) # where top first locates
 
 # saving
@@ -887,7 +887,7 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-900, ymax_val=1000, ytick_scale=100,
+                    ymin_val=-700, ymax_val=1000, ytick_scale=100,
                     first_time_voter_mult=0.95, new_voter_mult=1.10, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.80,
                     topF_1_mult=0.50, topF_2_mult=0.40,
@@ -1712,12 +1712,12 @@ if run_this == 1:
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
-    plot_vote_change(ymin_mult=1.0, ymax_mult=6.4,  # these multiplier to change ylims
-                     ymin_val=-2500000, ymax_val=2500000, ytick_scale=500000,
+    plot_vote_change(ymin_mult=1.0, ymax_mult=15.4,  # these multiplier to change ylims
+                     ymin_val=-3500000, ymax_val=4000000, ytick_scale=500000,
                      # these are actual ylims & tick interval20
-                     voter_mult=0.93, voter_diff_mult=1.10,  # voter change multiplier
-                     top10_1_mult=4.22, top10_2_mult=3.55,  # where top 10 streak locates
-                     topF_1_mult=2.00, topF_2_mult=1.47,
+                     voter_mult=0.93, voter_diff_mult=1.05,  # voter change multiplier
+                     top10_1_mult=10.22, top10_2_mult=9.45,  # where top 10 streak locates
+                     topF_1_mult=6.00, topF_2_mult=5.20,
                      title=my_title)  # where top first locates
 
     # saving
@@ -1764,11 +1764,11 @@ if run_this == 1:
     my_title = 'Weekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
-    plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
-                     ymin_val=-90, ymax_val=180, ytick_scale=30,
+    plot_voter_change(ymin_mult=1.1, ymax_mult=2.3,
+                     ymin_val=-150, ymax_val=180, ytick_scale=30,
                      first_time_voter_mult=1.00, new_voter_mult=1.13,  ## change these
-                     top10_1_mult=0.90, top10_2_mult=0.83,
-                     topF_1_mult=0.60, topF_2_mult=0.53,
+                     top10_1_mult=1.50, top10_2_mult=1.30,
+                     topF_1_mult=0.80, topF_2_mult=0.65,
                      title=my_title)
     # saving
     plt.savefig(os.path.join(resultsPath_interval, '02b_' + measuring_interval + "_voter_change.png"))
