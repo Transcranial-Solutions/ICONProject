@@ -236,6 +236,8 @@ print(f'Time taken: {time() - start}')
 # all votes per wallet
 df = pd.concat(temp_df)
 
+# df = df[df['delegator'] == 'hx0cc3a3d55ed55df7c8eee926a4fafb5412d0cca4'].reset_index(drop=True)
+# df = df[['validator_name','delegator','date','votes']]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Voting Info Data -- by validator ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # concatenate them into a dataframe -- by validator_name
 unique_date = df.drop_duplicates(['year', 'month', 'week', 'date', 'day'])[['year', 'month', 'week', 'date', 'day']].sort_values('date')
