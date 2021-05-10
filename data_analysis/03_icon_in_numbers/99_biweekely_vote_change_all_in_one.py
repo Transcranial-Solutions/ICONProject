@@ -51,7 +51,7 @@ measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day
 
 alternating_biweek = 2 # starting from first week or 2nd week
 
-terms = ['2021-15 & 2021-16', '2021-13 & 2021-14']
+terms = ['2021-17 & 2021-18', '2021-15 & 2021-16']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -732,11 +732,11 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
     plt.tight_layout()
 
 # adjust these numbers to get proper plot
-plot_vote_change(ymin_mult=1.0, ymax_mult=7.4, # these multiplier to change ylims
-                ymin_val=-6000000, ymax_val=6000000, ytick_scale=1000000, # these are actual ylims & tick interval20
+plot_vote_change(ymin_mult=1.0, ymax_mult=20, # these multiplier to change ylims
+                ymin_val=-8000000, ymax_val=8000000, ytick_scale=1000000, # these are actual ylims & tick interval20
                 voter_mult=1.00, voter_diff_mult=1.10, # voter change multiplier
-                top10_1_mult=5.22, top10_2_mult=4.55, # where top 10 streak locates
-                topF_1_mult=3.00, topF_2_mult=2.47,
+                top10_1_mult=13.50, top10_2_mult=11.85, # where top 10 streak locates
+                topF_1_mult=8.00, topF_2_mult=6.47,
                 title=my_title) # where top first locates
 
 # saving
@@ -914,8 +914,8 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-800, ymax_val=1200, ytick_scale=200,
-                    first_time_voter_mult=0.95, new_voter_mult=1.10, ## change these
+                    ymin_val=-300, ymax_val=1100, ytick_scale=100,
+                    first_time_voter_mult=0.95, new_voter_mult=1.13, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.83,
                     topF_1_mult=0.50, topF_2_mult=0.43,
                     title=my_title)
@@ -2012,12 +2012,12 @@ if run_this == 1:
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
-    plot_vote_change(ymin_mult=1.0, ymax_mult=7.4,  # these multiplier to change ylims
-                     ymin_val=-6000000, ymax_val=6000000, ytick_scale=1000000,
+    plot_vote_change(ymin_mult=1.0, ymax_mult=20,  # these multiplier to change ylims
+                     ymin_val=-8000000, ymax_val=8000000, ytick_scale=1000000,
                      # these are actual ylims & tick interval20
                      voter_mult=1.00, voter_diff_mult=1.10,  # voter change multiplier
-                     top10_1_mult=5.22, top10_2_mult=4.55,  # where top 10 streak locates
-                     topF_1_mult=3.00, topF_2_mult=2.47,
+                     top10_1_mult=13.50, top10_2_mult=11.85,  # where top 10 streak locates
+                     topF_1_mult=8.00, topF_2_mult=6.47,
                      title=my_title)  # where top first locates
 
     # saving
@@ -2065,11 +2065,11 @@ if run_this == 1:
     my_title = 'Biweekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
-    plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
-                     ymin_val=-200, ymax_val=500, ytick_scale=100,
+    plot_voter_change(ymin_mult=1.1, ymax_mult=4.3,
+                     ymin_val=-250, ymax_val=300, ytick_scale=50,
                      first_time_voter_mult=0.95, new_voter_mult=1.10,  ## change these
-                     top10_1_mult=0.90, top10_2_mult=0.83,
-                     topF_1_mult=0.60, topF_2_mult=0.53,
+                     top10_1_mult=3.10, top10_2_mult=2.80,
+                     topF_1_mult=2.10, topF_2_mult=1.80,
                      title=my_title)
     # saving
     plt.savefig(os.path.join(resultsPath_interval, '02b_' + measuring_interval + "_voter_change.png"))
