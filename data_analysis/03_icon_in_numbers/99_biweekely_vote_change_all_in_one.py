@@ -45,6 +45,12 @@ resultsPath = os.path.join(resultsPath, "biweekly")
 if not os.path.exists(resultsPath):
     os.mkdir(resultsPath)
 
+
+misc_data_path = os.path.join(currPath, "output")
+prep_vote_path = os.path.join(misc_data_path, "prep_votes")
+
+prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_2021_05_10.csv'))
+prep_df_1 = prep_df_1.drop('validator', axis=1)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day"// "biweek" //
@@ -251,17 +257,18 @@ def shorten_prep_name(df, contains_name, change_to_name):
     df.loc[index_prep, 'validator_name'] = change_to_name
     return df
 
-# hope you don't mind, just shortening your names
-df = shorten_prep_name(df, "ICONLEO", "ICONLEO")
-df = shorten_prep_name(df, "ICONIST VOTE WISELY", "ICONIST VOTE WISELY")
-df = shorten_prep_name(df, "Piconbello", "Piconbello")
-df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
-df = shorten_prep_name(df, "ICXburners", "ICXburners")
+def shorten_prep_name_wrapper(df):
+    # hope you don't mind, just shortening your names
+    df = shorten_prep_name(df, "ICONLEO", "ICONLEO")
+    df = shorten_prep_name(df, "ICONIST VOTE WISELY", "ICONIST VOTE WISELY")
+    df = shorten_prep_name(df, "Piconbello", "Piconbello")
+    df = shorten_prep_name(df, "UNBLOCK", "UNBLOCK")
+    df = shorten_prep_name(df, "ICXburners", "ICXburners")
+    # df = shorten_prep_name(df, "Gilga Capital", "Gilga Capital")
+    df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
+    return(df)
 
-# df = shorten_prep_name(df, "Gilga Capital", "Gilga Capital")
-df.loc[df['validator_name'] == 'Gilga Capital (NEW - LETS GROW ICON)', 'validator_name'] = 'Gilga Capital (NEW)'
-
-
+df = shorten_prep_name_wrapper(df)
 
 def df_wide_then_long(df, measuring_interval=measuring_interval):
     # pivot wider & longer to get all the longitudinal data
@@ -473,14 +480,33 @@ def get_vote_status_count(df, measuring_interval=measuring_interval):
 
 vote_status_count = get_vote_status_count(df_longer, measuring_interval=measuring_interval)
 
+
+prep_df_1 = shorten_prep_name_wrapper(prep_df_1)
+prep_df_1[measuring_interval] = this_term
+
+# need to add prep_df_2 next term
+
+# votes_sum['cum_votes_test'] = np.where((votes_sum[measuring_interval] == this_term) & (votes_sum['validator_name'] == prep_df_1['validator_name']), prep_df_1['cum_votes'], votes_sum['cum_votes'])
 def get_votes_sum(df, measuring_interval=measuring_interval):
     # Votes table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     votes_sum = df.groupby(['validator_name', measuring_interval]).agg('sum').reset_index()
+
+    # here is to fix total votes.. which is not great but hey, this is one solution.
+    votes_sum = pd.merge(votes_sum, prep_df_1, how='left', on=['validator_name', measuring_interval])
+    votes_sum['cum_votes'] = np.where(~votes_sum['cum_votes_update'].isnull(), votes_sum['cum_votes_update'],
+                                      votes_sum['cum_votes'])
+    votes_sum['votes_update'] = votes_sum.groupby('validator_name')['cum_votes'].diff()
+    votes_sum['votes'] = np.where(~votes_sum['votes_update'].isnull(), votes_sum['votes_update'], votes_sum['votes'])
+    votes_sum = votes_sum.drop(columns=['cum_votes_update', 'votes_update'])
+
     votes_sum['pct_change_votes'] = votes_sum['votes'] / (votes_sum.groupby('validator_name')['cum_votes'].shift(1))
     # votes_sum = votes_sum.replace(np.inf, np.nan)
     return votes_sum
 
 votes_sum = get_votes_sum(df_longer, measuring_interval=measuring_interval)
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # Get ranks, Top 10, Top 1
@@ -732,11 +758,11 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
     plt.tight_layout()
 
 # adjust these numbers to get proper plot
-plot_vote_change(ymin_mult=1.0, ymax_mult=20, # these multiplier to change ylims
-                ymin_val=-8000000, ymax_val=8000000, ytick_scale=1000000, # these are actual ylims & tick interval20
-                voter_mult=1.00, voter_diff_mult=1.10, # voter change multiplier
-                top10_1_mult=13.50, top10_2_mult=11.85, # where top 10 streak locates
-                topF_1_mult=8.00, topF_2_mult=6.47,
+plot_vote_change(ymin_mult=1.0, ymax_mult=1.2, # these multiplier to change ylims
+                ymin_val=-8000000, ymax_val=14000000, ytick_scale=2000000, # these are actual ylims & tick interval20
+                voter_mult=0.90, voter_diff_mult=1.03, # voter change multiplier
+                top10_1_mult=0.85, top10_2_mult=0.77, # where top 10 streak locates
+                topF_1_mult=0.55, topF_2_mult=0.47,
                 title=my_title) # where top first locates
 
 # saving
@@ -924,10 +950,10 @@ plt.savefig(os.path.join(resultsPath_interval, '02a_' + measuring_interval + "_v
 
 
 
-df_longer_terms = df_longer[df_longer[measuring_interval].isin(terms)][['validator_name','delegator','biweek','cum_votes']]
+# df_longer_terms = df_longer[df_longer[measuring_interval].isin(terms)][['validator_name','delegator','biweek','cum_votes']]
 #
 # df_longer_last_term = df_longer_terms[df_longer_terms[measuring_interval].isin([last_term])].drop(columns=[measuring_interval]).reset_index(drop=True)
-df_longer_this_term = df_longer_terms[df_longer_terms[measuring_interval].isin([this_term])].drop(columns=[measuring_interval]).reset_index(drop=True)
+# df_longer_this_term = df_longer_terms[df_longer_terms[measuring_interval].isin([this_term])].drop(columns=[measuring_interval]).reset_index(drop=True)
 
 # hx000d98e2db79cd885c054437a75369b92d01d413
 # hx0037aff27d12938f612accb854dfd15fadcacb0a
@@ -2012,12 +2038,13 @@ if run_this == 1:
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
-    plot_vote_change(ymin_mult=1.0, ymax_mult=20,  # these multiplier to change ylims
-                     ymin_val=-8000000, ymax_val=8000000, ytick_scale=1000000,
+    # adjust these numbers to get proper plot
+    plot_vote_change(ymin_mult=1.0, ymax_mult=1.2,  # these multiplier to change ylims
+                     ymin_val=-8000000, ymax_val=14000000, ytick_scale=2000000,
                      # these are actual ylims & tick interval20
-                     voter_mult=1.00, voter_diff_mult=1.10,  # voter change multiplier
-                     top10_1_mult=13.50, top10_2_mult=11.85,  # where top 10 streak locates
-                     topF_1_mult=8.00, topF_2_mult=6.47,
+                     voter_mult=0.90, voter_diff_mult=1.03,  # voter change multiplier
+                     top10_1_mult=0.85, top10_2_mult=0.77,  # where top 10 streak locates
+                     topF_1_mult=0.55, topF_2_mult=0.47,
                      title=my_title)  # where top first locates
 
     # saving
