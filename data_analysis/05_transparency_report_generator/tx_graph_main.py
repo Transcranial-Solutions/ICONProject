@@ -84,7 +84,7 @@ if date_is_range == 1:
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2018_03_08"
+   day_1 = "2021_05_14"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -96,7 +96,7 @@ if date_is_range == 0 and use_specified_date == 0:
 
 
 # wallet of interest
-this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
+# this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'hx1729b35b690d51e9944b2e94075acff986ea0675' # Binance cold
 # this_address = 'hx54d6f19c3d16b2ef23c09c885ca1ba776aaa80e2' #ubik
 # this_address = 'hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2' #velic
@@ -110,7 +110,7 @@ this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
 # this_address = 'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8' #velic_stav
-this_address = 'hxcd6f04b2a5184715ca89e523b6c823ceef2f9c3d'
+this_address = 'hx938b9a413de9ffbbeae72e7034931a3bdf0f1e96'
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
