@@ -51,13 +51,17 @@ prep_vote_path = os.path.join(misc_data_path, "prep_votes")
 
 prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_2021_05_10.csv'))
 prep_df_1 = prep_df_1.drop('validator', axis=1)
+
+prep_df_2 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_2021_05_22.csv'))
+prep_df_2 = prep_df_2.drop('validator', axis=1)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day"// "biweek" //
 
 alternating_biweek = 2 # starting from first week or 2nd week
 
-terms = ['2021-17 & 2021-18', '2021-15 & 2021-16']
+terms = ['2021-19 & 2021-20', '2021-17 & 2021-18']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -481,10 +485,15 @@ def get_vote_status_count(df, measuring_interval=measuring_interval):
 vote_status_count = get_vote_status_count(df_longer, measuring_interval=measuring_interval)
 
 
+# because of balanced, this needs to be done
 prep_df_1 = shorten_prep_name_wrapper(prep_df_1)
-prep_df_1[measuring_interval] = this_term
+prep_df_1[measuring_interval] = last_term
 
-# need to add prep_df_2 next term
+prep_df_2 = shorten_prep_name_wrapper(prep_df_2)
+prep_df_2[measuring_interval] = this_term
+
+prep_df_1_2 = pd.merge(prep_df_1, prep_df_2, how='outer', on=['validator_name', 'cum_votes_update', measuring_interval])
+
 
 # votes_sum['cum_votes_test'] = np.where((votes_sum[measuring_interval] == this_term) & (votes_sum['validator_name'] == prep_df_1['validator_name']), prep_df_1['cum_votes'], votes_sum['cum_votes'])
 def get_votes_sum(df, measuring_interval=measuring_interval):
@@ -492,7 +501,7 @@ def get_votes_sum(df, measuring_interval=measuring_interval):
     votes_sum = df.groupby(['validator_name', measuring_interval]).agg('sum').reset_index()
 
     # here is to fix total votes.. which is not great but hey, this is one solution.
-    votes_sum = pd.merge(votes_sum, prep_df_1, how='left', on=['validator_name', measuring_interval])
+    votes_sum = pd.merge(votes_sum, prep_df_1_2, how='left', on=['validator_name', measuring_interval])
     votes_sum['cum_votes'] = np.where(~votes_sum['cum_votes_update'].isnull(), votes_sum['cum_votes_update'],
                                       votes_sum['cum_votes'])
     votes_sum['votes_update'] = votes_sum.groupby('validator_name')['cum_votes'].diff()

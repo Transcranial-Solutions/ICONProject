@@ -48,13 +48,16 @@ if not os.path.exists(resultsPath):
 misc_data_path = os.path.join(currPath, "output")
 prep_vote_path = os.path.join(misc_data_path, "prep_votes")
 
-prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_2021_05_10.csv'))
+prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_2021_05_15.csv'))
 prep_df_1 = prep_df_1.drop('validator', axis=1)
+
+prep_df_2 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_2021_05_22.csv'))
+prep_df_2 = prep_df_2.drop('validator', axis=1)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-18', '2021-17']
+terms = ['2021-19', '2021-18']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -447,18 +450,23 @@ def get_vote_status_count(df, measuring_interval=measuring_interval):
 
 vote_status_count = get_vote_status_count(df_longer, measuring_interval=measuring_interval)
 
+# because of balanced, this needs to be done
 prep_df_1 = shorten_prep_name_wrapper(prep_df_1)
-prep_df_1[measuring_interval] = this_term
+prep_df_1[measuring_interval] = last_term
 
-# need to add prep_df_2 next term
+prep_df_2 = shorten_prep_name_wrapper(prep_df_2)
+prep_df_2[measuring_interval] = this_term
+
+prep_df_1_2 = pd.merge(prep_df_1, prep_df_2, how='outer', on=['validator_name', 'cum_votes_update', measuring_interval])
 
 # votes_sum['cum_votes_test'] = np.where((votes_sum[measuring_interval] == this_term) & (votes_sum['validator_name'] == prep_df_1['validator_name']), prep_df_1['cum_votes'], votes_sum['cum_votes'])
+
 def get_votes_sum(df, measuring_interval=measuring_interval):
     # Votes table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     votes_sum = df.groupby(['validator_name', measuring_interval]).agg('sum').reset_index()
 
     # here is to fix total votes.. which is not great but hey, this is one solution.
-    votes_sum = pd.merge(votes_sum, prep_df_1, how='left', on=['validator_name', measuring_interval])
+    votes_sum = pd.merge(votes_sum, prep_df_1_2, how='left', on=['validator_name', measuring_interval])
     votes_sum['cum_votes'] = np.where(~votes_sum['cum_votes_update'].isnull(), votes_sum['cum_votes_update'],
                                       votes_sum['cum_votes'])
     votes_sum['votes_update'] = votes_sum.groupby('validator_name')['cum_votes'].diff()
@@ -724,7 +732,7 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_change(ymin_mult=1.0, ymax_mult=1.2, # these multiplier to change ylims
-                ymin_val=-4000000, ymax_val=14000000, ytick_scale=2000000, # these are actual ylims & tick interval20
+                ymin_val=-1000000, ymax_val=2000000, ytick_scale=500000, # these are actual ylims & tick interval20
                 voter_mult=0.90, voter_diff_mult=1.03, # voter change multiplier
                 top10_1_mult=0.85, top10_2_mult=0.77, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47,
@@ -1735,7 +1743,7 @@ if run_this == 1:
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
     plot_vote_change(ymin_mult=1.0, ymax_mult=1.2,  # these multiplier to change ylims
-                     ymin_val=-4000000, ymax_val=14000000, ytick_scale=2000000,
+                     ymin_val=-1000000, ymax_val=2000000, ytick_scale=500000,
                      # these are actual ylims & tick interval20
                      voter_mult=0.90, voter_diff_mult=1.03,  # voter change multiplier
                      top10_1_mult=0.85, top10_2_mult=0.77,  # where top 10 streak locates
@@ -1786,11 +1794,11 @@ if run_this == 1:
     my_title = 'Weekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
-    plot_voter_change(ymin_mult=1.1, ymax_mult=2.3,
-                     ymin_val=-700, ymax_val=700, ytick_scale=100,
+    plot_voter_change(ymin_mult=1.1, ymax_mult=8.3,
+                     ymin_val=-200, ymax_val=250, ytick_scale=50,
                      first_time_voter_mult=1.00, new_voter_mult=1.13,  ## change these
-                     top10_1_mult=1.50, top10_2_mult=1.30,
-                     topF_1_mult=0.80, topF_2_mult=0.65,
+                     top10_1_mult=5.40, top10_2_mult=5.00,
+                     topF_1_mult=2.80, topF_2_mult=2.30,
                      title=my_title)
     # saving
     plt.savefig(os.path.join(resultsPath_interval, '02b_' + measuring_interval + "_voter_change.png"))
