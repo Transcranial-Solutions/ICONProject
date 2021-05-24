@@ -57,7 +57,7 @@ prep_df_2 = prep_df_2.drop('validator', axis=1)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'week' # // 'year' // 'month' // 'week' // "date" // "day"//
-terms = ['2021-19', '2021-18']
+terms = ['2021-20', '2021-19']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
@@ -731,11 +731,11 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
 #                 title=my_title) # where top first locates
 
 # adjust these numbers to get proper plot
-plot_vote_change(ymin_mult=1.0, ymax_mult=1.2, # these multiplier to change ylims
-                ymin_val=-1000000, ymax_val=2000000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=0.90, voter_diff_mult=1.03, # voter change multiplier
-                top10_1_mult=0.85, top10_2_mult=0.77, # where top 10 streak locates
-                topF_1_mult=0.55, topF_2_mult=0.47,
+plot_vote_change(ymin_mult=1.0, ymax_mult=1.5, # these multiplier to change ylims
+                ymin_val=-1000000, ymax_val=1000000, ytick_scale=200000, # these are actual ylims & tick interval20
+                voter_mult=0.95, voter_diff_mult=1.03, # voter change multiplier
+                top10_1_mult=0.94, top10_2_mult=0.85, # where top 10 streak locates
+                topF_1_mult=0.50, topF_2_mult=0.40,
                 title=my_title) # where top first locates
 
 # saving
@@ -917,7 +917,7 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-700, ymax_val=700, ytick_scale=100,
+                    ymin_val=-1000, ymax_val=800, ytick_scale=200,
                     first_time_voter_mult=0.95, new_voter_mult=1.10, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.80,
                     topF_1_mult=0.50, topF_2_mult=0.40,
@@ -1742,12 +1742,12 @@ if run_this == 1:
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
-    plot_vote_change(ymin_mult=1.0, ymax_mult=1.2,  # these multiplier to change ylims
-                     ymin_val=-1000000, ymax_val=2000000, ytick_scale=500000,
+    plot_vote_change(ymin_mult=1.0, ymax_mult=1.5,  # these multiplier to change ylims
+                     ymin_val=-1000000, ymax_val=1000000, ytick_scale=200000,
                      # these are actual ylims & tick interval20
-                     voter_mult=0.90, voter_diff_mult=1.03,  # voter change multiplier
-                     top10_1_mult=0.85, top10_2_mult=0.77,  # where top 10 streak locates
-                     topF_1_mult=0.55, topF_2_mult=0.47,
+                     voter_mult=0.95, voter_diff_mult=1.03,  # voter change multiplier
+                     top10_1_mult=0.94, top10_2_mult=0.85,  # where top 10 streak locates
+                     topF_1_mult=0.50, topF_2_mult=0.40,
                      title=my_title)  # where top first locates
 
     # saving
@@ -1794,11 +1794,11 @@ if run_this == 1:
     my_title = 'Weekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
-    plot_voter_change(ymin_mult=1.1, ymax_mult=8.3,
-                     ymin_val=-200, ymax_val=250, ytick_scale=50,
-                     first_time_voter_mult=1.00, new_voter_mult=1.13,  ## change these
-                     top10_1_mult=5.40, top10_2_mult=5.00,
-                     topF_1_mult=2.80, topF_2_mult=2.30,
+    plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
+                     ymin_val=-80, ymax_val=180, ytick_scale=20,
+                     first_time_voter_mult=0.98, new_voter_mult=1.12,  ## change these
+                     top10_1_mult=0.90, top10_2_mult=0.80,
+                     topF_1_mult=0.55, topF_2_mult=0.45,
                      title=my_title)
     # saving
     plt.savefig(os.path.join(resultsPath_interval, '02b_' + measuring_interval + "_voter_change.png"))
