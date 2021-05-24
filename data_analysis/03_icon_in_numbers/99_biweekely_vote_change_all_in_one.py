@@ -768,7 +768,7 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_change(ymin_mult=1.0, ymax_mult=1.2, # these multiplier to change ylims
-                ymin_val=-8000000, ymax_val=14000000, ytick_scale=2000000, # these are actual ylims & tick interval20
+                ymin_val=-1000000, ymax_val=2000000, ytick_scale=500000, # these are actual ylims & tick interval20
                 voter_mult=0.90, voter_diff_mult=1.03, # voter change multiplier
                 top10_1_mult=0.85, top10_2_mult=0.77, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.47,
@@ -949,8 +949,8 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-300, ymax_val=1100, ytick_scale=100,
-                    first_time_voter_mult=0.95, new_voter_mult=1.13, ## change these
+                    ymin_val=-1200, ymax_val=1500, ytick_scale=300,
+                    first_time_voter_mult=1, new_voter_mult=1.10, ## change these
                     top10_1_mult=0.90, top10_2_mult=0.83,
                     topF_1_mult=0.50, topF_2_mult=0.43,
                     title=my_title)
@@ -2047,9 +2047,8 @@ if run_this == 1:
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
-    # adjust these numbers to get proper plot
     plot_vote_change(ymin_mult=1.0, ymax_mult=1.2,  # these multiplier to change ylims
-                     ymin_val=-8000000, ymax_val=14000000, ytick_scale=2000000,
+                     ymin_val=-1000000, ymax_val=2000000, ytick_scale=500000,
                      # these are actual ylims & tick interval20
                      voter_mult=0.90, voter_diff_mult=1.03,  # voter change multiplier
                      top10_1_mult=0.85, top10_2_mult=0.77,  # where top 10 streak locates
@@ -2101,11 +2100,11 @@ if run_this == 1:
     my_title = 'Biweekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
-    plot_voter_change(ymin_mult=1.1, ymax_mult=4.3,
-                     ymin_val=-250, ymax_val=300, ytick_scale=50,
-                     first_time_voter_mult=0.95, new_voter_mult=1.10,  ## change these
-                     top10_1_mult=3.10, top10_2_mult=2.80,
-                     topF_1_mult=2.10, topF_2_mult=1.80,
+    plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
+                     ymin_val=-150, ymax_val=250, ytick_scale=50,
+                     first_time_voter_mult=0.98, new_voter_mult=1.10,  ## change these
+                     top10_1_mult=0.90, top10_2_mult=0.80,
+                     topF_1_mult=0.55, topF_2_mult=0.45,
                      title=my_title)
     # saving
     plt.savefig(os.path.join(resultsPath_interval, '02b_' + measuring_interval + "_voter_change.png"))
