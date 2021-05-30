@@ -25,6 +25,7 @@ import pandas as pd
 import numpy as np
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import date, datetime, timedelta
 from time import time
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -49,11 +50,17 @@ if not os.path.exists(resultsPath):
 misc_data_path = os.path.join(currPath, "output")
 prep_vote_path = os.path.join(misc_data_path, "prep_votes")
 
-prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_2021_05_10.csv'))
-prep_df_1 = prep_df_1.drop('validator', axis=1)
+# assign date here
+date_prev = date(2021, 5, 22)
+date_now = date(2021, 6, 5)
 
-prep_df_2 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_2021_05_22.csv'))
-prep_df_2 = prep_df_2.drop('validator', axis=1)
+prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_' + date_prev.strftime("%Y_%m_%d") + '.csv'))
+prep_df_1 = prep_df_1[['validator_name', 'cum_votes_update']]
+prep_df_1 = prep_df_1[prep_df_1['validator_name'].notna()]
+
+prep_df_2 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_' + date_now.strftime("%Y_%m_%d") + '.csv'))
+prep_df_2 = prep_df_2[['validator_name', 'cum_votes_update']]
+prep_df_2 = prep_df_2[prep_df_2['validator_name'].notna()]
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -61,7 +68,10 @@ measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day
 
 alternating_biweek = 2 # starting from first week or 2nd week
 
-terms = ['2021-19 & 2021-20', '2021-17 & 2021-18']
+terms = [(date_now - timedelta(weeks=1)).strftime("%Y-%U") + ' & ' + date_now.strftime("%Y-%U"),
+         (date_prev - timedelta(weeks=1)).strftime("%Y-%U") + ' & ' + date_prev.strftime("%Y-%U")]
+
+# terms = ['2021-19 & 2021-20', '2021-17 & 2021-18']
 # weeks = ['2020-24', '2020-23']
 # months = ['2020-05', '2020-06']
 # years = ['2020']
