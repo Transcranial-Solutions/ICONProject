@@ -62,6 +62,9 @@ prep_df_2 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_' + date_now.st
 prep_df_2 = prep_df_2[['validator_name', 'cum_votes_update']]
 prep_df_2 = prep_df_2[prep_df_2['validator_name'].notna()]
 
+# vote change %
+((prep_df_2['cum_votes_update'].sum() / prep_df_1['cum_votes_update'].sum() - 1) * 100).round(2)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 measuring_interval = 'biweek' # // 'year' // 'month' // 'week' // "date" // "day"// "biweek" //
