@@ -79,7 +79,7 @@ def extract_values(obj, key):
 # extracting each p-rep json data -- need to feed in address
 
 # get data function
-def get_my_values(method, address):
+def get_my_logo(method, address):
     call = CallBuilder().from_(tester_address) \
         .to('cx0000000000000000000000000000000000000000') \
         .params({"address": address}) \
@@ -102,4 +102,4 @@ def get_my_values(method, address):
 
 
 # example
-get_my_values(method='getPRep', address='hx2f3fb9a9ff98df2145936d2bfcaa3837a289496b')
+get_my_logo(method='getPRep', address='hx2f3fb9a9ff98df2145936d2bfcaa3837a289496b')
