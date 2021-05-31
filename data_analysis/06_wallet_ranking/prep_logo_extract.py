@@ -92,13 +92,17 @@ def get_my_logo(method, address):
     jpage = json.load(urlopen(page))
 
     try:
-        logo_link = extract_values(jpage, 'logo_256')[0]
+        logo_link_256 = extract_values(jpage, 'logo_256')[0]
+        logo_link_1024 = extract_values(jpage, 'logo_1024')[0]
+        logo_link_svg = extract_values(jpage, 'logo_svg')[0]
     except:
         print(json_details + ': Perhaps No logo uploaded by the P-Rep')
 
     print(address + ' is done.')
 
-    return(logo_link)
+    ## add ranking logic to choose one maybe?
+
+    return logo_link_256, logo_link_1024, logo_link_svg
 
 
 # example
