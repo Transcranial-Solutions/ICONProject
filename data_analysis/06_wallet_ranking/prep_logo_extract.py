@@ -101,8 +101,14 @@ def get_my_logo(method, address):
     print(address + ' is done.')
 
     ## add ranking logic to choose one maybe?
+    if logo_link_svg is not None:
+        logo_link = logo_link_svg
+    elif logo_link_1024 is not None:
+        logo_link = logo_link_1024
+    else:
+        logo_link = logo_link_256
 
-    return logo_link_256, logo_link_1024, logo_link_svg
+    return logo_link
 
 
 # example
