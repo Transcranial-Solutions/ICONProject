@@ -1059,7 +1059,7 @@ fig.patch.set_facecolor('black')
 cmap = plt.get_cmap("Set3")
 inner_colors = cmap(np.array(range(len(count_vote_bin['delegator']))))
 
-my_circle=plt.Circle((0,0), 0.7, color='black')
+my_circle = plt.Circle((0,0), 0.7, color='black')
 wedges, texts = plt.pie(count_vote_bin['delegator'],
                                    labels=count_vote_bin['delegator'],
                                    counterclock=False,
@@ -1070,6 +1070,7 @@ wedges, texts = plt.pie(count_vote_bin['delegator'],
 
 for text, color in zip(texts, inner_colors):
     text.set_color(color)
+    text.set_rotation(30)
 
 labels = ['{0} ({1:1.2f} % || {2})'.format(i,j,k) for i,j,k in zip(count_vote_bin['cum_votes_bin'], porcent, porcet_vote)]
 
