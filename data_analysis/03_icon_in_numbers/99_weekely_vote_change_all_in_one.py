@@ -50,8 +50,8 @@ misc_data_path = os.path.join(currPath, "output")
 prep_vote_path = os.path.join(misc_data_path, "prep_votes")
 
 # assign date here
-date_prev = date(2021, 5, 22)
-date_now = date(2021, 5, 29)
+date_prev = date(2021, 5, 29)
+date_now = date(2021, 6, 5)
 
 prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_' + date_prev.strftime("%Y_%m_%d") + '.csv'))
 prep_df_1 = prep_df_1[['validator_name', 'cum_votes_update']]
@@ -1008,6 +1008,7 @@ wedges, texts = plt.pie(count_vote_bin['delegator'],
 
 for text, color in zip(texts, inner_colors):
     text.set_color(color)
+    text.set_rotation(30)
 
 labels = ['{0} ({1:1.2f} % || {2})'.format(i,j,k) for i,j,k in zip(count_vote_bin['cum_votes_bin'], porcent, porcet_vote)]
 
