@@ -78,13 +78,13 @@ use_specified_date = 1 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2021_03_01"; day_2 = "2021_04_08"
+    day_1 = "2021_02_04"; day_2 = "2021_02_05"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2021_05_14"
+   day_1 = "2021_02_05"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -110,7 +110,7 @@ if date_is_range == 0 and use_specified_date == 0:
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
 # this_address = 'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8' #velic_stav
-this_address = 'hx938b9a413de9ffbbeae72e7034931a3bdf0f1e96'
+this_address = 'hx73cefec1379a64b52b0652c2f8a495cfeb8b8889'
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
@@ -122,7 +122,7 @@ tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet
 
 # does not work with range
 first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
-further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
+further_degree = 1 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
