@@ -51,8 +51,8 @@ misc_data_path = os.path.join(currPath, "output")
 prep_vote_path = os.path.join(misc_data_path, "prep_votes")
 
 # assign date here
-date_prev = date(2021, 5, 22)
-date_now = date(2021, 6, 5)
+date_prev = date(2021, 6, 5)
+date_now = date(2021, 6, 19)
 
 prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_' + date_prev.strftime("%Y_%m_%d") + '.csv'))
 prep_df_1 = prep_df_1[['validator_name', 'cum_votes_update']]
@@ -780,11 +780,11 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
     plt.tight_layout()
 
 # adjust these numbers to get proper plot
-plot_vote_change(ymin_mult=1.0, ymax_mult=1.2, # these multiplier to change ylims
-                ymin_val=-2000000, ymax_val=14000000, ytick_scale=1000000, # these are actual ylims & tick interval20
-                voter_mult=0.90, voter_diff_mult=1.30, # voter change multiplier
-                top10_1_mult=0.85, top10_2_mult=0.77, # where top 10 streak locates
-                topF_1_mult=0.55, topF_2_mult=0.47,
+plot_vote_change(ymin_mult=1.0, ymax_mult=1.0, # these multiplier to change ylims
+                ymin_val=-500000, ymax_val=6500000, ytick_scale=500000, # these are actual ylims & tick interval20
+                voter_mult=0.70, voter_diff_mult=1.08, # voter change multiplier
+                top10_1_mult=0.78, top10_2_mult=0.73, # where top 10 streak locates
+                topF_1_mult=0.58, topF_2_mult=0.53,
                 title=my_title) # where top first locates
 
 # saving
@@ -961,11 +961,11 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 
 
 
-plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
-                    ymin_val=-1200, ymax_val=1200, ytick_scale=200,
-                    first_time_voter_mult=1, new_voter_mult=1.10, ## change these
-                    top10_1_mult=0.90, top10_2_mult=0.83,
-                    topF_1_mult=0.50, topF_2_mult=0.43,
+plot_voter_change(ymin_mult=1.0, ymax_mult=1.3,
+                    ymin_val=-1000, ymax_val=1400, ytick_scale=200,
+                    first_time_voter_mult=0.90, new_voter_mult=1.02, ## change these
+                    top10_1_mult=0.90, top10_2_mult=0.84,
+                    topF_1_mult=0.55, topF_2_mult=0.48,
                     title=my_title)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02a_' + measuring_interval + "_voter_change.png"))
@@ -1653,7 +1653,7 @@ def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=12,
             cell.set_facecolor(row_colors[k[0]%len(row_colors) ])
     return ax
 
-render_mpl_table(SYV_participants_summary_agg_merged, header_columns=0, col_width=2.4)
+render_mpl_table(SYV_participants_summary_agg_merged, header_columns=0, col_width=2.6)
 
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '05_' + measuring_interval + "_vote_spreading.png"))
@@ -1767,7 +1767,7 @@ total = "n=" + Prep_11_plus['count'].apply('{:,}'.format).unique()
 
 sns.set(style="ticks", rc={"lines.linewidth": 3})
 plt.style.use(['dark_background'])
-f, ax = plt.subplots(figsize=(10, 6))
+f, ax = plt.subplots(figsize=(11, 6))
 sns.barplot(x=measuring_interval, y='sum', data=Prep_11_plus,
             palette=sns.cubehelix_palette(len(Prep_11_plus), start=.5, rot=-.75))
 h,l = ax.get_legend_handles_labels()
@@ -1775,7 +1775,7 @@ h,l = ax.get_legend_handles_labels()
 ax.set_xlabel('Biweeks', fontsize=14, weight='bold', labelpad=10)
 ax.set_ylabel('Votes (ICX)', fontsize=14, weight='bold', labelpad=10)
 ax.set_title("Votes in '11+ P-Rep' Voted Category", fontsize=14,
-             weight='bold')
+             weight='bold', pad=30)
 ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. format(x/1000000) + ' M'))
 
 
@@ -1792,7 +1792,7 @@ for i in range(len(total)):
     ax.text(p.get_x() + p.get_width() / 2., height + height * 0.02,
                 total[i],
                 ha="center",
-            fontsize=8)
+            fontsize=8, rotation=45)
 
 
 plt.tight_layout()
@@ -2061,12 +2061,11 @@ if run_this == 1:
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
-    plot_vote_change(ymin_mult=1.0, ymax_mult=1.2,  # these multiplier to change ylims
-                     ymin_val=-2000000, ymax_val=14000000, ytick_scale=1000000,
-                     # these are actual ylims & tick interval20
-                     voter_mult=0.90, voter_diff_mult=1.30,  # voter change multiplier
-                     top10_1_mult=0.85, top10_2_mult=0.77,  # where top 10 streak locates
-                     topF_1_mult=0.55, topF_2_mult=0.47,
+    plot_vote_change(ymin_mult=1.0, ymax_mult=1.0,  # these multiplier to change ylims
+                     ymin_val=-500000, ymax_val=6500000, ytick_scale=500000,  # these are actual ylims & tick interval20
+                     voter_mult=0.70, voter_diff_mult=1.08,  # voter change multiplier
+                     top10_1_mult=0.78, top10_2_mult=0.73,  # where top 10 streak locates
+                     topF_1_mult=0.58, topF_2_mult=0.53,
                      title=my_title)  # where top first locates
 
     # saving
@@ -2114,9 +2113,9 @@ if run_this == 1:
     my_title = 'Biweekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
-    plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
-                     ymin_val=-100, ymax_val=350, ytick_scale=50,
-                     first_time_voter_mult=0.98, new_voter_mult=1.15,  ## change these
+    plot_voter_change(ymin_mult=1.1, ymax_mult=1.2,
+                     ymin_val=-60, ymax_val=220, ytick_scale=20,
+                     first_time_voter_mult=0.90, new_voter_mult=1.10,  ## change these
                      top10_1_mult=0.90, top10_2_mult=0.80,
                      topF_1_mult=0.55, topF_2_mult=0.45,
                      title=my_title)
