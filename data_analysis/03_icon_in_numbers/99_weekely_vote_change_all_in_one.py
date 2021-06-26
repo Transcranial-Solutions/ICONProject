@@ -50,8 +50,8 @@ misc_data_path = os.path.join(currPath, "output")
 prep_vote_path = os.path.join(misc_data_path, "prep_votes")
 
 # assign date here
-date_prev = date(2021, 6, 5)
-date_now = date(2021, 6, 12)
+date_prev = date(2021, 6, 12)
+date_now = date(2021, 6, 19)
 
 prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_' + date_prev.strftime("%Y_%m_%d") + '.csv'))
 prep_df_1 = prep_df_1[['validator_name', 'cum_votes_update']]
@@ -741,11 +741,11 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
 #                 title=my_title) # where top first locates
 
 # adjust these numbers to get proper plot
-plot_vote_change(ymin_mult=1.0, ymax_mult=1.0, # these multiplier to change ylims
-                ymin_val=-500000, ymax_val=6500000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=0.70, voter_diff_mult=1.08, # voter change multiplier
-                top10_1_mult=0.78, top10_2_mult=0.73, # where top 10 streak locates
-                topF_1_mult=0.58, topF_2_mult=0.53,
+plot_vote_change(ymin_mult=1.0, ymax_mult=1.2, # these multiplier to change ylims
+                ymin_val=-300000, ymax_val=500000, ytick_scale=100000, # these are actual ylims & tick interval20
+                voter_mult=0.95, voter_diff_mult=1.08, # voter change multiplier
+                top10_1_mult=0.85, top10_2_mult=0.77, # where top 10 streak locates
+                topF_1_mult=0.55, topF_2_mult=0.48,
                 title=my_title) # where top first locates
 
 # saving
@@ -926,11 +926,11 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 
 
 
-plot_voter_change(ymin_mult=1.0, ymax_mult=1.3,
+plot_voter_change(ymin_mult=1.0, ymax_mult=8.3,
                     ymin_val=-1000, ymax_val=1200, ytick_scale=200,
-                    first_time_voter_mult=0.90, new_voter_mult=1.02, ## change these
-                    top10_1_mult=0.90, top10_2_mult=0.84,
-                    topF_1_mult=0.55, topF_2_mult=0.48,
+                    first_time_voter_mult=0.99, new_voter_mult=1.08, ## change these
+                    top10_1_mult=5.90, top10_2_mult=5.20,
+                    topF_1_mult=3.55, topF_2_mult=2.98,
                     title=my_title)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02a_' + measuring_interval + "_voter_change.png"))
@@ -1753,11 +1753,11 @@ if run_this == 1:
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
-    plot_vote_change(ymin_mult=1.0, ymax_mult=1.0,  # these multiplier to change ylims
-                     ymin_val=-500000, ymax_val=6500000, ytick_scale=500000,  # these are actual ylims & tick interval20
-                     voter_mult=0.70, voter_diff_mult=1.08,  # voter change multiplier
-                     top10_1_mult=0.78, top10_2_mult=0.73,  # where top 10 streak locates
-                     topF_1_mult=0.58, topF_2_mult=0.53,
+    plot_vote_change(ymin_mult=1.0, ymax_mult=1.2,  # these multiplier to change ylims
+                     ymin_val=-300000, ymax_val=500000, ytick_scale=100000,  # these are actual ylims & tick interval20
+                     voter_mult=0.95, voter_diff_mult=1.08,  # voter change multiplier
+                     top10_1_mult=0.85, top10_2_mult=0.77,  # where top 10 streak locates
+                     topF_1_mult=0.55, topF_2_mult=0.48,
                      title=my_title)  # where top first locates
 
     # saving
@@ -1804,11 +1804,11 @@ if run_this == 1:
     my_title = 'Weekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
-    plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
-                     ymin_val=-40, ymax_val=140, ytick_scale=20,
+    plot_voter_change(ymin_mult=1.1, ymax_mult=1.2,
+                     ymin_val=-40, ymax_val=120, ytick_scale=20,
                      first_time_voter_mult=0.90, new_voter_mult=1.10,  ## change these
-                     top10_1_mult=0.90, top10_2_mult=0.80,
-                     topF_1_mult=0.55, topF_2_mult=0.45,
+                     top10_1_mult=0.90, top10_2_mult=0.84,
+                     topF_1_mult=0.64, topF_2_mult=0.58,
                      title=my_title)
     # saving
     plt.savefig(os.path.join(resultsPath_interval, '02b_' + measuring_interval + "_voter_change.png"))
