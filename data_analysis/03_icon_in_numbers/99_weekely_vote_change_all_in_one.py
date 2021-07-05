@@ -1697,7 +1697,23 @@ if run_this == 1:
 
     vote_status_count = get_vote_status_count(df_longer, measuring_interval=measuring_interval)
 
-    votes_sum = get_votes_sum(df_longer, measuring_interval=measuring_interval)
+    # votes_sum['cum_votes_test'] = np.where((votes_sum[measuring_interval] == this_term) & (votes_sum['validator_name'] == prep_df_1['validator_name']), prep_df_1['cum_votes'], votes_sum['cum_votes'])
+    def get_votes_sum_iconfi(df, measuring_interval=measuring_interval):
+        # Votes table ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+        votes_sum = df.groupby(['validator_name', measuring_interval]).agg('sum').reset_index()
+
+        # here is to fix total votes.. which is not great but hey, this is one solution.
+        # votes_sum = pd.merge(votes_sum, prep_df_1_2, how='left', on=['validator_name', measuring_interval])
+        votes_sum['votes_update'] = votes_sum.groupby('validator_name')['cum_votes'].diff()
+        votes_sum['votes'] = np.where(~votes_sum['votes_update'].isnull(), votes_sum['votes_update'],
+                                      votes_sum['votes'])
+        votes_sum = votes_sum.drop(columns=['votes_update'])
+
+        votes_sum['pct_change_votes'] = votes_sum['votes'] / (votes_sum.groupby('validator_name')['cum_votes'].shift(1))
+        # votes_sum = votes_sum.replace(np.inf, np.nan)
+        return votes_sum
+
+    votes_sum = get_votes_sum_iconfi(df_longer, measuring_interval=measuring_interval)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
@@ -1740,7 +1756,7 @@ if run_this == 1:
     temp_this_term_change = this_term_change[this_term_change['win_rank_votes'].between(1, 10) \
                                              | this_term_change['loss_rank_votes'].between(1, 10)]
 
-    my_title = 'Weekly Vote Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
+    my_title = 'Weekly Vote Change (without ICONFi & Balanced) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
@@ -1793,7 +1809,7 @@ if run_this == 1:
     temp_this_term_change = this_term_change[this_term_change['win_rank_Voter'].between(1, 10) \
                                              | this_term_change['loss_rank_Voter'].between(1, 10)]
 
-    my_title = 'Weekly Voter Change (without ICONFi) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
+    my_title = 'Weekly Voter Change (without ICONFi & Balanced) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
 
     # plotting
     plot_voter_change(ymin_mult=1.1, ymax_mult=1.2,
