@@ -2114,10 +2114,10 @@ if run_this == 1:
 
     # plotting
     plot_voter_change(ymin_mult=1.1, ymax_mult=1.2,
-                     ymin_val=-60, ymax_val=220, ytick_scale=20,
-                     first_time_voter_mult=0.90, new_voter_mult=1.10,  ## change these
-                     top10_1_mult=0.90, top10_2_mult=0.80,
-                     topF_1_mult=0.55, topF_2_mult=0.45,
+                     ymin_val=-40, ymax_val=160, ytick_scale=20,
+                     first_time_voter_mult=0.90, new_voter_mult=1.15,  ## change these
+                     top10_1_mult=0.90, top10_2_mult=0.85,
+                     topF_1_mult=0.65, topF_2_mult=0.59,
                      title=my_title)
     # saving
     plt.savefig(os.path.join(resultsPath_interval, '02b_' + measuring_interval + "_voter_change.png"))
