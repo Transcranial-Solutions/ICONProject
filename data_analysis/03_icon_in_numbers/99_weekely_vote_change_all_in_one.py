@@ -1645,7 +1645,7 @@ if run_this == 1:
     iconfi_addresses = iconfi_addresses[['delegator','how_many_prep_voted']].drop_duplicates()
     # and I suppose more than 50 to qualify
     iconfi_addresses['counts'] = iconfi_addresses.groupby(['how_many_prep_voted']).transform('count')
-    iconfi_addresses = iconfi_addresses[iconfi_addresses['counts'] >= 50][['delegator']]
+    iconfi_addresses = iconfi_addresses[iconfi_addresses['counts'] >= 40][['delegator']]
 
 
     # original df
@@ -1762,8 +1762,8 @@ if run_this == 1:
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
     plot_vote_change(ymin_mult=1.0, ymax_mult=1.3,  # these multiplier to change ylims
-                     ymin_val=-300000, ymax_val=800000, ytick_scale=100000,  # these are actual ylims & tick interval20
-                     voter_mult=0.88, voter_diff_mult=1.02,  # voter change multiplier
+                     ymin_val=-300000, ymax_val=700000, ytick_scale=100000,  # these are actual ylims & tick interval20
+                     voter_mult=0.88, voter_diff_mult=1.05,  # voter change multiplier
                      top10_1_mult=0.95, top10_2_mult=0.88,  # where top 10 streak locates
                      topF_1_mult=0.65, topF_2_mult=0.58,
                      title=my_title)  # where top first locates
@@ -1813,7 +1813,7 @@ if run_this == 1:
 
     # plotting
     plot_voter_change(ymin_mult=1.1, ymax_mult=1.2,
-                     ymin_val=-30, ymax_val=80, ytick_scale=10,
+                     ymin_val=-20, ymax_val=90, ytick_scale=10,
                      first_time_voter_mult=0.90, new_voter_mult=1.10,  ## change these
                      top10_1_mult=0.85, top10_2_mult=0.78,
                      topF_1_mult=0.60, topF_2_mult=0.53,
