@@ -73,12 +73,12 @@ def extract_values(obj, key):
 
 
 # today's date
-date_is_range = 0 # if date is range (1) or is one  date (0)
-use_specified_date = 1 # yes(1) no(0)
+date_is_range = 1 # if date is range (1) or is one  date (0)
+use_specified_date = 0 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2021_02_04"; day_2 = "2021_02_05"
+    day_1 = "2021_04_01"; day_2 = "2021_07_08"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
@@ -110,7 +110,7 @@ if date_is_range == 0 and use_specified_date == 0:
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
 # this_address = 'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8' #velic_stav
-this_address = 'cxa0af3165c08318e988cb30993b3048335b94af6c '
+this_address = 'hx60ad5da1c0eb80f52ef7be5b07e590108078a96e'
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
@@ -121,7 +121,7 @@ tx_flow = 'both' # 'in', 'out', 'both'
 tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet)', 'token_txlist (token that has been xferred), 'token_list'
 
 # does not work with range
-first_degree = 1 # this is for getting only 1 interaction (WOI <-> wallet_x)
+first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
 further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
