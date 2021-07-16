@@ -94,6 +94,11 @@ if date_is_range == 0 and use_specified_date == 0:
    date_of_interest = [day_to_text(day_1)]
 
 
+api_endpoint = "http://icon.everstake.one:9000"
+if 'http' not in api_endpoint:
+    api_endpoint_mod = 'http://' + api_endpoint
+elif 'https' not in api_endpoint:
+    api_endpoint_mod = 'https://' + api_endpoint
 
 # wallet of interest
 # this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
