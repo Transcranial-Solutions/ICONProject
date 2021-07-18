@@ -107,7 +107,7 @@ prep_df.to_csv(os.path.join(outPath, 'icon_prep_details.csv'), index=False)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ logos ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # extract logos separately
-prep_logo = extract_values(jprep_list_url, 'logo')
+prep_logo = extract_values(jprep_list_url_reg, 'logo')
 
 # saving path for logos
 logoPath = os.path.join(outPath, 'logos')
@@ -126,8 +126,8 @@ for i in range(len(prep_logo)):
         else:
             pass
 
-        urllib.request.urlretrieve(prep_logo[i], os.path.join(logoPath, prep_name[i] + filetype))
-        print(prep_name[i] + ": Done - " + str(i+1) + ' out of ' + str(len(prep_logo)))
+        urllib.request.urlretrieve(prep_logo[i], os.path.join(logoPath, prep_address[i] + filetype))
+        print(prep_address[i] + ": Done - " + str(i+1) + ' out of ' + str(len(prep_logo)))
 
     except:
         pass
@@ -241,3 +241,14 @@ for k in range(len(prep_address)):
            print("Votes for " + validator_name[0] + ": Done - " + str(k + 1) + " out of " + str(len(prep_address)))
        except:
            print("An exception occurred - Possibly a new P-Rep without votes")
+
+
+# details="https://raw.githubusercontent.com/Iconserve/Iconserve/master/prepdetails.json"
+# import requests
+# response = requests.request(
+#     "GET", url=details, headers={"User-Agent": "curl/7.64.1"}, timeout=5)
+
+# print(details)
+# print(response.json())
+# response.raise_for_status()
+# jpage = response.json()
