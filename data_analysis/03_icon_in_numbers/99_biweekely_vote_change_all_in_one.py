@@ -51,8 +51,8 @@ misc_data_path = os.path.join(currPath, "output")
 prep_vote_path = os.path.join(misc_data_path, "prep_votes")
 
 # assign date here
-date_prev = date(2021, 6, 19)
-date_now = date(2021, 7, 3)
+date_prev = date(2021, 7, 3)
+date_now = date(2021, 7, 17)
 
 prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_' + date_prev.strftime("%Y_%m_%d") + '.csv'))
 prep_df_1 = prep_df_1[['validator_name', 'cum_votes_update']]
@@ -780,8 +780,8 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_change(ymin_mult=1.0, ymax_mult=1.2, # these multiplier to change ylims
-                ymin_val=-500000, ymax_val=800000, ytick_scale=100000, # these are actual ylims & tick interval20
-                voter_mult=0.90, voter_diff_mult=1.03, # voter change multiplier
+                ymin_val=-1200000, ymax_val=1600000, ytick_scale=200000, # these are actual ylims & tick interval20
+                voter_mult=0.90, voter_diff_mult=1.01, # voter change multiplier
                 top10_1_mult=0.85, top10_2_mult=0.78, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.48,
                 title=my_title) # where top first locates
@@ -960,11 +960,11 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 
 
 
-plot_voter_change(ymin_mult=1.0, ymax_mult=2.8,
-                    ymin_val=-1200, ymax_val=1400, ytick_scale=200,
-                    first_time_voter_mult=0.93, new_voter_mult=1.03, ## change these
-                    top10_1_mult=1.90, top10_2_mult=1.74,
-                    topF_1_mult=1.00, topF_2_mult=0.80,
+plot_voter_change(ymin_mult=1.0, ymax_mult=1.2,
+                    ymin_val=-600, ymax_val=1400, ytick_scale=200,
+                    first_time_voter_mult=0.90, new_voter_mult=1.02, ## change these
+                    top10_1_mult=0.85, top10_2_mult=0.79,
+                    topF_1_mult=0.58, topF_2_mult=0.52,
                     title=my_title)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02a_' + measuring_interval + "_voter_change.png"))
@@ -2079,8 +2079,8 @@ if run_this == 1:
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
     plot_vote_change(ymin_mult=1.0, ymax_mult=1.2,  # these multiplier to change ylims
-                     ymin_val=-500000, ymax_val=800000, ytick_scale=100000,  # these are actual ylims & tick interval20
-                     voter_mult=0.90, voter_diff_mult=1.03,  # voter change multiplier
+                     ymin_val=-1000000, ymax_val=1400000, ytick_scale=200000, # these are actual ylims & tick interval20
+                     voter_mult=0.90, voter_diff_mult=1.01,  # voter change multiplier
                      top10_1_mult=0.85, top10_2_mult=0.78,  # where top 10 streak locates
                      topF_1_mult=0.55, topF_2_mult=0.48,
                      title=my_title)  # where top first locates
