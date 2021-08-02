@@ -78,7 +78,7 @@ use_specified_date = 0 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2021_04_01"; day_2 = "2021_07_08"
+    day_1 = "2021_07_29"; day_2 = "2021_07_30"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
@@ -115,7 +115,7 @@ elif 'https' not in api_endpoint:
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
 # this_address = 'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8' #velic_stav
-this_address = 'hx60ad5da1c0eb80f52ef7be5b07e590108078a96e'
+this_address = 'hxff00e72b487ee5475ab1fabb31c5b6a6a49c9993'
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
@@ -127,7 +127,7 @@ tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet
 
 # does not work with range
 first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
-further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
+further_degree = 3 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
@@ -943,9 +943,9 @@ try:
     if tx_flow == 'both':
         in_out_text = 'transacted with '
     elif tx_flow == 'out':
-        in_out_text = 'flow from'
+        in_out_text = 'flow from '
     elif tx_flow == 'in':
-        in_out_text = 'flow into'
+        in_out_text = 'flow into '
 
     # to give title different colour
     plt.figtext(0.25, 0.96, "$ICX", fontsize='large', weight='bold', color='cyan', ha='right')
