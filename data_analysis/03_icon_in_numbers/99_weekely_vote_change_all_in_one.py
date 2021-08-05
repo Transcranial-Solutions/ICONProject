@@ -1757,7 +1757,7 @@ if run_this == 1:
     temp_this_term_change = this_term_change[this_term_change['win_rank_votes'].between(1, 10) \
                                              | this_term_change['loss_rank_votes'].between(1, 10)]
 
-    my_title = 'Weekly Vote Change (without ICONFi & Balanced) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
+    my_title = 'Weekly Vote Change (without ICONFi & Balanced App Users) \n Top 10 gained / lost (' + insert_week(this_term, 4) + ')'
 
     # temporary
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
@@ -1810,7 +1810,7 @@ if run_this == 1:
     temp_this_term_change = this_term_change[this_term_change['win_rank_Voter'].between(1, 10) \
                                              | this_term_change['loss_rank_Voter'].between(1, 10)]
 
-    my_title = 'Weekly Voter Change (without ICONFi & Balanced) - Top 10 gained / lost \n (' + insert_week(this_term, 4) + ')'
+    my_title = 'Weekly Voter Change (without ICONFi & Balanced App Users) \n Top 10 gained / lost (' + insert_week(this_term, 4) + ')'
 
     # plotting
     # plot_voter_change(ymin_mult=1.1, ymax_mult=1.2,
