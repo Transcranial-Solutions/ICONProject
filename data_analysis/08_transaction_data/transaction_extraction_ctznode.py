@@ -17,12 +17,12 @@
 # from urllib.request import Request, urlopen
 # import json
 import pandas as pd
+import numpy as np
 # import matplotlib.pyplot as plt
 # from pandas.core.groupby.generic import DataFrameGroupBy
 # import pylab as pl
 import os
 from functools import reduce
-# import numpy as np
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import concurrent.futures
 from iconsdk.icon_service import IconService
@@ -42,9 +42,9 @@ desired_width=320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
 
-# currPath = os.getcwd()
-currPath = "/home/tonoplast/IconProject/"
-projectPath = os.path.join(currPath, "transaction_data")
+currPath = os.getcwd()
+# currPath = "08_transaction_data"
+projectPath = os.path.join(currPath, "08_transaction_data")
 if not os.path.exists(projectPath):
     os.mkdir(projectPath)
     
@@ -94,7 +94,8 @@ def extract_values(obj, key):
 
     results = extract(obj, arr, key)
     if not results:
-        results=''
+        # results=''
+        results=np.nan
     return results
 
 ## value extraction function
@@ -117,7 +118,8 @@ def extract_values_no_params(obj, key):
 
     results = extract(obj, arr, key)
     if not results:
-        results=''
+        # results=''
+        results=np.nan
     return results
 
 def deep_get_imps(data, key: str):
@@ -139,7 +141,8 @@ def deep_get_imps(data, key: str):
         else:
             return None
     if not out_data:
-        out_data = ''
+        # out_data=''
+        out_data=np.nan
     return out_data
 
 def deep_get(dictionary, keys):
@@ -150,7 +153,7 @@ def deep_get(dictionary, keys):
 today = datetime.utcnow()
 date_today = today.strftime("%Y-%m-%d")
 
-# to use specific date, otherwise use yesterday
+# to use specific date (1), otherwise use yesterday (0)
 use_specific_prev_date = 1
 date_prev = "2021-07-28"
 
@@ -159,41 +162,42 @@ if use_specific_prev_date == 1:
 else:
     date_prev = yesterday(today)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ solidwallet ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ solidwallet ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # using solidwallet
 # icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
 # icon_service = IconService(HTTPProvider("http://localhost:9000", 3))
+# icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io", 3, request_kwargs={"timeout": 60}))
 
-icon_service = IconService(HTTPProvider("http://127.0.0.1:9000/api/v3"))
+# localhost
+icon_service = IconService(HTTPProvider("http://127.0.0.1:9000/api/v3", request_kwargs={"timeout": 60}))
+# block = icon_service.get_block(1000) 
 
-## Creating Wallet (only done for the first time)
-# wallet = KeyWallet.create()
-# wallet.get_address()
-# wallet.get_private_key()
+
+## Creating Wallet if does not exist (only done for the first time)
 tester_wallet = os.path.join(walletPath, "test_keystore_1")
-# wallet.store(tester_wallet, "abcd1234*")
 
-wallet = KeyWallet.load(tester_wallet, "abcd1234*")
+if os.path.exists(tester_wallet):
+    wallet = KeyWallet.load(tester_wallet, "abcd1234*")
+else:
+    wallet = KeyWallet.create()
+    wallet.get_address()
+    wallet.get_private_key()
+    wallet.store(tester_wallet, "abcd1234*")
+
 tester_address = wallet.get_address()
 
 
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ block Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-windows_path = "/mnt/e/GitHub/Icon/ICONProject/data_analysis/08_transaction_data/data/"
-
-# if not os.path.exists(windows_path):
-#     os.makedirs(windows_path)
-
-combined_df = pd.read_csv(os.path.join(windows_path, 'transaction_blocks_' + date_prev + '.csv'))
-
+# reading from the data extracted previously
+combined_df = pd.read_csv(os.path.join(dataPath, 'transaction_blocks_' + date_prev + '.csv'))
 
 combined_df['date'] = pd.to_datetime(combined_df['block_createDate']).dt.strftime("%Y-%m-%d")
 df_of_interest = combined_df[combined_df['date'] == date_prev]
 
-
-df_of_interest = df_of_interest[df_of_interest['block_fee'] != '0']
-block_of_interest = df_of_interest['blockHeight']
+block_of_interest = df_of_interest[df_of_interest['block_fee'] != 0]
+block_of_interest = block_of_interest['blockHeight']
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Other way ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -211,202 +215,182 @@ def get_block_df(blockInfo):
 
     block_df = pd.DataFrame(data=combined_block)
     return block_df
-    # return combined_block
 
-def get_tx_df(txHash):
+def get_tx_dfs(txHash):
     tx = icon_service.get_transaction(txHash)
-    tx_blockHeight = deep_get(tx, 'blockHeight')
-    tx_txHash = deep_get(tx, "txHash")
-    tx_timestamp = deep_get(tx, 'timestamp')
-    tx_from = deep_get(tx, 'from')
-    tx_to = deep_get(tx, 'to')
-    tx_value = deep_get(tx, 'value')
-    tx_data = deep_get(tx, "data")
-    tx_dataType = deep_get(tx, "dataType")
+    # try:
+    #     combined_tx = pd.DataFrame.from_dict(tx).reset_index()
+    #     if not combined_tx:
+    #         raise ValueError('empty string')
+    # except:
+    combined_tx = pd.json_normalize(tx)
 
-    combined_tx = {'blockHeight': tx_blockHeight,
-        'txHash': tx_txHash,
-        'tx_timestamp': tx_timestamp,
-        'tx_from': tx_from,
-        'tx_to': tx_to,
-        'tx_value': tx_value,
-        'tx_data': [tx_data],
-        'tx_dataType': tx_dataType}
-    
-    # tx_df = pd.DataFrame(data=combined_tx, index=[0])
-    tx_df = pd.DataFrame(data=combined_tx)
-
-    return tx_df   
-
-def get_eventlogs_tx_data(tx_results):
-    eventlog_output=[]
-    for i in tx_results['eventLogs']:
-        eventlog = deep_get(i, "indexed")
-        if "transfer" in eventlog[0].lower() and eventlog[1].startswith(("hx","cx")) and eventlog[2].startswith(("hx","cx")):
-            eventlog_output.append(eventlog)
-        else:
-            pass
-    if not eventlog_output:
-        eventlog_output = ''
-    return eventlog_output
-
-def get_tx_results_df(txHash):
     tx_results = icon_service.get_transaction_result(txHash)
-    txResults_txHash = deep_get(tx_results, 'txHash')
-    txResults_status = deep_get(tx_results, 'status')
-    txResults_stepUsed = deep_get(tx_results, 'stepUsed')
-    txResults_stepPrice = deep_get(tx_results, 'stepPrice')
-    # txResults_eventlogs = dict(enumerate(get_eventlogs_tx_data(tx_results)))
-    txResults_eventlogs = get_eventlogs_tx_data(tx_results)
+    # try:
+    #     combined_tx_results = pd.DataFrame.from_dict(tx_results)
+    #     if not combined_tx_results:
+    #         raise ValueError('empty string')
+    # except:
+    combined_tx_results = pd.json_normalize(tx_results)
 
-    combined_txResults = {'txHash': txResults_txHash,
-        'status': txResults_status,
-        'stepUsed': txResults_stepUsed,
-        'stepPrice': txResults_stepPrice,
-        'eventlogs': [txResults_eventlogs],}
+    tx_df = combined_tx.drop(['signature','blockHeight','blockHash','to'], axis=1, errors='ignore').rename(columns={'timestamp':'tx_timestamp'})
+    tx_results_df = combined_tx_results.drop(['logsBloom', 'blockHeight', 'blockHash'], axis=1, errors='ignore')
 
-    tx_results_df = pd.DataFrame(data=combined_txResults)
+    tx_dfs = pd.merge(tx_df, tx_results_df, on=["txHash","txIndex"], how="left")
 
-    return tx_results_df   
+    return tx_dfs
 
-# startRange = 37090345
-# endRange = 37090346
-
-# startRange = block_of_interest.iloc[0]
-# endRange = block_of_interest.iloc[-1]
-
-# blockRange = range(startRange,endRange+1)
-
-# block_of_interest = block_of_interest[block_of_interest > 37211616]
-# block_of_interest = block_of_interest.iloc[0:50]
+# block_of_interest = block_of_interest.iloc[0:10]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # collecting contact info using multithreading
-# start = time()
 
-# pbar = tqdm(block_of_interest)
-# pbar.bar_format = "{desc:<15}{percentage:3.0f}%|{bar:75}{r_bar}"
-# myblock = []
-# with ThreadPoolExecutor(max_workers=8) as executor:
-#     for k in pbar: #block_of_interest:
-#         myblock.append(executor.submit(get_block_df, blockInfo=k))
+def run_block():
+    start = time()
 
-# pbar = tqdm(myblock)
-# pbar.bar_format = "{desc:<15}{percentage:3.0f}%|{bar:75}{r_bar}"
-# temp_df = []
-# for task in as_completed(pbar):
-#     temp_df.append(task.result())
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        myblock = list(tqdm(executor.map(get_block_df, block_of_interest), total=len(block_of_interest)))
 
-# block_df = pd.concat(temp_df).reset_index(drop=True)
+    block_df = pd.concat(myblock).reset_index(drop=True)
+    print(f'Time taken: {time() - start}')
 
-start = time()
-with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-    myblock = list(tqdm(executor.map(get_block_df, block_of_interest), total=len(block_of_interest)))
+    return block_df
 
-block_df = pd.concat(myblock).reset_index(drop=True)
-print(f'Time taken: {time() - start}')
+block_df = run_block()
+# if __name__ == "__main__":
+#     run_block()
+
+# def not_done():
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-# block_df = pd.concat(myblock)
-
-windows_path = "/mnt/e/GitHub/Icon/ICONProject/data_analysis/08_transaction_data/data/"
-
-if not os.path.exists(windows_path):
-    os.makedirs(windows_path)
-
-# saving block data balance
-block_df.to_csv(os.path.join(windows_path, 'transactions_each_block_' + date_prev + '.csv'), index=False)
+# save block info
+block_df.to_csv(os.path.join(dataPath, 'transactions_each_block_' + date_prev + '.csv'), index=False)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# random_sleep_except = random.uniform(600,900)
-# print("I'll pause for"+str(random_sleep_except/60) + " minutes before doing another... \n")
-# time.sleep(random_sleep_except) #sleep the script for x seconds and....#
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# load block info
+block_df = pd.read_csv(os.path.join(dataPath, 'transactions_each_block_' + date_prev + '.csv'))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-block_df = pd.read_csv(os.path.join(windows_path, 'transactions_each_block_' + date_prev + '.csv'))
-
-
+# getting hash only
 txHashes = block_df['txHash']
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# collecting contact info using multithreading
-# start = time()
-
-# pbar = tqdm(txHashes)
-# pbar.bar_format = "{desc:<15}{percentage:3.0f}%|{bar:75}{r_bar}"
-# mytx = []
-# mytx_results = []
-# with ThreadPoolExecutor(max_workers=8) as executor:
-#     for k in pbar: #block_of_interest:
-#         mytx.append(executor.submit(get_tx_df, txHash=k))
-#         mytx_results.append(executor.submit(get_tx_results_df, txHash=k))
-
-
-# pbar = tqdm(mytx)
-# pbar.bar_format = "{desc:<15}{percentage:3.0f}%|{bar:75}{r_bar}"
-# temp_df = []
-# for task in as_completed(pbar):
-#     temp_df.append(task.result())
-# tx_df = pd.concat(temp_df).reset_index(drop=True)
-
-# pbar = tqdm(mytx_results)
-# pbar.bar_format = "{desc:<15}{percentage:3.0f}%|{bar:75}{r_bar}"
-# temp_df = []
-# for task in as_completed(pbar):
-#     temp_df.append(task.result())
-# tx_results_df = pd.concat(temp_df).reset_index(drop=True)
-
-
-start = time()
-with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
-    mytx = list(tqdm(executor.map(get_tx_df, txHashes), total=len(txHashes)))
-    mytx_results = list(tqdm(executor.map(get_tx_results_df, txHashes), total=len(txHashes)))
-
-
-tx_df = pd.concat(mytx).reset_index(drop=True)
-tx_results_df = pd.concat(mytx_results).reset_index(drop=True)
-
-print(f'Time taken: {time() - start}')
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-tx_df.to_csv(os.path.join(windows_path, 'tx_' + date_prev + '.csv'), index=False)
-tx_results_df.to_csv(os.path.join(windows_path, 'tx_results_' + date_prev + '.csv'), index=False)
+# txHashes = txHashes.iloc[0:1000]
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# processing
+# collecting transaction info using multithreading
 
+def run_tx():
+    start = time()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        mytx = list(tqdm(executor.map(get_tx_dfs, txHashes), total=len(txHashes)))
+
+    tx_df = pd.concat(mytx).reset_index(drop=True)
+    print(f'Time taken: {time() - start}')
+
+    return tx_df
+
+tx_df = run_tx()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # loop to icx converter
 def loop_to_icx(loop):
     icx = loop / 1000000000000000000
     return(icx)
 
-
 # convert timestamp to datetime
 def timestamp_to_date(df, timestamp, dateformat):
     return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
 
-tx_all = pd.merge(tx_df, tx_results_df, on="txHash", how="left")
-tx_all = pd.merge(block_df, tx_all, on=["txHash","tx_timestamp","blockHeight"], how="left")
+def df_merge_all(tx_df=tx_df, block_df=block_df):
+    tx_all = pd.merge(block_df, tx_df, on=["txHash","tx_timestamp"], how="left")
+    return(tx_all)
 
-tx_all['stepPrice'] = pd.to_numeric(tx_all['stepPrice'], errors='coerce').astype('Int64').map(loop_to_icx).fillna(0)
-tx_all['stepUsed'] = pd.to_numeric(tx_all['stepUsed'], errors='coerce').astype('Int64').fillna(0)
-tx_all['tx_fees'] = tx_all['stepUsed'] * tx_all['stepPrice']
+def tx_data_cleaning_1(tx_all=tx_all):
+    tx_all['stepPrice'] = pd.to_numeric(tx_all['stepPrice'], errors='coerce').astype('Int64').map(loop_to_icx).fillna(0)
+    tx_all['stepUsed'] = pd.to_numeric(tx_all['stepUsed'], errors='coerce').astype('Int64').fillna(0)
+    tx_all['tx_fees'] = tx_all['stepUsed'] * tx_all['stepPrice']
 
-# tx_all['block_date'] = timestamp_to_date(tx_all, 'block_timestamp', '%Y-%m-%d')
-tx_all['block_time'] = timestamp_to_date(tx_all, 'block_timestamp', '%H:%M:%S')
-tx_all['tx_date'] = timestamp_to_date(tx_all, 'tx_timestamp', '%Y-%m-%d')
-tx_all['tx_time'] = timestamp_to_date(tx_all, 'tx_timestamp', '%H:%M:%S')
+    tx_all['block_time'] = timestamp_to_date(tx_all, 'block_timestamp', '%H:%M:%S')
+    tx_all['tx_date'] = timestamp_to_date(tx_all, 'tx_timestamp', '%Y-%m-%d')
+    tx_all['tx_time'] = timestamp_to_date(tx_all, 'tx_timestamp', '%H:%M:%S')
+    return tx_all
+
+def get_list(df, strings):
+    cols = list(df.columns.values)
+    delete_list = [cols.index(i) for i in cols if strings in i]
+    return df.columns[delete_list].tolist()
+
+def remove_list(cols, strings):
+    delete_list = [cols.index(i) for i in cols if strings in i]
+    for index in sorted(delete_list, reverse=True):
+        del cols[index]
+
+def tx_data_cleaning_2(tx_all=tx_all):
+    # exploding event logs
+    tx_all = tx_all.explode('eventLogs').reset_index(drop=True)
+
+    # separating event logs by those that have NaN
+    nonans = tx_all[tx_all['eventLogs'].notnull()]
+    nans = tx_all[tx_all['eventLogs'].isnull()]
+
+    eventLogs_df = pd.json_normalize(nonans['eventLogs']).rename(columns={"scoreAddress":"eventLogs.scoreAddress","indexed":"eventLogs.indexed","data":"eventLogs.data"})
+    df1 = nonans.join(eventLogs_df)
+
+    # standardising columns
+    df1['eventLogs_indexed'] = df1['eventLogs.indexed'].str[0]
+    df1['eventLogs_data'] = df1['eventLogs.indexed'].str[1:] + df1['eventLogs.data']
+
+    # cleaning up
+    df1 = df1.drop(columns=['eventLogs.indexed', 'eventLogs.data'])
+    df1 = df1.rename(columns={"eventLogs_indexed":"eventLogs.indexed","eventLogs_data":"eventLogs.data"})
+
+    df = df1.append(nans)
+    df = df.drop(columns=["eventLogs","data"])
+
+    # shifting data. and eventLogs. to the end
+    cols = list(df.columns.values)  # Make a list of all of the columns in the df
+    data_list = get_list(df=df, strings="data.")
+    eventlog_list = get_list(df=df, strings="eventLogs.")
+
+    remove_list(cols, strings="data.")
+    remove_list(cols, strings="eventLogs.")
+
+    df = df[cols + data_list + eventlog_list]  # Create new dataframe with columns in the order you want
+
+    # shifting columns (from - to) together
+    cols = list(df.columns.values)
+
+    to_loc = df.columns.get_loc("to")
+    from_loc = df.columns.get_loc("from")
+
+    df = df[cols[0:to_loc] + [cols[from_loc]] + cols[to_loc:from_loc] + cols[from_loc+1:]]
+
+    df = df.sort_values(by=['blockHeight','txIndex','tx_timestamp','txHash'])
+
+    return df
 
 
-tx_all = tx_all.explode("eventlogs").reset_index(drop=True)
+def final_output():
+    tx_all = df_merge_all(tx_df=tx_df, block_df=block_df)
+    tx_all = tx_data_cleaning_1(tx_all=tx_all)
+    tx_all = tx_data_cleaning_2(tx_all=tx_all)
+    final_tx_df = pd.merge(df_of_interest, tx_all, on=['blockHeight'], how='left')
+    return final_tx_df
+
+final_tx_df = final_output()
+
+final_tx_df.to_csv(os.path.join(dataPath, 'tx_final_' + date_prev + '.csv'), index=False)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# pd.to_datetime(1560932465382639 / 1000000, unit='s').strftime('%Y-%m-%d')
 
 # bytearray.fromhex(dat[2:]).decode()
 # import binascii 
 # string = '{"msgType":"JejuVisitLog","time":1626533340,"period":60,"count":17}'
 # binascii.hexlify(string.encode())
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+def run_all():
+    if __name__ == "__main__":
+        run_all()
