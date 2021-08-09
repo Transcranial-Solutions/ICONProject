@@ -199,6 +199,7 @@ df_of_interest = combined_df[combined_df['date'] == date_prev]
 block_of_interest = df_of_interest[df_of_interest['block_fee'] != 0]
 block_of_interest = block_of_interest['blockHeight']
 
+# block = icon_service.get_block(1000)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Other way ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 def get_block_df(blockInfo):
