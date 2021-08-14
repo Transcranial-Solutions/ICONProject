@@ -734,7 +734,7 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_change(ymin_mult=1.0, ymax_mult=1.3, # these multiplier to change ylims
-                ymin_val=-2000000, ymax_val=4000000, ytick_scale=500000, # these are actual ylims & tick interval20
+                ymin_val=-1000000, ymax_val=2000000, ytick_scale=500000, # these are actual ylims & tick interval20
                 voter_mult=0.90, voter_diff_mult=1.03, # voter change multiplier
                 top10_1_mult=0.90, top10_2_mult=0.82, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.48,
@@ -918,7 +918,7 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 
 
 ymin_mult=1.0
-ymax_mult=1.4
+ymax_mult=2.2
 plot_voter_change(ymin_mult=ymin_mult, ymax_mult=ymax_mult,
                     ymin_val=-1000, ymax_val=1200, ytick_scale=200,
                     first_time_voter_mult=ymin_mult*0.92, new_voter_mult=ymin_mult*1.02, ## change these
@@ -1763,7 +1763,7 @@ if run_this == 1:
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
     plot_vote_change(ymin_mult=1.0, ymax_mult=1.3,  # these multiplier to change ylims
-                     ymin_val=-2000000, ymax_val=4000000, ytick_scale=500000,
+                     ymin_val=-1000000, ymax_val=2000000, ytick_scale=500000,
                      # these are actual ylims & tick interval20
                      voter_mult=0.90, voter_diff_mult=1.03,  # voter change multiplier
                      top10_1_mult=0.90, top10_2_mult=0.82,  # where top 10 streak locates
@@ -1824,7 +1824,7 @@ if run_this == 1:
     ymin_mult = 1.2
     ymax_mult = 1.4
     plot_voter_change(ymin_mult=ymin_mult, ymax_mult=ymax_mult,
-                      ymin_val=-30, ymax_val=80, ytick_scale=10,
+                      ymin_val=-20, ymax_val=50, ytick_scale=10,
                       first_time_voter_mult=ymin_mult * 0.90, new_voter_mult=ymin_mult * 1.05,  ## change these
                       top10_1_mult=ymax_mult * 0.7, top10_2_mult=ymax_mult * 0.63,
                       topF_1_mult=ymax_mult * 0.45, topF_2_mult=ymax_mult * 0.38,
