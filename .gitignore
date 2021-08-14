@@ -16,3 +16,4 @@ data_analysis/06_wallet_ranking/results/wallet_balance_2021_02_08.csv
 data_analysis/output/vote_status_per_day.csv
 
 data_analysis/08_transaction_data/data/*.csv
+data_analysis/wallet/test_keystore_1
