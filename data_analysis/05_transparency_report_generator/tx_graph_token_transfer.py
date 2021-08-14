@@ -875,6 +875,13 @@ table_now = table_now[['symbol','amount']].groupby(['symbol']).amount.agg(['sum'
 table_now = table_now.sort_values(by='count', ascending=False).reset_index(drop=True)
 table_now = table_now.rename(columns={'symbol': 'IRC Token', 'sum': 'Amount', 'count': 'No. of Transactions'})
 
+def add_total_tx(df):
+    df.loc['Total'] = df.sum(numeric_only=True, axis=0)
+    # df['Amount'] = np.where(df['Amount'] == df['Amount'].max(), '-', df['Amount'])
+    df['IRC Token'] = np.where(df['IRC Token'].isna(), 'Total', df['IRC Token'])
+    df = df.reset_index(drop=True)
+    return df
+
 day_today = title_date.replace("-","_")
 day_today_text = title_date.replace("-","/")
 
@@ -889,7 +896,7 @@ else:
     day_prev = yesterday(today)
 day_prev_text = day_prev.replace("_","/")
 
-windows_path = "E:/GitHub/Icon/ICONProject/data_analysis/10_token_transfer/results/" + day_today
+windows_path = "E:/GitHub/ICONProject/data_analysis/10_token_transfer/results/" + day_today
 
 if not os.path.exists(windows_path):
     os.makedirs(windows_path)
@@ -899,10 +906,12 @@ table_now.to_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + 
 
 
 # reading previous term data
-windows_path_prev = "E:/GitHub/Icon/ICONProject/data_analysis/10_token_transfer/results/" + day_prev
+windows_path_prev = "E:/GitHub/ICONProject/data_analysis/10_token_transfer/results/" + day_prev
 table_prev = pd.read_csv(os.path.join(windows_path_prev, 'IRC_token_transfer_' + day_prev + '.csv'))
 
 
+table_now = add_total_tx(table_now)
+table_prev = add_total_tx(table_prev)
 
 # reindexing last term's based on this term
 def reindex_df(df_now, df_prev, my_index):
@@ -929,7 +938,7 @@ table_prev = reindex_df(table_now, table_prev, 'IRC Token')
 
 table_now = add_val_differences(table_now, table_prev, 'Amount')
 table_now = add_val_differences(table_now, table_prev, 'No. of Transactions')
-
+table_now['Amount'].iloc[-1] = '-'
 
 import six
 my_title = "IRC Token Transfer Breakdown - " + day_today_text + " (Δ since " + day_prev_text + ")"
