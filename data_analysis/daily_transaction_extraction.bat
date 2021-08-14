@@ -1,2 +1,2 @@
-wsl.exe ~/IconProject/.analysis/bin/python ~/IconProject/transaction_data/transaction_extraction.py
+wsl.exe ~/IconProject/.analysis/bin/python ~/IconProject/transaction_data/transaction_extraction_icon_tracker.py
 
