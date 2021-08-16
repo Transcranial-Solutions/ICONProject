@@ -78,7 +78,7 @@ use_specified_date = 0 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2021_07_29"; day_2 = "2021_07_30"
+    day_1 = "2021_06_01"; day_2 = "2021_08_15"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
@@ -115,7 +115,7 @@ elif 'https' not in api_endpoint:
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
 # this_address = 'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8' #velic_stav
-this_address = 'hxff00e72b487ee5475ab1fabb31c5b6a6a49c9993'
+this_address = 'hx94a7cd360a40cbf39e92ac91195c2ee3c81940a6'
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
@@ -126,8 +126,8 @@ tx_flow = 'both' # 'in', 'out', 'both'
 tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet)', 'token_txlist (token that has been xferred), 'token_list'
 
 # does not work with range
-first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
-further_degree = 3 # this is for the next and beyond (so if it's 1, it means 2 in total)
+first_degree = 1 # this is for getting only 1 interaction (WOI <-> wallet_x)
+further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
@@ -170,6 +170,17 @@ add_dict_if_noexist('hx44c0d5fab0c81fe01a052f5ffb83fd152e505202', jknown_address
 # add_dict_if_noexist('hx63862927a9c1389e277cd20a6168e51bd50af13e', jknown_address, 'icf_related2')
 # add_dict_if_noexist('hx294c5d0699615fc8d92abfe464a2601612d11bf7', jknown_address, 'funnel_a1')
 # add_dict_if_noexist('hxc8377a960d4eb484a3b8a733012995583dda0813', jknown_address, 'easy_crypto')
+
+
+add_dict_if_noexist('hx9d9ad1bc19319bd5cdb5516773c0e376db83b644', jknown_address, 'icf_delegate_1')
+add_dict_if_noexist('hx0cc3a3d55ed55df7c8eee926a4fafb5412d0cca4', jknown_address, 'icf_delegate_2')
+add_dict_if_noexist('hxa9c54005bfa47bb8c3ff0d8adb5ddaac141556a3', jknown_address, 'icf_delegate_3')
+add_dict_if_noexist('hxc1481b2459afdbbde302ab528665b8603f7014dc', jknown_address, 'icf_delegate_4')
+
+add_dict_if_noexist('hx02ada5d31e0f3eafa7fdf069caebb8d9ac7272f7', jknown_address, 'icf_delegate_5')
+add_dict_if_noexist('hxf936493f53a45cfcf3bc1d35643dfda051f9534f', jknown_address, 'icf_delegate_6')
+add_dict_if_noexist('hx2d84173c2cfb0e5c4ca31fbd8e5df252fcad0992', jknown_address, 'icf_delegate_7')
+add_dict_if_noexist('hx5620c34cc9bc6e56f4feaf4d81cbe69535221237', jknown_address, 'icf_delegate_8')
 
 # binance sweepers
 add_dict_if_noexist('hx8a50805989ceddee4341016722290f13e471281e', jknown_address, 'binance\nsweeper_01')
