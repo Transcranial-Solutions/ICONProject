@@ -167,6 +167,16 @@ add_dict_if_noexist('hxbdd5ba518b70408acd023a18e4d6b438c7f11655', jknown_address
 # add_dict_if_noexist('hx294c5d0699615fc8d92abfe464a2601612d11bf7', jknown_address, 'funnel_a1')
 # add_dict_if_noexist('hxc8377a960d4eb484a3b8a733012995583dda0813', jknown_address, 'easy_crypto')
 
+add_dict_if_noexist('hx9d9ad1bc19319bd5cdb5516773c0e376db83b644', jknown_address, 'icf_delegate_1')
+add_dict_if_noexist('hx0cc3a3d55ed55df7c8eee926a4fafb5412d0cca4', jknown_address, 'icf_delegate_2')
+add_dict_if_noexist('hxa9c54005bfa47bb8c3ff0d8adb5ddaac141556a3', jknown_address, 'icf_delegate_3')
+add_dict_if_noexist('hxc1481b2459afdbbde302ab528665b8603f7014dc', jknown_address, 'icf_delegate_4')
+
+add_dict_if_noexist('hx02ada5d31e0f3eafa7fdf069caebb8d9ac7272f7', jknown_address, 'icf_delegate_5')
+add_dict_if_noexist('hxf936493f53a45cfcf3bc1d35643dfda051f9534f', jknown_address, 'icf_delegate_6')
+add_dict_if_noexist('hx2d84173c2cfb0e5c4ca31fbd8e5df252fcad0992', jknown_address, 'icf_delegate_7')
+add_dict_if_noexist('hx5620c34cc9bc6e56f4feaf4d81cbe69535221237', jknown_address, 'icf_delegate_8')
+
 # binance sweepers
 add_dict_if_noexist('hx8a50805989ceddee4341016722290f13e471281e', jknown_address, 'binance\nsweeper_01')
 add_dict_if_noexist('hx58b2592941f61f97c7a8bed9f84c543f12099239', jknown_address, 'binance\nsweeper_02')
