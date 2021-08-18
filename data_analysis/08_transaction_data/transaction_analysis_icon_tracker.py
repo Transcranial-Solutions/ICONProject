@@ -78,7 +78,7 @@ else:
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ load  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # data loading
-windows_path = "E:/GitHub/Icon/ICONProject/data_analysis/08_transaction_data/data/"
+windows_path = "E:/GitHub/ICONProject/data_analysis/08_transaction_data/data/"
 tx_df = pd.read_csv(os.path.join(windows_path, 'transaction_data_icon_tracker_' + date_prev + '.csv'))
 
 def clean_tx_df(tx_df):
@@ -163,6 +163,9 @@ def add_know_addresses():
 
     add_dict_if_noexist('hxbdd5ba518b70408acd023a18e4d6b438c7f11655', jknown_address, 'Somesing Exchange')
 
+    add_dict_if_noexist('hx037c73025819e490e9a01a7e954f9b46d89b0245', jknown_address, 'MyID-related')
+    add_dict_if_noexist('hx522bff55a62e0c75a1b51855b0802cfec6a92e84', jknown_address, '3-min_tx_bot_out')
+    add_dict_if_noexist('hx11de4e28be4845de3ea392fd8d758655bf766ca7', jknown_address, '3-min_tx_bot_in')
 
     # add_dict_if_noexist('hx7a649b6b2d431849fd8e3db2d4ed371378eacf78', jknown_address, 'icf_related1')
     # add_dict_if_noexist('hx63862927a9c1389e277cd20a6168e51bd50af13e', jknown_address, 'icf_related2')
@@ -314,14 +317,15 @@ def get_contract_info():
     jknown_address['cx087b4164a87fdfb7b714f3bafe9dfb050fd6b132'] = 'Relay_1'
     jknown_address['cx2ccc0c98ab5c2709cfc2c1512345baa99ea4106a'] = 'Relay_2'
     jknown_address['cx2ccc0c98ab5c2709cfc2c1512345baa99ea4106a'] = 'Relay_2'
-    jknown_address['cx694e8c9f1a05c8c3719f30d46b97697960e4289e'] = 'MyID_1'
-    jknown_address['cxba62bb61baf8dd8b6a04633fe33806547785a00c'] = 'MyID_2'
+    jknown_address['cx9e3cadcc1a4be3323ea23371b84575abb32703ae'] = 'MyID_1'
+    jknown_address['cx694e8c9f1a05c8c3719f30d46b97697960e4289e'] = 'MyID_2'
+    jknown_address['cxba62bb61baf8dd8b6a04633fe33806547785a00c'] = 'MyID_3'
     jknown_address['cxcaef4255ec5cb784594655fa5ff62ce09a4f8dfa'] = 'w3id'
     jknown_address['cx636caea5cf5a336d33985ae12ae1839821a175a4'] = 'SEED_1'
     jknown_address['cx2e138bde7e4cb3706c7ac3c881fbd165dce49828'] = 'SEED_2'
     jknown_address['cx3c08892673803db95c617fb9803c3653f4dcd4ac'] = 'SEED_3'
     jknown_address['cx32b06547643fead9048ea912ba4c03419ee97052'] = 'FutureICX'
-    jknown_address['cx9e3cadcc1a4be3323ea23371b84575abb32703ae'] = 'Manager'
+    jknown_address['cx9e3cadcc1a4be3323ea23371b84575abb32703ae'] = 'MyID_1'
     jknown_address['cx9c4698411c6d9a780f605685153431dcda04609f'] = 'Auction'
     jknown_address['cx334beb9a6cde3bf1df045869447488e0de31df4c'] = 'circle_arb_1'
     jknown_address['cx9df59cf2c7dc7ae2dbdec4a10b295212595f2378'] = 'circle_arb_2'
@@ -345,9 +349,9 @@ known_address_details_to, known_address_details_from, known_address_exception = 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Analysis ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
-tx_contract = tx_df[tx_df['target_contract'] !='System'].groupby('target_contract')['fee']\
+tx_contract = tx_df[(tx_df['target_contract'] !='System') & (tx_df['state'] != '1')].groupby('target_contract')['fee']\
     .agg({'count','sum'})\
-    .sort_values(by='sum', ascending=False)\
+    .sort_values(by='count', ascending=False)\
     .rename(columns={'count':'tx_count','sum':'fees_burned'})\
     .reset_index()
 
@@ -356,16 +360,21 @@ tx_contract = pd.merge(tx_contract, known_address_details_to, left_on='target_co
 
 
 
-tx_from = tx_df.groupby('from')['fee']\
+tx_from = tx_df[(tx_df['from'] !='System') & (tx_df['state'] != '1')].groupby('from')['fee']\
     .agg({'count','sum'})\
-    .sort_values(by='sum', ascending=False)\
+    .sort_values(by='count', ascending=False)\
     .rename(columns={'count':'tx_count','sum':'fees_burned'})\
     .reset_index()
 
+tx_from = pd.merge(tx_from, known_address_details_from, on='from', how='left')
 
 
-tx_to = tx_df.groupby('to')['fee']\
+
+
+tx_to = tx_df[(tx_df['from'] !='System') & (tx_df['state'] != '1')].groupby('to')['fee']\
     .agg({'count','sum'})\
-    .sort_values(by='sum', ascending=False)\
+    .sort_values(by='count', ascending=False)\
     .rename(columns={'count':'tx_count','sum':'fees_burned'})\
     .reset_index()
+
+tx_to = pd.merge(tx_to, known_address_details_to, on='to', how='left')
