@@ -31,13 +31,13 @@ desired_width=320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
 
-# currPath = os.getcwd()
-currPath = "/home/tonoplast/IconProject/"
-projectPath = os.path.join(currPath, "wallet_ranking")
+currPath = os.getcwd()
+# currPath = "/home/tonoplast/IconProject/"
+projectPath = os.path.join(currPath, "")
 if not os.path.exists(projectPath):
     os.mkdir(projectPath)
     
-dataPath = os.path.join(projectPath, "data")
+dataPath = os.path.join(projectPath, "../06_wallet_ranking/data")
 if not os.path.exists(dataPath):
     os.mkdir(dataPath)
 
@@ -352,7 +352,7 @@ all_df = pd.merge(all_df, exchange_details, how='left', on='address')
 
 
 
-windows_path = "/mnt/e/GitHub/Icon/ICONProject/data_analysis/06_wallet_ranking/results/" + day_today
+windows_path = "E:/GitHub/ICONProject/data_analysis/06_wallet_ranking/results/" + day_today
 
 if not os.path.exists(windows_path):
     os.makedirs(windows_path)
@@ -361,7 +361,7 @@ if not os.path.exists(windows_path):
 all_df.to_csv(os.path.join(windows_path, 'exchange_wallet_balance_' + day_today + '.csv'), index=False)
 
 # reading previous term data
-windows_path_prev = "/mnt/e/GitHub/Icon/ICONProject/data_analysis/06_wallet_ranking/results/" + day_prev
+windows_path_prev = "E:/GitHub/ICONProject/data_analysis/06_wallet_ranking/results/" + day_prev
 all_df_prev = pd.read_csv(os.path.join(windows_path_prev, "exchange_wallet_balance_" + day_prev + '.csv'))
 
 
