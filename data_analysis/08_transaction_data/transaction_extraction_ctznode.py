@@ -45,10 +45,12 @@ pd.set_option('display.max_columns',10)
 workers = 8
 
 currPath = os.getcwd()
-# currPath = "08_transaction_data"
-projectPath = os.path.join(currPath, "08_transaction_data")
-if not os.path.exists(projectPath):
-    os.mkdir(projectPath)
+if not "08_transaction_data" in currPath:
+    projectPath = os.path.join(currPath, "08_transaction_data")
+    if not os.path.exists(projectPath):
+        os.mkdir(projectPath)
+else:
+    projectPath = currPath
     
 dataPath = os.path.join(projectPath, "data")
 if not os.path.exists(dataPath):
@@ -260,25 +262,24 @@ txHashes = block_df['txHash']
 # collecting transaction info using multithreading
 def get_tx_dfs(txHash):
     tx = icon_service.get_transaction(txHash)
-    # try:
-    #     combined_tx = pd.DataFrame.from_dict(tx).reset_index()
-    #     if not combined_tx:
-    #         raise ValueError('empty string')
-    # except:
-    combined_tx = pd.json_normalize(tx)
+
+    # removing some data here
+    entries_to_remove = ('data','signature','blockHeight','blockHash')
+    for k in entries_to_remove:
+        tx.pop(k, None)
+    combined_tx = pd.json_normalize(tx).rename(columns={'timestamp':'tx_timestamp'})
+
+
 
     tx_results = icon_service.get_transaction_result(txHash)
-    # try:
-    #     combined_tx_results = pd.DataFrame.from_dict(tx_results)
-    #     if not combined_tx_results:
-    #         raise ValueError('empty string')
-    # except:
+
+    # removing some data here
+    entries_to_remove = ('logsBloom','blockHeight','blockHash','to')
+    for k in entries_to_remove:
+        tx_results.pop(k, None)
     combined_tx_results = pd.json_normalize(tx_results)
 
-    tx_df = combined_tx.drop(['signature','blockHeight','blockHash','to'], axis=1, errors='ignore').rename(columns={'timestamp':'tx_timestamp'})
-    tx_results_df = combined_tx_results.drop(['logsBloom', 'blockHeight', 'blockHash'], axis=1, errors='ignore')
-
-    tx_dfs = pd.merge(tx_df, tx_results_df, on=["txHash","txIndex"], how="left")
+    tx_dfs = pd.merge(combined_tx, combined_tx_results, on=["txHash","txIndex"], how="left")
 
     return tx_dfs
 
@@ -305,7 +306,7 @@ def loop_to_icx(loop):
 def timestamp_to_date(df, timestamp, dateformat):
     return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
 
-def df_merge_all(tx_df, block_df):
+def df_merge_all(block_df, tx_df):
     tx_all = pd.merge(block_df, tx_df, on=["txHash","tx_timestamp"], how="left")
     return(tx_all)
 
@@ -315,7 +316,6 @@ def tx_data_cleaning_1(tx_all):
     tx_all['stepUsed'] = pd.to_numeric(tx_all['stepUsed'], errors='coerce').astype('Int64').fillna(0)
     tx_all['tx_fees'] = tx_all['stepUsed'] * tx_all['stepPrice']
 
-    tx_all['block_time'] = timestamp_to_date(tx_all, 'block_timestamp', '%H:%M:%S')
     tx_all['tx_date'] = timestamp_to_date(tx_all, 'tx_timestamp', '%Y-%m-%d')
     tx_all['tx_time'] = timestamp_to_date(tx_all, 'tx_timestamp', '%H:%M:%S')
 
@@ -334,69 +334,73 @@ def remove_list(cols, strings):
 
 def tx_data_cleaning_2(tx_all):
     # exploding event logs
-    tx_all = tx_all.explode('eventLogs').reset_index(drop=True).sort_index(axis=1)
+    temp_tx = tx_all.explode('eventLogs').reset_index(drop=True).sort_index(axis=1)
 
-    # separating event logs by those that have NaN
-    nonans = tx_all[tx_all['eventLogs'].notnull()]
-    nans = tx_all[tx_all['eventLogs'].isnull()]
+    # giving empty {} to be able to json_normalize
+    temp_tx['eventLogs'] = np.where(temp_tx['eventLogs'].isnull(), {}, temp_tx['eventLogs'])
 
-    eventLogs_df = pd.json_normalize(nonans['eventLogs']).rename(columns={"scoreAddress":"eventLogs.scoreAddress","indexed":"eventLogs.indexed","data":"eventLogs.data"})
-    df1 = nonans.join(eventLogs_df)
+    eventLogs_df = pd.json_normalize(temp_tx['eventLogs']).rename(columns={"scoreAddress":"eventLogs.scoreAddress","indexed":"eventLogs.indexed","data":"eventLogs.data"})
+    df = temp_tx.join(eventLogs_df)
 
     # standardising columns
-    df1['eventLogs_indexed'] = df1['eventLogs.indexed'].str[0]
-    df1['eventLogs_data'] = df1['eventLogs.indexed'].str[1:] + df1['eventLogs.data']
+    df['eventLogs_indexed'] = df['eventLogs.indexed'].str[0]
+    df['eventLogs_data'] = df['eventLogs.indexed'].str[1:] + df['eventLogs.data']
 
     # cleaning up
-    df1 = df1.drop(columns=['eventLogs.indexed', 'eventLogs.data'])
-    df1 = df1.rename(columns={"eventLogs_indexed":"eventLogs.indexed","eventLogs_data":"eventLogs.data"})
+    df = df.drop(columns=['eventLogs.indexed', 'eventLogs.data'])
+    df = df.rename(columns={"eventLogs_indexed":"eventLogs.indexed","eventLogs_data":"eventLogs.data"})
 
-    df = df1.append(nans)
     df = df.drop(columns=["eventLogs","data"], axis=1, errors='ignore')
 
     # shifting data. and eventLogs. to the end
     cols = list(df.columns.values)  # Make a list of all of the columns in the df
-    data_list = get_list(df=df, strings="data.")
+    # data_list = get_list(df=df, strings="data.")
     eventlog_list = get_list(df=df, strings="eventLogs.")
 
-    remove_list(cols, strings="data.")
+    # remove_list(cols, strings="data.")
     remove_list(cols, strings="eventLogs.")
 
-    df = df[cols + eventlog_list + data_list]  # Create new dataframe with columns in the order you want
+    # df = df[cols + eventlog_list + data_list]  # Create new dataframe with columns in the order you want
+    df = df[cols + eventlog_list]  # Create new dataframe with columns in the order you want
+
+
+    # counting internal transactions / total events
+    df['intTxCount'] = np.where(df['eventLogs.indexed'].str.contains('Address', na=False), 1, 0)
+    df['intEvtCount'] = np.where(df['eventLogs.data'].notnull(), 1, 0)
+
+    int_tx_event = df.groupby('txHash').agg('sum')[['intTxCount', 'intEvtCount']].reset_index()
+    # print(int_tx_event)
+
+    tx_all = pd.merge(tx_all, int_tx_event, on='txHash', how='left')
+
+    return tx_all
+
+
+def tx_data_cleaning_3(df):
+    cols = list(df.columns.values)  # Make a list of all of the columns in the df
+    remove_list(cols, strings="step")
+    df = df[cols]
 
     # shifting columns (from - to) together
-    cols = list(df.columns.values)
-    to_loc = df.columns.get_loc("to")
-    from_loc = df.columns.get_loc("from")
-    df = df[cols[0:from_loc+1] + [cols[to_loc]] + cols[from_loc+1:to_loc] + cols[to_loc+1:]]
-
-    df = df.sort_values(by=['blockHeight','txIndex','tx_timestamp','txHash'])
-
+    # cols = list(df.columns.values)
+    # to_loc = df.columns.get_loc("to")
+    # from_loc = df.columns.get_loc("from")
+    # df = df[cols[0:from_loc + 1] + [cols[to_loc]] + cols[from_loc + 1:to_loc] + cols[to_loc + 1:]]
     return df
 
 
 def final_output():
-    tx_all = df_merge_all(tx_df=tx_df, block_df=block_df)
-    # tx_all = tx_all[tx_all['to'].notnull()]
-    tx_all = tx_data_cleaning_1(tx_all=tx_all)
+    tx_all = tx_data_cleaning_1(tx_all=tx_df)
     tx_all = tx_data_cleaning_2(tx_all=tx_all)
+    block_df['block_time'] = timestamp_to_date(block_df, 'block_timestamp', '%H:%M:%S')
+    tx_all = df_merge_all(block_df=block_df, tx_df=tx_all)
     final_tx_df = pd.merge(df_of_interest, tx_all, on=['blockHeight'], how='left')
+    # final_tx_df = final_tx_df[final_tx_df['to'].notnull()]
+    final_tx_df = tx_data_cleaning_3(df=final_tx_df)
+
     return final_tx_df
 
 final_tx_df = final_output()
-
-
-
-
-# df['count'] = df['eventLogs.indexed'].str.count("Address")
-
-df['intTxCount'] = np.where(df['eventLogs.indexed'].str.contains('Address,Address,int', na=False), 1, 0)
-df['intEvtCount'] = np.where(df['eventLogs.data'].notnull(), 1, 0)
-
-
-test = df.groupby('txHash').agg('sum')[['intTxCount','intEvtCount']].reset_index()
-
-
 
 
 final_tx_df.to_csv(os.path.join(dataPath, 'tx_final_' + date_prev + '.csv'), index=False)
