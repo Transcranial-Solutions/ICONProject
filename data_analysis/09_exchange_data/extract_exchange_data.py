@@ -306,7 +306,7 @@ def corr_plot(df, inVar1, inVar2, this_xlabel, this_ylabel, this_title):
 # df_neg = df_delegator[df_delegator['votes'] < 0]
 # df_neg = df_delegator[df_delegator['votes'] < -500000]
 
-# df_neg = df_delegator[df_delegator['cum_votes'] < 0.001]
+df_neg = df_delegator[df_delegator['cum_votes'] < 0.001]
 # df_neg = df_delegator.copy()
 
 
