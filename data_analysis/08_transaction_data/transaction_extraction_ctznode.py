@@ -158,261 +158,264 @@ today = datetime.utcnow()
 date_today = today.strftime("%Y-%m-%d")
 
 # to use specific date (1), otherwise use yesterday (0)
-use_specific_prev_date = 1
-date_prev = "2021-07-28"
+use_specific_prev_date = 2
+date_prev = "2021-07-21"
+
 
 if use_specific_prev_date == 1:
-    date_prev = date_prev
+    date_of_interest = date_prev
+elif use_specific_prev_date == 0:
+    date_of_interest = yesterday(today)
+elif use_specific_prev_date == 2:
+    # for loop between dates
+    day_1 = "2021-08-12"; day_2 = "2021-08-19"
+    date_of_interest = pd.date_range(start=day_1, end=day_2, freq='D').strftime("%Y-%m-%d").to_list()
 else:
-    date_prev = yesterday(today)
+    date_of_interest=[]
+    print('No date selected.')
 
+print(date_of_interest)
 
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ solidwallet ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# using solidwallet
-# icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
-# icon_service = IconService(HTTPProvider("http://localhost:9000", 3))
-# icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io", 3, request_kwargs={"timeout": 60}))
-# icon_service = IconService(HTTPProvider("http://localhost:9000/api/v3", request_kwargs={"timeout": 60}))
+for date_prev in date_of_interest:
 
-# localhost
-icon_service = IconService(HTTPProvider("http://127.0.0.1:9000/api/v3", request_kwargs={"timeout": 60}))
-# block = icon_service.get_block(38000000)
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ solidwallet ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # using solidwallet
+    # icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+    # icon_service = IconService(HTTPProvider("http://localhost:9000", 3))
+    # icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io", 3, request_kwargs={"timeout": 60}))
+    # icon_service = IconService(HTTPProvider("http://localhost:9000/api/v3", request_kwargs={"timeout": 60}))
 
+    # localhost
+    icon_service = IconService(HTTPProvider("http://127.0.0.1:9000/api/v3", request_kwargs={"timeout": 60}))
+    # block = icon_service.get_block(38000000)
 
-## Creating Wallet if does not exist (only done for the first time)
-tester_wallet = os.path.join(walletPath, "test_keystore_1")
 
-if os.path.exists(tester_wallet):
-    wallet = KeyWallet.load(tester_wallet, "abcd1234*")
-else:
-    wallet = KeyWallet.create()
-    wallet.get_address()
-    wallet.get_private_key()
-    wallet.store(tester_wallet, "abcd1234*")
+    ## Creating Wallet if does not exist (only done for the first time)
+    tester_wallet = os.path.join(walletPath, "test_keystore_1")
 
-tester_address = wallet.get_address()
+    if os.path.exists(tester_wallet):
+        wallet = KeyWallet.load(tester_wallet, "abcd1234*")
+    else:
+        wallet = KeyWallet.create()
+        wallet.get_address()
+        wallet.get_private_key()
+        wallet.store(tester_wallet, "abcd1234*")
 
+    tester_address = wallet.get_address()
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ block Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# reading from the data extracted previously
-combined_df = pd.read_csv(os.path.join(dataPath, 'transaction_blocks_' + date_prev + '.csv'))
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ block Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # reading from the data extracted previously
+    combined_df = pd.read_csv(os.path.join(dataPath, 'transaction_blocks_' + date_prev + '.csv'))
 
-combined_df['date'] = pd.to_datetime(combined_df['block_createDate']).dt.strftime("%Y-%m-%d")
-df_of_interest = combined_df[combined_df['date'] == date_prev]
+    combined_df['date'] = pd.to_datetime(combined_df['block_createDate']).dt.strftime("%Y-%m-%d")
+    df_of_interest = combined_df[combined_df['date'] == date_prev]
 
-# block_of_interest = df_of_interest[df_of_interest['block_fee'] != 0]
-# block_of_interest = block_of_interest['blockHeight']
+    block_of_interest = df_of_interest['blockHeight']
+    # block_of_interest = block_of_interest.iloc[0:100]
 
-block_of_interest = df_of_interest['blockHeight']
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Other way ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-# block_of_interest = block_of_interest.iloc[0:10]
+    def get_block_df(blockInfo):
+        blockInfo = icon_service.get_block(blockInfo)
+        block_blockheight = deep_get(blockInfo, "height")
+        # blockTS = deep_get(blockInfo, "time_stamp")
+        txHashes = extract_values_no_params(blockInfo, "txHash")
+        txTS = extract_values(blockInfo, "timestamp")
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Other way ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+        combined_block = {'blockHeight': block_blockheight,
+            # 'block_timestamp': blockTS,
+            'txHash': txHashes,
+            'timestamp': txTS}
 
-def get_block_df(blockInfo):
-    blockInfo = icon_service.get_block(blockInfo)
-    block_blockheight = deep_get(blockInfo, "height")
-    blockTS = deep_get(blockInfo, "time_stamp")
-    txHashes = extract_values_no_params(blockInfo, "txHash")
-    txTS = extract_values(blockInfo, "timestamp")
-    
-    combined_block = {'blockHeight': block_blockheight,
-        'block_timestamp': blockTS,
-        'txHash': txHashes,
-        'tx_timestamp': txTS}
+        block_df = pd.DataFrame(data=combined_block)
+        return block_df
 
-    block_df = pd.DataFrame(data=combined_block)
-    return block_df
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # collecting contact info using multithreading
 
+    def run_block():
+        start = time()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            myblock = list(tqdm(executor.map(get_block_df, block_of_interest), total=len(block_of_interest)))
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# collecting contact info using multithreading
+        block_df = pd.concat(myblock).reset_index(drop=True)
+        print(f'Time taken: {time() - start}')
 
-def run_block():
-    start = time()
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        myblock = list(tqdm(executor.map(get_block_df, block_of_interest), total=len(block_of_interest)))
+        return block_df
 
-    block_df = pd.concat(myblock).reset_index(drop=True)
-    print(f'Time taken: {time() - start}')
+    block_df = run_block()
 
-    return block_df
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # # save block info
+    # block_df.to_csv(os.path.join(dataPath, 'transactions_each_block_' + date_prev + '.csv'), index=False)
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # # load block info
+    # block_df = pd.read_csv(os.path.join(dataPath, 'transactions_each_block_' + date_prev + '.csv'))
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-block_df = run_block()
-# if __name__ == "__main__":
-#     run_block()
+    # getting hash only
+    txHashes = block_df['txHash']
+    # txHashes = txHashes.iloc[0:200]
 
-# def not_done():
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# save block info
-block_df.to_csv(os.path.join(dataPath, 'transactions_each_block_' + date_prev + '.csv'), index=False)
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # collecting transaction info using multithreading
+    def get_tx_dfs(txHash):
+        tx = icon_service.get_transaction(txHash)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# load block info
-block_df = pd.read_csv(os.path.join(dataPath, 'transactions_each_block_' + date_prev + '.csv'))
+        # removing some data here
+        entries_to_remove = ('version','data','signature','blockHeight','blockHash','nid','nonce')
+        for k in entries_to_remove:
+            tx.pop(k, None)
+        combined_tx = pd.json_normalize(tx)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# getting hash only
-txHashes = block_df['txHash']
-# txHashes = txHashes.iloc[0:200]
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# collecting transaction info using multithreading
-def get_tx_dfs(txHash):
-    tx = icon_service.get_transaction(txHash)
 
-    # removing some data here
-    entries_to_remove = ('data','signature','blockHeight','blockHash')
-    for k in entries_to_remove:
-        tx.pop(k, None)
-    combined_tx = pd.json_normalize(tx).rename(columns={'timestamp':'tx_timestamp'})
+        tx_results = icon_service.get_transaction_result(txHash)
 
+        # removing some data here
+        entries_to_remove = ('logsBloom','blockHeight','blockHash','to', 'scoreAddress')
+        for k in entries_to_remove:
+            tx_results.pop(k, None)
+        combined_tx_results = pd.json_normalize(tx_results)
 
+        tx_dfs = pd.merge(combined_tx, combined_tx_results, on=["txHash","txIndex"], how="left")
 
-    tx_results = icon_service.get_transaction_result(txHash)
+        return tx_dfs
 
-    # removing some data here
-    entries_to_remove = ('logsBloom','blockHeight','blockHash','to')
-    for k in entries_to_remove:
-        tx_results.pop(k, None)
-    combined_tx_results = pd.json_normalize(tx_results)
+    def run_tx():
+        start = time()
 
-    tx_dfs = pd.merge(combined_tx, combined_tx_results, on=["txHash","txIndex"], how="left")
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            mytx = list(tqdm(executor.map(get_tx_dfs, txHashes), total=len(txHashes)))
 
-    return tx_dfs
+        tx_df = pd.concat(mytx).reset_index(drop=True)
+        print(f'Time taken: {time() - start}')
 
-def run_tx():
-    start = time()
+        return tx_df
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        mytx = list(tqdm(executor.map(get_tx_dfs, txHashes), total=len(txHashes)))
+    tx_df = run_tx()
 
-    tx_df = pd.concat(mytx).reset_index(drop=True)
-    print(f'Time taken: {time() - start}')
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    # loop to icx converter
+    def loop_to_icx(loop):
+        icx = loop / 1000000000000000000
+        return(icx)
 
-    return tx_df
+    # convert timestamp to datetime
+    def timestamp_to_date(df, timestamp, dateformat):
+        return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
 
-tx_df = run_tx()
+    def df_merge_all(block_df, tx_df):
+        tx_all = pd.merge(block_df, tx_df, on=["txHash","timestamp"], how="left")
+        return(tx_all)
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# loop to icx converter
-def loop_to_icx(loop):
-    icx = loop / 1000000000000000000
-    return(icx)
+    def tx_data_cleaning_1(tx_all):
+        tx_all = tx_all.rename(columns={'cumulativeStepUsed':'stepUsedCumulative'})
+        tx_all['stepPrice'] = pd.to_numeric(tx_all['stepPrice'], errors='coerce').astype('Int64').map(loop_to_icx).fillna(0)
+        tx_all['stepUsed'] = pd.to_numeric(tx_all['stepUsed'], errors='coerce').astype('Int64').fillna(0)
+        tx_all['tx_fees'] = tx_all['stepUsed'] * tx_all['stepPrice']
 
-# convert timestamp to datetime
-def timestamp_to_date(df, timestamp, dateformat):
-    return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
+        tx_all['tx_date'] = timestamp_to_date(tx_all, 'timestamp', '%Y-%m-%d')
+        tx_all['tx_time'] = timestamp_to_date(tx_all, 'timestamp', '%H:%M:%S')
 
-def df_merge_all(block_df, tx_df):
-    tx_all = pd.merge(block_df, tx_df, on=["txHash","tx_timestamp"], how="left")
-    return(tx_all)
+        tx_all['value'] = loop_to_icx(tx_all['value'])
+        return tx_all
 
-def tx_data_cleaning_1(tx_all):
-    tx_all = tx_all.rename(columns={'cumulativeStepUsed':'stepUsedCumulative'})
-    tx_all['stepPrice'] = pd.to_numeric(tx_all['stepPrice'], errors='coerce').astype('Int64').map(loop_to_icx).fillna(0)
-    tx_all['stepUsed'] = pd.to_numeric(tx_all['stepUsed'], errors='coerce').astype('Int64').fillna(0)
-    tx_all['tx_fees'] = tx_all['stepUsed'] * tx_all['stepPrice']
+    def get_list(df, strings):
+        cols = list(df.columns.values)
+        delete_list = [cols.index(i) for i in cols if strings in i]
+        return df.columns[delete_list].tolist()
 
-    tx_all['tx_date'] = timestamp_to_date(tx_all, 'tx_timestamp', '%Y-%m-%d')
-    tx_all['tx_time'] = timestamp_to_date(tx_all, 'tx_timestamp', '%H:%M:%S')
+    def remove_list(cols, strings):
+        delete_list = [cols.index(i) for i in cols if strings in i]
+        for index in sorted(delete_list, reverse=True):
+            del cols[index]
 
-    tx_all['value'] = loop_to_icx(tx_all['value'])
-    return tx_all
+    def tx_data_cleaning_2(tx_all):
+        # exploding event logs
+        temp_tx = tx_all.explode('eventLogs').reset_index(drop=True).sort_index(axis=1)
 
-def get_list(df, strings):
-    cols = list(df.columns.values)
-    delete_list = [cols.index(i) for i in cols if strings in i]
-    return df.columns[delete_list].tolist()
+        # giving empty {} to be able to json_normalize
+        temp_tx['eventLogs'] = np.where(temp_tx['eventLogs'].isnull(), {}, temp_tx['eventLogs'])
 
-def remove_list(cols, strings):
-    delete_list = [cols.index(i) for i in cols if strings in i]
-    for index in sorted(delete_list, reverse=True):
-        del cols[index]
+        eventLogs_df = pd.json_normalize(temp_tx['eventLogs']).rename(columns={"scoreAddress":"eventLogs.scoreAddress","indexed":"eventLogs.indexed","data":"eventLogs.data"})
+        df = temp_tx.join(eventLogs_df)
 
-def tx_data_cleaning_2(tx_all):
-    # exploding event logs
-    temp_tx = tx_all.explode('eventLogs').reset_index(drop=True).sort_index(axis=1)
+        # standardising columns
+        df['eventLogs_indexed'] = df['eventLogs.indexed'].str[0]
+        df['eventLogs_data'] = df['eventLogs.indexed'].str[1:] + df['eventLogs.data']
 
-    # giving empty {} to be able to json_normalize
-    temp_tx['eventLogs'] = np.where(temp_tx['eventLogs'].isnull(), {}, temp_tx['eventLogs'])
+        # cleaning up
+        df = df.drop(columns=['eventLogs.indexed', 'eventLogs.data'])
+        df = df.rename(columns={"eventLogs_indexed":"eventLogs.indexed","eventLogs_data":"eventLogs.data"})
 
-    eventLogs_df = pd.json_normalize(temp_tx['eventLogs']).rename(columns={"scoreAddress":"eventLogs.scoreAddress","indexed":"eventLogs.indexed","data":"eventLogs.data"})
-    df = temp_tx.join(eventLogs_df)
+        df = df.drop(columns=["eventLogs","data"], axis=1, errors='ignore')
 
-    # standardising columns
-    df['eventLogs_indexed'] = df['eventLogs.indexed'].str[0]
-    df['eventLogs_data'] = df['eventLogs.indexed'].str[1:] + df['eventLogs.data']
+        # shifting data. and eventLogs. to the end
+        cols = list(df.columns.values)  # Make a list of all of the columns in the df
+        # data_list = get_list(df=df, strings="data.")
+        eventlog_list = get_list(df=df, strings="eventLogs.")
 
-    # cleaning up
-    df = df.drop(columns=['eventLogs.indexed', 'eventLogs.data'])
-    df = df.rename(columns={"eventLogs_indexed":"eventLogs.indexed","eventLogs_data":"eventLogs.data"})
+        # remove_list(cols, strings="data.")
+        remove_list(cols, strings="eventLogs.")
 
-    df = df.drop(columns=["eventLogs","data"], axis=1, errors='ignore')
+        # df = df[cols + eventlog_list + data_list]  # Create new dataframe with columns in the order you want
+        df = df[cols + eventlog_list]  # Create new dataframe with columns in the order you want
 
-    # shifting data. and eventLogs. to the end
-    cols = list(df.columns.values)  # Make a list of all of the columns in the df
-    # data_list = get_list(df=df, strings="data.")
-    eventlog_list = get_list(df=df, strings="eventLogs.")
 
-    # remove_list(cols, strings="data.")
-    remove_list(cols, strings="eventLogs.")
+        # counting internal transactions / total events
+        df['intTxCount'] = np.where(df['eventLogs.indexed'].str.contains('Address', na=False), 1, 0)
+        df['intEvtCount'] = np.where(df['eventLogs.data'].notnull(), 1, 0)
 
-    # df = df[cols + eventlog_list + data_list]  # Create new dataframe with columns in the order you want
-    df = df[cols + eventlog_list]  # Create new dataframe with columns in the order you want
+        int_tx_event = df.groupby('txHash').agg('sum')[['intTxCount', 'intEvtCount']].reset_index()
+        # print(int_tx_event)
 
+        tx_all = pd.merge(tx_all, int_tx_event, on='txHash', how='left')
 
-    # counting internal transactions / total events
-    df['intTxCount'] = np.where(df['eventLogs.indexed'].str.contains('Address', na=False), 1, 0)
-    df['intEvtCount'] = np.where(df['eventLogs.data'].notnull(), 1, 0)
+        return tx_all
 
-    int_tx_event = df.groupby('txHash').agg('sum')[['intTxCount', 'intEvtCount']].reset_index()
-    # print(int_tx_event)
+    def tx_data_cleaning_3(df):
+        cols = list(df.columns.values)  # Make a list of all of the columns in the df
+        remove_list(cols, strings="step")
+        df = df[cols]
+        df = df.drop(columns=['eventLogs'])
 
-    tx_all = pd.merge(tx_all, int_tx_event, on='txHash', how='left')
+        # shifting columns (from - to) together
+        # cols = list(df.columns.values)
+        # to_loc = df.columns.get_loc("to")
+        # from_loc = df.columns.get_loc("from")
+        # df = df[cols[0:from_loc + 1] + [cols[to_loc]] + cols[from_loc + 1:to_loc] + cols[to_loc + 1:]]
+        return df
 
-    return tx_all
 
+    def final_output():
+        tx_all = tx_data_cleaning_1(tx_all=tx_df)
+        tx_all = tx_data_cleaning_2(tx_all=tx_all)
+        tx_all = df_merge_all(block_df=block_df, tx_df=tx_all)
+        # final_tx_df = pd.merge(df_of_interest, tx_all, on=['blockHeight'], how='left')
+        # final_tx_df = final_tx_df[final_tx_df['to'].notnull()]
+        final_tx_df = tx_data_cleaning_3(df=tx_all)
 
-def tx_data_cleaning_3(df):
-    cols = list(df.columns.values)  # Make a list of all of the columns in the df
-    remove_list(cols, strings="step")
-    df = df[cols]
+        return final_tx_df
 
-    # shifting columns (from - to) together
-    # cols = list(df.columns.values)
-    # to_loc = df.columns.get_loc("to")
-    # from_loc = df.columns.get_loc("from")
-    # df = df[cols[0:from_loc + 1] + [cols[to_loc]] + cols[from_loc + 1:to_loc] + cols[to_loc + 1:]]
-    return df
+    final_tx_df = final_output()
 
 
-def final_output():
-    tx_all = tx_data_cleaning_1(tx_all=tx_df)
-    tx_all = tx_data_cleaning_2(tx_all=tx_all)
-    block_df['block_time'] = timestamp_to_date(block_df, 'block_timestamp', '%H:%M:%S')
-    tx_all = df_merge_all(block_df=block_df, tx_df=tx_all)
-    final_tx_df = pd.merge(df_of_interest, tx_all, on=['blockHeight'], how='left')
-    # final_tx_df = final_tx_df[final_tx_df['to'].notnull()]
-    final_tx_df = tx_data_cleaning_3(df=final_tx_df)
+    final_tx_df.to_csv(os.path.join(dataPath, 'tx_final_' + date_prev + '.csv'), index=False)
 
-    return final_tx_df
+    # check = pd.read_csv(os.path.join(dataPath, 'tx_final_' + date_prev + '.csv'), low_memory=False)
 
-final_tx_df = final_output()
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
+    # bytearray.fromhex(dat[2:]).decode()
+    # import binascii
+    # string = '{"msgType":"JejuVisitLog","time":1626533340,"period":60,"count":17}'
+    # binascii.hexlify(string.encode())
 
-final_tx_df.to_csv(os.path.join(dataPath, 'tx_final_' + date_prev + '.csv'), index=False)
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-# bytearray.fromhex(dat[2:]).decode()
-# import binascii 
-# string = '{"msgType":"JejuVisitLog","time":1626533340,"period":60,"count":17}'
-# binascii.hexlify(string.encode())
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    print(date_prev + ' is done!')
 
 def run_all():
     if __name__ == "__main__":
