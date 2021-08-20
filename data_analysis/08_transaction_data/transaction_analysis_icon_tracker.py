@@ -84,7 +84,6 @@ tx_df = pd.read_csv(os.path.join(windows_path, 'transaction_data_icon_tracker_' 
 def clean_tx_df(tx_df):
     tx_df = tx_df.rename(columns={'fromAddr': 'from', 'toAddr': 'to', 'targetContractAddr': 'target_contract'})
 
-
     tx_df['target_contract'] = np.where((tx_df['target_contract'].isnull()) & (tx_df['to'].isnull()), 'System', tx_df['target_contract'])
     tx_df['from'] = np.where(tx_df['from'].isnull(), 'System', tx_df['from'])
     tx_df['to'] = np.where(tx_df['to'].isnull(), 'System', tx_df['to'])
