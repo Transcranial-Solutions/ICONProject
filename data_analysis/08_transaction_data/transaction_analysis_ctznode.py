@@ -29,6 +29,9 @@ from tqdm import tqdm
 from functools import reduce
 import re
 import random
+import matplotlib.pyplot as plt  # for improving our visualizations
+import matplotlib.lines as mlines
+import seaborn as sns
 
 desired_width = 320
 pd.set_option('display.width', desired_width)
@@ -75,7 +78,7 @@ elif use_specific_prev_date == 0:
     date_of_interest = yesterday(today)
 elif use_specific_prev_date == 2:
     # for loop between dates
-    day_1 = "2021-07-21"; day_2 = "2021-07-31"
+    day_1 = "2021-08-12"; day_2 = "2021-08-17"
     date_of_interest = pd.date_range(start=day_1, end=day_2, freq='D').strftime("%Y-%m-%d").to_list()
 else:
     date_of_interest=[]
@@ -495,9 +498,7 @@ for date_prev in date_of_interest:
     # stacked barplot
 
 
-    import matplotlib.pyplot as plt # for improving our visualizations
-    import matplotlib.lines as mlines
-    import seaborn as sns
+
 
     sns.set(style="dark")
     plt.style.use("dark_background")
@@ -507,14 +508,14 @@ for date_prev in date_of_interest:
     ax1.set_ylabel('Transactions')
     ax1.set_xticklabels(ax1.get_xticklabels(), rotation=90, ha="center")
     ax2 = ax1.twinx()
-    lines = plt.plot(to_group[fees_burned])
+    lines = plt.plot(to_group[fees_burned], marker='.', linestyle='dotted', mfc='none', mec='b', markersize=12)
 
     ax2.set_ylabel(fees_burned, labelpad=10)
-    plt.setp(lines, 'color', 'r', 'linewidth', 2.0)
+    plt.setp(lines, 'color', 'tab:blue', 'linewidth', 1.0)
     # ax1.legend(loc='upper center', bbox_to_anchor=(0.4, 0.95),
     #           fancybox=True, shadow=True, ncol=5)
-    color = 'tab:red'
-    red_line = mlines.Line2D([], [], color=color, label=fees_burned, linewidth=3)
+    color = 'tab:blue'
+    red_line = mlines.Line2D([], [], color=color, label=fees_burned, linewidth=1, marker='.', linestyle='dotted', mfc='none', mec='b')
     plt.legend(handles=[red_line], loc='upper right', fontsize='small', bbox_to_anchor=(0.98, 0.99), frameon=False)
     plt.tight_layout(rect=[0,0,1,1])
 
