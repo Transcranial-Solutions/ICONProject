@@ -38,9 +38,12 @@ pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns', 10)
 
 currPath = os.getcwd()
-projectPath = os.path.join(currPath, "08_transaction_data")
-if not os.path.exists(projectPath):
-    os.mkdir(projectPath)
+if not "08_transaction_data" in currPath:
+    projectPath = os.path.join(currPath, "08_transaction_data")
+    if not os.path.exists(projectPath):
+        os.mkdir(projectPath)
+else:
+    projectPath = currPath
 
 dataPath = os.path.join(projectPath, "data")
 if not os.path.exists(dataPath):
@@ -73,12 +76,12 @@ use_specific_prev_date = 2
 date_prev = "2021-07-21"
 
 if use_specific_prev_date == 1:
-    date_of_interest = date_prev
+    date_of_interest = [date_prev]
 elif use_specific_prev_date == 0:
-    date_of_interest = yesterday(today)
+    date_of_interest = [yesterday(date_today)]
 elif use_specific_prev_date == 2:
     # for loop between dates
-    day_1 = "2021-08-12"; day_2 = "2021-08-17"
+    day_1 = "2021-07-21"; day_2 = "2021-08-19"
     date_of_interest = pd.date_range(start=day_1, end=day_2, freq='D').strftime("%Y-%m-%d").to_list()
 else:
     date_of_interest=[]
@@ -450,9 +453,10 @@ for date_prev in date_of_interest:
             df['group'] = np.where(df['group'] == 'Balance', 'Balanced', df['group'])
             df['group'] = np.where(df['to'] == 'cx43e2eec79eb76293c298f2b17aec06097be606e0', 'Balanced', df['group'])
             df['group'] = np.where(df['to'] == 'cxaf244cf3c7164fe6f996f398a9d99c4d4a85cf15', 'Balanced', df['group'])
+            df['group'] = np.where(df['to'] == 'cx2609b924e33ef00b648a409245c7ea394c467824', 'Balanced', df['group'])
 
             #iconbet
-            df['group'] = np.where(df['group'] == 'TAPToken', 'ICONbet', df['group'])
+            df['group'] = np.where(df['group'] == 'TapToken', 'ICONbet', df['group'])
             df['group'] = np.where(df['group'] == 'SicBo', 'ICONbet', df['group'])
 
             # futureicx
@@ -479,7 +483,7 @@ for date_prev in date_of_interest:
     totals = to_group.agg('sum')
 
     all_tx = 'Total Transactions: ' + '{:,}'.format(totals['Regular Tx'].astype(int) + totals['Internal Tx'].astype(int)) + '\n' + \
-             'Total Events (including Tx): ' + '{:,}'.format(totals['Regular Tx'].astype(int) + totals['Internal Event (excluding Tx)'].astype(int))
+             'Total Events (including Tx): ' + '{:,}'.format(totals['Regular Tx'].astype(int) + totals['Internal Tx'].astype(int) + totals['Internal Event (excluding Tx)'].astype(int))
 
     totals = totals.astype(int).map("{:,}".format)
 
@@ -510,12 +514,12 @@ for date_prev in date_of_interest:
     ax2 = ax1.twinx()
     lines = plt.plot(to_group[fees_burned], marker='.', linestyle='dotted', mfc='none', mec='b', markersize=12)
 
-    ax2.set_ylabel(fees_burned, labelpad=10)
+    ax2.set_ylabel('Fees burned (ICX)', labelpad=10)
     plt.setp(lines, 'color', 'tab:blue', 'linewidth', 1.0)
     # ax1.legend(loc='upper center', bbox_to_anchor=(0.4, 0.95),
     #           fancybox=True, shadow=True, ncol=5)
     color = 'tab:blue'
-    red_line = mlines.Line2D([], [], color=color, label=fees_burned, linewidth=1, marker='.', linestyle='dotted', mfc='none', mec='b')
+    red_line = mlines.Line2D([], [], color=color, label='Total ' + fees_burned, linewidth=1, marker='.', linestyle='dotted', mfc='none', mec='b')
     plt.legend(handles=[red_line], loc='upper right', fontsize='small', bbox_to_anchor=(0.98, 0.99), frameon=False)
     plt.tight_layout(rect=[0,0,1,1])
 
