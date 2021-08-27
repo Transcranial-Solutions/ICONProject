@@ -72,8 +72,8 @@ today = datetime.utcnow()
 date_today = today.strftime("%Y-%m-%d")
 
 # to use specific date (1), otherwise use yesterday (0)
-use_specific_prev_date = 2
-date_prev = "2021-07-21"
+use_specific_prev_date = 0
+date_prev = "2021-08-26"
 
 if use_specific_prev_date == 1:
     date_of_interest = [date_prev]
@@ -140,6 +140,14 @@ for date_prev in date_of_interest:
     def add_dict_if_noexist(key, d, value):
         if key not in d:
             d[key] = value
+
+    def replace_dict_if_unknown(key, d, value):
+        if ("-" in d.values()) or (d.values() == None):
+            # print(key)
+            # print(value)
+            d.update({key: value})
+
+        # replace_dict_if_unknown('cxb0b6f777fba13d62961ad8ce11be7ef6c4b2bcc6', contract_d, 'ICONbet \nDAOdice(new)')
 
 
     def add_know_addresses():
@@ -295,6 +303,7 @@ for date_prev in date_of_interest:
 
         print(f'Time taken: {time() - start}')
 
+
         # extracting information by labels
         contract_address = extract_values(temp_df, 'address')
         contract_name = extract_values(temp_df, 'contractName')
@@ -309,48 +318,96 @@ for date_prev in date_of_interest:
         # updating known address with other contract addresses
         jknown_address.update(contract_d)
 
+        # return contract_d
+
         # updating contact address
-        jknown_address['cxb0b6f777fba13d62961ad8ce11be7ef6c4b2bcc6'] = 'ICONbet \nDAOdice (new)'
-        jknown_address['cx38fd2687b202caf4bd1bda55223578f39dbb6561'] = 'ICONbet \nDAOlette (new)'
-        jknown_address['cx1c06cf597921e343dfca2883f699265fbec4d578'] = 'ICONbet \nLottery (new)'
-        jknown_address['cx5d6e1482434085f30660efe30573304d629270e5'] = 'ICONbet \nBaccarat'
-        jknown_address['cx38fd2687b202caf4bd1bda55223578f39dbb6561'] = 'ICONbet \nMini Roulette (new)'
-        jknown_address['cx6cdbc291c73faf79366d35b1491b89217fdc6638'] = 'ICONbet \nWar'
-        jknown_address['cx8f9683da09e251cc2b67e4b479e016550f154bd6'] = 'ICONbet \nHi-Lo'
-        jknown_address['cxd47f7d943ad76a0403210501dab03d4daf1f6864'] = 'ICONbet \nBlackjack'
-        jknown_address['cx299d88908ab371d586c8dfe0ed42899a899e6e5b'] = 'ICONbet \nLevels'
-        jknown_address['cxca5df10ab4f46df979aa2d38b370be85076e6117'] = 'ICONbet \nColors'
-        jknown_address['cx03c76787861eec166b25e744e52a82af963670eb'] = 'ICONbet \nPlinko'
-        jknown_address['cx26b5b9990e78c6afe4f9d30776a43b1c19f7d85a'] = 'ICONbet \nSic Bo'
-        jknown_address['cx9fda786d3e7965ed9dc01321c85026653d6a5ff4'] = 'ICONbet \nJungle Jackpot'
-        jknown_address['cx3b9955d507ace8ac27080ed64948e89783a62ab1'] = 'ICONbet \nReward'
-        jknown_address['cx1b97c1abfd001d5cd0b5a3f93f22cccfea77e34e'] = 'ICONbet \nGame Contract'
-        jknown_address['cxc6bb033f9d0b2d921887040b0674e7ceec1b769c'] = 'Lossless Lottery'
-        jknown_address['cx14002628a4599380f391f708843044bc93dce27d'] = 'iAM Div'
-        jknown_address['cx75e584ffe40cf361b3daa00fa6593198d47505d5'] = 'TAP Div'
-        jknown_address['cxff66ea114d20f6518e89f1269b4a31d3620b9331'] = 'PGT Distro'
-        jknown_address['cx953260a551584681e1f0492dce29e07d323ed5a6'] = 'ICONPOOL'
-        jknown_address['cx087b4164a87fdfb7b714f3bafe9dfb050fd6b132'] = 'Relay_1'
-        jknown_address['cx2ccc0c98ab5c2709cfc2c1512345baa99ea4106a'] = 'Relay_2'
-        jknown_address['cx735704cf28098ea43cae2a8325c35a3e7f2a5d1c'] = 'Relay_3'
-        jknown_address['cx9e3cadcc1a4be3323ea23371b84575abb32703ae'] = 'MyID_1'
-        jknown_address['cx694e8c9f1a05c8c3719f30d46b97697960e4289e'] = 'MyID_2'
-        jknown_address['cxba62bb61baf8dd8b6a04633fe33806547785a00c'] = 'MyID_3'
-        jknown_address['cxcaef4255ec5cb784594655fa5ff62ce09a4f8dfa'] = 'w3id'
-        jknown_address['cx636caea5cf5a336d33985ae12ae1839821a175a4'] = 'SEED_1'
-        jknown_address['cx2e138bde7e4cb3706c7ac3c881fbd165dce49828'] = 'SEED_2'
-        jknown_address['cx3c08892673803db95c617fb9803c3653f4dcd4ac'] = 'SEED_3'
-        jknown_address['cx32b06547643fead9048ea912ba4c03419ee97052'] = 'FutureICX'
-        jknown_address['cx9c4698411c6d9a780f605685153431dcda04609f'] = 'Auction'
-        jknown_address['cx334beb9a6cde3bf1df045869447488e0de31df4c'] = 'circle_arb_1'
-        jknown_address['cx9df59cf2c7dc7ae2dbdec4a10b295212595f2378'] = 'circle_arb_2'
-        jknown_address['cx05874afb081257373c89491d6dc63faefb428bb9'] = 'circle_arb_3'
-        jknown_address['cxcc711062b732ed14954008da8a5b5193b4d48618'] = 'peek_1'
-        jknown_address['cxa89982990826b66d86ef31275e93275dfddabfde'] = 'peek_2'
-        jknown_address['cxcaef4255ec5cb784594655fa5ff62ce09a4f8dfa'] = 'peek_3'
-        jknown_address['cxfb832c213401d824b9725b5cca8d75b734fd830b'] = 'rev_share'
-        jknown_address['cx40d59439571299bca40362db2a7d8cae5b0b30b0'] = 'balanced_check_1'
-        jknown_address['cx624af53e8954abed2acf18e6f8c9f35eae918244'] = 'balanced_check_2'
+        replace_dict_if_unknown('cxb0b6f777fba13d62961ad8ce11be7ef6c4b2bcc6', jknown_address, 'ICONbet\n DAOdice(new)')
+        replace_dict_if_unknown('cx38fd2687b202caf4bd1bda55223578f39dbb6561', jknown_address, 'ICONbet\n DAOlette(new)')
+        replace_dict_if_unknown('cx1c06cf597921e343dfca2883f699265fbec4d578', jknown_address, 'ICONbet\n Lottery(new)')
+        replace_dict_if_unknown('cx5d6e1482434085f30660efe30573304d629270e5', jknown_address, 'ICONbet\n Baccarat')
+        replace_dict_if_unknown('cx38fd2687b202caf4bd1bda55223578f39dbb6561', jknown_address, 'ICONbet\n Mini Roulette(new)')
+        replace_dict_if_unknown('cx6cdbc291c73faf79366d35b1491b89217fdc6638', jknown_address, 'ICONbet\n War')
+        replace_dict_if_unknown('cx8f9683da09e251cc2b67e4b479e016550f154bd6', jknown_address, 'ICONbet\n Hi - Lo')
+        replace_dict_if_unknown('cxd47f7d943ad76a0403210501dab03d4daf1f6864', jknown_address, 'ICONbet\n Blackjack')
+        replace_dict_if_unknown('cx299d88908ab371d586c8dfe0ed42899a899e6e5b', jknown_address, 'ICONbet\n Levels')
+        replace_dict_if_unknown('cxca5df10ab4f46df979aa2d38b370be85076e6117', jknown_address, 'ICONbet\n Colors')
+        replace_dict_if_unknown('cx03c76787861eec166b25e744e52a82af963670eb', jknown_address, 'ICONbet\n Plinko')
+        replace_dict_if_unknown('cx26b5b9990e78c6afe4f9d30776a43b1c19f7d85a', jknown_address, 'ICONbet\n Sic Bo')
+        replace_dict_if_unknown('cx9fda786d3e7965ed9dc01321c85026653d6a5ff4', jknown_address, 'ICONbet\n Jungle Jackpot')
+        replace_dict_if_unknown('cx3b9955d507ace8ac27080ed64948e89783a62ab1', jknown_address, 'ICONbet\n Reward')
+        replace_dict_if_unknown('cx1b97c1abfd001d5cd0b5a3f93f22cccfea77e34e', jknown_address, 'ICONbet\n Game Contract')
+        replace_dict_if_unknown('cxc6bb033f9d0b2d921887040b0674e7ceec1b769c', jknown_address, 'Lossless Lottery')
+        replace_dict_if_unknown('cx14002628a4599380f391f708843044bc93dce27d', jknown_address, 'iAM Div')
+        replace_dict_if_unknown('cx75e584ffe40cf361b3daa00fa6593198d47505d5', jknown_address, 'TAP Div')
+        replace_dict_if_unknown('cxff66ea114d20f6518e89f1269b4a31d3620b9331', jknown_address, 'PGT Distro')
+        replace_dict_if_unknown('cx953260a551584681e1f0492dce29e07d323ed5a6', jknown_address, 'ICONPOOL')
+        replace_dict_if_unknown('cx087b4164a87fdfb7b714f3bafe9dfb050fd6b132', jknown_address, 'Relay_1')
+        replace_dict_if_unknown('cx2ccc0c98ab5c2709cfc2c1512345baa99ea4106a', jknown_address, 'Relay_2')
+        replace_dict_if_unknown('cx735704cf28098ea43cae2a8325c35a3e7f2a5d1c', jknown_address, 'Relay_3')
+        replace_dict_if_unknown('cx9e3cadcc1a4be3323ea23371b84575abb32703ae', jknown_address, 'MyID_1')
+        replace_dict_if_unknown('cx694e8c9f1a05c8c3719f30d46b97697960e4289e', jknown_address, 'MyID_2')
+        replace_dict_if_unknown('cxba62bb61baf8dd8b6a04633fe33806547785a00c', jknown_address, 'MyID_3')
+        replace_dict_if_unknown('cxcaef4255ec5cb784594655fa5ff62ce09a4f8dfa', jknown_address, 'w3id')
+        replace_dict_if_unknown('cx636caea5cf5a336d33985ae12ae1839821a175a4', jknown_address, 'SEED_1')
+        replace_dict_if_unknown('cx2e138bde7e4cb3706c7ac3c881fbd165dce49828', jknown_address, 'SEED_2')
+        replace_dict_if_unknown('cx3c08892673803db95c617fb9803c3653f4dcd4ac', jknown_address, 'SEED_3')
+        replace_dict_if_unknown('cx32b06547643fead9048ea912ba4c03419ee97052', jknown_address, 'FutureICX')
+        replace_dict_if_unknown('cx9c4698411c6d9a780f605685153431dcda04609f', jknown_address, 'Auction')
+        replace_dict_if_unknown('cx334beb9a6cde3bf1df045869447488e0de31df4c', jknown_address, 'circle_arb_1')
+        replace_dict_if_unknown('cx9df59cf2c7dc7ae2dbdec4a10b295212595f2378', jknown_address, 'circle_arb_2')
+        replace_dict_if_unknown('cx05874afb081257373c89491d6dc63faefb428bb9', jknown_address, 'circle_arb_3')
+        replace_dict_if_unknown('cxcc711062b732ed14954008da8a5b5193b4d48618', jknown_address, 'peek_1')
+        replace_dict_if_unknown('cxa89982990826b66d86ef31275e93275dfddabfde', jknown_address, 'peek_2')
+        replace_dict_if_unknown('cxcaef4255ec5cb784594655fa5ff62ce09a4f8dfa', jknown_address, 'peek_3')
+        replace_dict_if_unknown('cxfb832c213401d824b9725b5cca8d75b734fd830b', jknown_address, 'rev_share')
+        replace_dict_if_unknown('cx40d59439571299bca40362db2a7d8cae5b0b30b0', jknown_address, 'balanced_check_1')
+        replace_dict_if_unknown('cx624af53e8954abed2acf18e6f8c9f35eae918244', jknown_address, 'balanced_check_2')
+        replace_dict_if_unknown('cxbb2871f468a3008f80b08fdde5b8b951583acf06', jknown_address, 'Stably_USD')
+        replace_dict_if_unknown('cx7d8caa66cbe1a96876e0bc2bda4fc60e5f9781e6', jknown_address, 'ICX_Card')
+
+        # jknown_address['cxb0b6f777fba13d62961ad8ce11be7ef6c4b2bcc6'] = 'ICONbet \nDAOdice (new)'
+        # jknown_address['cx38fd2687b202caf4bd1bda55223578f39dbb6561'] = 'ICONbet \nDAOlette (new)'
+        # jknown_address['cx1c06cf597921e343dfca2883f699265fbec4d578'] = 'ICONbet \nLottery (new)'
+        # jknown_address['cx5d6e1482434085f30660efe30573304d629270e5'] = 'ICONbet \nBaccarat'
+        # jknown_address['cx38fd2687b202caf4bd1bda55223578f39dbb6561'] = 'ICONbet \nMini Roulette (new)'
+        # jknown_address['cx6cdbc291c73faf79366d35b1491b89217fdc6638'] = 'ICONbet \nWar'
+        # jknown_address['cx8f9683da09e251cc2b67e4b479e016550f154bd6'] = 'ICONbet \nHi-Lo'
+        # jknown_address['cxd47f7d943ad76a0403210501dab03d4daf1f6864'] = 'ICONbet \nBlackjack'
+        # jknown_address['cx299d88908ab371d586c8dfe0ed42899a899e6e5b'] = 'ICONbet \nLevels'
+        # jknown_address['cxca5df10ab4f46df979aa2d38b370be85076e6117'] = 'ICONbet \nColors'
+        # jknown_address['cx03c76787861eec166b25e744e52a82af963670eb'] = 'ICONbet \nPlinko'
+        # jknown_address['cx26b5b9990e78c6afe4f9d30776a43b1c19f7d85a'] = 'ICONbet \nSic Bo'
+        # jknown_address['cx9fda786d3e7965ed9dc01321c85026653d6a5ff4'] = 'ICONbet \nJungle Jackpot'
+        # jknown_address['cx3b9955d507ace8ac27080ed64948e89783a62ab1'] = 'ICONbet \nReward'
+        # jknown_address['cx1b97c1abfd001d5cd0b5a3f93f22cccfea77e34e'] = 'ICONbet \nGame Contract'
+        # jknown_address['cxc6bb033f9d0b2d921887040b0674e7ceec1b769c'] = 'Lossless Lottery'
+        # jknown_address['cx14002628a4599380f391f708843044bc93dce27d'] = 'iAM Div'
+        # jknown_address['cx75e584ffe40cf361b3daa00fa6593198d47505d5'] = 'TAP Div'
+        # jknown_address['cxff66ea114d20f6518e89f1269b4a31d3620b9331'] = 'PGT Distro'
+        # jknown_address['cx953260a551584681e1f0492dce29e07d323ed5a6'] = 'ICONPOOL'
+        # jknown_address['cx087b4164a87fdfb7b714f3bafe9dfb050fd6b132'] = 'Relay_1'
+        # jknown_address['cx2ccc0c98ab5c2709cfc2c1512345baa99ea4106a'] = 'Relay_2'
+        # jknown_address['cx735704cf28098ea43cae2a8325c35a3e7f2a5d1c'] = 'Relay_3'
+        # jknown_address['cx9e3cadcc1a4be3323ea23371b84575abb32703ae'] = 'MyID_1'
+        # jknown_address['cx694e8c9f1a05c8c3719f30d46b97697960e4289e'] = 'MyID_2'
+        # jknown_address['cxba62bb61baf8dd8b6a04633fe33806547785a00c'] = 'MyID_3'
+        # jknown_address['cxcaef4255ec5cb784594655fa5ff62ce09a4f8dfa'] = 'w3id'
+        # jknown_address['cx636caea5cf5a336d33985ae12ae1839821a175a4'] = 'SEED_1'
+        # jknown_address['cx2e138bde7e4cb3706c7ac3c881fbd165dce49828'] = 'SEED_2'
+        # jknown_address['cx3c08892673803db95c617fb9803c3653f4dcd4ac'] = 'SEED_3'
+        # jknown_address['cx32b06547643fead9048ea912ba4c03419ee97052'] = 'FutureICX'
+        # jknown_address['cx9c4698411c6d9a780f605685153431dcda04609f'] = 'Auction'
+        # jknown_address['cx334beb9a6cde3bf1df045869447488e0de31df4c'] = 'circle_arb_1'
+        # jknown_address['cx9df59cf2c7dc7ae2dbdec4a10b295212595f2378'] = 'circle_arb_2'
+        # jknown_address['cx05874afb081257373c89491d6dc63faefb428bb9'] = 'circle_arb_3'
+        # jknown_address['cxcc711062b732ed14954008da8a5b5193b4d48618'] = 'peek_1'
+        # jknown_address['cxa89982990826b66d86ef31275e93275dfddabfde'] = 'peek_2'
+        # jknown_address['cxcaef4255ec5cb784594655fa5ff62ce09a4f8dfa'] = 'peek_3'
+        # jknown_address['cxfb832c213401d824b9725b5cca8d75b734fd830b'] = 'rev_share'
+        # jknown_address['cx40d59439571299bca40362db2a7d8cae5b0b30b0'] = 'balanced_check_1'
+        # jknown_address['cx624af53e8954abed2acf18e6f8c9f35eae918244'] = 'balanced_check_2'
+        # jknown_address['cxbb2871f468a3008f80b08fdde5b8b951583acf06'] = 'Stably_USD'
+        # jknown_address['cx7d8caa66cbe1a96876e0bc2bda4fc60e5f9781e6'] = 'ICX_Card'
 
         for k, v in jknown_address.items():
             if v == "-":
@@ -432,7 +489,7 @@ for date_prev in date_of_interest:
             return df
 
         these_incols = ['bithumb', 'upbit','velic','bitvavo','unkEx_c','unkEx_d','kraken',
-                        'circle_arb','ICONbet','Relay','MyID','Balance','Nebula','peek','Craft','SEED','iAM ']
+                        'circle_arb','ICONbet','Relay','MyID','Balance','Nebula','peek','Craft','SEED','iAM']
 
         def group_wallet(df, in_col='to_def'):
             df = wallet_grouping(df,  in_col, in_name='binance', else_name=df[in_col])
@@ -454,16 +511,35 @@ for date_prev in date_of_interest:
             df['group'] = np.where(df['to'] == 'cx43e2eec79eb76293c298f2b17aec06097be606e0', 'Balanced', df['group'])
             df['group'] = np.where(df['to'] == 'cxaf244cf3c7164fe6f996f398a9d99c4d4a85cf15', 'Balanced', df['group'])
             df['group'] = np.where(df['to'] == 'cx2609b924e33ef00b648a409245c7ea394c467824', 'Balanced', df['group'])
+            df['group'] = np.where(df['to'] == 'cxd4d8444d9ad73d80b5a1691e51dc4a4108d09473', 'Balanced', df['group'])
+
+            #omm
+            df['group'] = np.where(df['group'].str.contains('omm', case=False), 'Omm', df['group'])
+            df['group'] = np.where(df['group'].str.contains('ICON USD', case=False), 'Omm', df['group'])
+
+            #iAM
+            df['group'] = np.where(df['to'] == 'cx210ded1e8e109a93c89e9e5a5d0dcbc48ef90394', 'iAM', df['group'])
+
+            #Bridge
+            df['group'] = np.where(df['to'] == 'cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f', 'Bridge', df['group'])
+            df['group'] = np.where(df['to'] == 'cx0eb215b6303142e37c0c9123abd1377feb423f0e', 'Bridge', df['group'])
+
 
             #iconbet
+            df['group'] = np.where(df['group'].str.contains('SicBo', case=False), 'ICONbet', df['group'])
+            df['group'] = np.where(df['group'].str.contains('Jungle Jackpot', case=False), 'ICONbet', df['group'])
             df['group'] = np.where(df['group'] == 'TapToken', 'ICONbet', df['group'])
-            df['group'] = np.where(df['group'] == 'SicBo', 'ICONbet', df['group'])
 
             # futureicx
-            df['group'] = np.where(df['group'] == 'FutureICX', 'FutureICX', df['group'])
-            df['group'] = np.where(df['group'] == 'EpICX', 'FutureICX', df['group'])
-            return df
+            # df['group'] = np.where(df['group'] == 'FutureICX', 'FutureICX', df['group'])
+            # df['group'] = np.where(df['group'] == 'EpICX', 'FutureICX', df['group'])
+            df['group'] = np.where(df['group'] == 'FutureICX', 'EPX', df['group'])
+            df['group'] = np.where(df['group'].str.contains('epx', case=False), 'EPX', df['group'])
 
+            # UP
+            df['group'] = np.where(df['to'] == 'cxc432c12e6c91f8a685ee6ff50a653c8a056875e4', 'UP', df['group'])
+
+            return df
 
         df = manual_grouping(df)
 
