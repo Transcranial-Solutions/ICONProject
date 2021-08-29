@@ -51,8 +51,8 @@ misc_data_path = os.path.join(currPath, "output")
 prep_vote_path = os.path.join(misc_data_path, "prep_votes")
 
 # assign date here
-date_prev = date(2021, 7, 31)
-date_now = date(2021, 8, 14)
+date_prev = date(2021, 8, 14)
+date_now = date(2021, 8, 28)
 
 prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_' + date_prev.strftime("%Y_%m_%d") + '.csv'))
 prep_df_1 = prep_df_1[['validator_name', 'cum_votes_update']]
@@ -215,7 +215,7 @@ def get_votes(prep_address, len_prep_address):
 start = time()
 
 all_votes = []
-with ThreadPoolExecutor(max_workers=3) as executor:
+with ThreadPoolExecutor(max_workers=2) as executor:
     for k in range(len(prep_address)):
         all_votes.append(executor.submit(get_votes, prep_address[k], len_prep_address))
 
@@ -780,8 +780,8 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
 
 # adjust these numbers to get proper plot
 plot_vote_change(ymin_mult=1.0, ymax_mult=1.2, # these multiplier to change ylims
-                ymin_val=-500000, ymax_val=2500000, ytick_scale=500000, # these are actual ylims & tick interval20
-                voter_mult=0.85, voter_diff_mult=1.06, # voter change multiplier
+                ymin_val=-8000000, ymax_val=16000000, ytick_scale=2000000, # these are actual ylims & tick interval20
+                voter_mult=0.88, voter_diff_mult=1.04, # voter change multiplier
                 top10_1_mult=0.85, top10_2_mult=0.78, # where top 10 streak locates
                 topF_1_mult=0.55, topF_2_mult=0.48,
                 title=my_title) # where top first locates
@@ -961,14 +961,13 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 
 
 plot_voter_change(ymin_mult=1.0, ymax_mult=1.5,
-                    ymin_val=-1400, ymax_val=1400, ytick_scale=200,
+                    ymin_val=-1200, ymax_val=1600, ytick_scale=200,
                     first_time_voter_mult=0.90, new_voter_mult=1.02, ## change these
                     top10_1_mult=0.99, top10_2_mult=0.89,
                     topF_1_mult=0.57, topF_2_mult=0.48,
                     title=my_title)
 # saving
 plt.savefig(os.path.join(resultsPath_interval, '02a_' + measuring_interval + "_voter_change.png"))
-
 
 
 # df_longer_terms = df_longer[df_longer[measuring_interval].isin(terms)][['validator_name','delegator','biweek','cum_votes']]
