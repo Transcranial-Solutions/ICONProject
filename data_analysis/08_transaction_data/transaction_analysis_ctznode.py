@@ -30,6 +30,7 @@ from functools import reduce
 import re
 import random
 import matplotlib.pyplot as plt  # for improving our visualizations
+import matplotlib.ticker as ticker
 import matplotlib.lines as mlines
 import seaborn as sns
 
@@ -556,6 +557,11 @@ for date_prev in date_of_interest:
     # to_group = to_final_grouping.groupby('group').agg('sum').sort_values(by='Regular Tx', ascending=False) #.reset_index()
     to_group = to_final_grouping.groupby('group').agg('sum').sort_values(by='Fees burned', ascending=False) #.reset_index()
 
+    system_tx = to_group[to_group.index == 'System'].agg('sum')
+
+    system_tx = 'System Transactions: ' + '{:,}'.format(system_tx['Regular Tx'].astype(int) + system_tx['Internal Tx'].astype(int)) + '\n' + \
+             'System Events (including Tx): ' + '{:,}'.format(system_tx['Regular Tx'].astype(int) + system_tx['Internal Tx'].astype(int) + system_tx['Internal Event (excluding Tx)'].astype(int))
+
     totals = to_group.agg('sum')
 
     all_tx = 'Total Transactions: ' + '{:,}'.format(totals['Regular Tx'].astype(int) + totals['Internal Tx'].astype(int)) + '\n' + \
@@ -572,35 +578,37 @@ for date_prev in date_of_interest:
 
     plot_df = to_group.drop(columns=fees_burned)
 
-
+    plot_df = plot_df[plot_df.index !="System"]
 
 
     # stacked barplot
-
-
-
-
     sns.set(style="dark")
     plt.style.use("dark_background")
     ax1 = plot_df.plot(kind='bar', stacked=True, figsize=(14, 8))
     plt.title('Daily Transactions' + ' (' + date_prev + ')', fontsize=14, weight='bold', pad=10, loc='left')
     ax1.set_xlabel('Destination Contracts/Addresses')
-    ax1.set_ylabel('Transactions')
+    ax1.set_ylabel('Transactions', labelpad=10)
     ax1.set_xticklabels(ax1.get_xticklabels(), rotation=90, ha="center")
     ax2 = ax1.twinx()
     lines = plt.plot(to_group[fees_burned], marker='.', linestyle='dotted', mfc='none', mec='b', markersize=12)
+
+    xmin, xmax = ax1.get_xlim()
+    ymin, ymax = ax1.get_ylim()
+
+    if ymax >= 1000:
+        ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x / 1e3) + ' K'))
+    if ymax >= 1000000:
+        ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
 
     ax2.set_ylabel('Fees burned (ICX)', labelpad=10)
     plt.setp(lines, 'color', 'tab:blue', 'linewidth', 1.0)
     # ax1.legend(loc='upper center', bbox_to_anchor=(0.4, 0.95),
     #           fancybox=True, shadow=True, ncol=5)
     color = 'tab:blue'
-    red_line = mlines.Line2D([], [], color=color, label='Total ' + fees_burned, linewidth=1, marker='.', linestyle='dotted', mfc='none', mec='b')
-    plt.legend(handles=[red_line], loc='upper right', fontsize='small', bbox_to_anchor=(0.98, 0.99), frameon=False)
+    m_line = mlines.Line2D([], [], color=color, label='Total ' + fees_burned, linewidth=1, marker='.', linestyle='dotted', mfc='none', mec='b')
+    plt.legend(handles=[m_line], loc='upper right', fontsize='small', bbox_to_anchor=(0.98, 0.99), frameon=False)
     plt.tight_layout(rect=[0,0,1,1])
 
-    xmin, xmax = ax1.get_xlim()
-    ymin, ymax = ax1.get_ylim()
     ax1.text(xmax*0.97, ymax*0.88, all_tx,
             horizontalalignment='right',
             verticalalignment='center',
@@ -612,6 +620,12 @@ for date_prev in date_of_interest:
     ax1.legend(handles, labels,
                loc='upper right', bbox_to_anchor=(1, 1.07),
                frameon=False, fancybox=True, shadow=True, ncol=3)
+
+    ax1.text(xmax*1.00, ymax*-0.40, system_tx,
+            horizontalalignment='right',
+            verticalalignment='center',
+            linespacing = 1.5,
+            fontsize=8)
 
 
     plt.savefig(os.path.join(resultPath, 'tx_summary_' + date_prev + '.png'))
