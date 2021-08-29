@@ -1293,7 +1293,7 @@ for x,y,z in zip(xs,ys,porcent):
                  fontsize=8,
                  color='w',
                  weight='bold',
-                 rotation=30)
+                 rotation=0)
 
 plt.tight_layout()
 ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
