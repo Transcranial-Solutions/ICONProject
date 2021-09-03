@@ -1,7 +1,7 @@
 
 #########################################################################
 ## Project: ICON Network Wallet Ranking                                ##
-## Date: January 2021                                                  ##
+## Date: August 2021                                                   ##
 ## Author: Tono / Sung Wook Chung (Transcranial Solutions)             ##
 ## transcranial.solutions@gmail.com                                    ##
 ##                                                                     ##
@@ -27,38 +27,46 @@ pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
 
 # making path for saving
+
 currPath = os.getcwd()
-outPath = os.path.join(currPath, "06_wallet_ranking")
-if not os.path.exists(outPath):
-    os.mkdir(outPath)
-resultsPath = os.path.join(outPath, "results")
-if not os.path.exists(resultsPath):
-    os.mkdir(resultsPath)
-walletsPath = os.path.join(resultsPath, "wallet_balance")
-if not os.path.exists(walletsPath):
-    os.mkdir(walletsPath)
+if not "06_wallet_ranking" in currPath:
+    projectPath = os.path.join(currPath, "06_wallet_ranking")
+    if not os.path.exists(projectPath):
+        os.mkdir(projectPath)
+else:
+    projectPath = currPath
 
+dataPath = os.path.join(projectPath, "data")
+if not os.path.exists(dataPath):
+    os.mkdir(dataPath)
 
+resultPath = os.path.join(projectPath, "results")
+if not os.path.exists(resultPath):
+    os.mkdir(resultPath)
+
+walletPath = os.path.join(currPath, "wallet")
+if not os.path.exists(walletPath):
+    os.mkdir(walletPath)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Loading wallet info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-fname_now = 'wallet_balance_2021_03_11'
-fname_past = 'wallet_balance_2021_02_22' # for comparison
+fname_now = 'wallet_balance_2021-08-30'
+fname_past = 'wallet_balance_2021-08-29' # for comparison
 
 fdate = fname_now.rsplit('wallet_balance_', 1)[1]
 fdate_past = fname_past.rsplit('wallet_balance_', 1)[1]
 
 
 # for output (tables)
-outputPath = os.path.join(resultsPath, fdate)
+outputPath = os.path.join(resultPath, fdate)
 if not os.path.exists(outputPath):
     os.mkdir(outputPath)
 
-fdate = fdate.replace('_','-')
-fdate_past = fdate_past.replace('_','-')
+# fdate = fdate.replace('_','-')
+# fdate_past = fdate_past.replace('_','-')
 
-ori_df_now = pd.read_csv(os.path.join(walletsPath, fname_now + '.csv'))
-ori_df_past = pd.read_csv(os.path.join(walletsPath, fname_past + '.csv'))
+ori_df_now = pd.read_csv(os.path.join(dataPath, fname_now + '.csv'))
+ori_df_past = pd.read_csv(os.path.join(dataPath, fname_past + '.csv'))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # adding date/datetime info
@@ -67,7 +75,7 @@ def preprocess_df(inData):
     df = df.groupby('address').sum().reset_index()
 
     # str to float and get total icx owned
-    col_list = ['balance', 'stake', 'unstake']
+    col_list = ['balance', 'stake', 'unstake', 'balancedCollateral']
     df['totalDelegated'] = df['totalDelegated'].astype(float)
     df[col_list] = df[col_list].astype(float)
     df['total'] = df[col_list].sum(axis=1)
@@ -230,7 +238,7 @@ render_mpl_table(df,
                  header_color='green',
                  header_columns=0,
                  col_width=3.5,
-                 title="Total ICX Owned - " + fdate + " (Δ since " + fdate_past + ")" + "\n (Staking + Unstaking + Balance)")
+                 title="Total ICX Owned - " + fdate + " (Δ since " + fdate_past + ")" + "\n (Staking + Unstaking + Balance + Balanced Collateral)")
 
 plt.savefig(os.path.join(outputPath, "total_balance_" + fdate + ".png"))
 
