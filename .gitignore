@@ -20,3 +20,7 @@ data_analysis/08_transaction_data/data/*.csv
 data_analysis/wallet/test_keystore_1
 
 data_analysis/08_transaction_data/wallet/test_keystore_1
+data_analysis/06_wallet_ranking/data/wallet_balance_2021-08-29.csv
+data_analysis/06_wallet_ranking/data/wallet_balance_2021-08-30.csv
+data_analysis/06_wallet_ranking/data/wallet_balance_test.csv
+data_analysis/06_wallet_ranking/data/wallets.csv
