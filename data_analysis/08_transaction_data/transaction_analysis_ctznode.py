@@ -167,7 +167,7 @@ for date_prev in date_of_interest:
         add_dict_if_noexist('hx6d14b2b77a9e73c5d5804d43c7e3c3416648ae3d', jknown_address, 'bithumb_3')
 
         add_dict_if_noexist('hxa390d24fdcba68515b492ffc553192802706a121', jknown_address, 'bitvavo_hot')
-        add_dict_if_noexist('hxa390d24fdcba68515b492ffc553192802706a121', jknown_address, 'bitvavo_cold')
+        add_dict_if_noexist('hx23cb1d823ef96ac22ae30c986a78bdbf3da976df', jknown_address, 'bitvavo_cold')
 
         add_dict_if_noexist('hx85532472e789802a943bd34a8aeb86668bc23265', jknown_address, 'unkEx_c1')
         add_dict_if_noexist('hx94a7cd360a40cbf39e92ac91195c2ee3c81940a6', jknown_address, 'unkEx_c2')
@@ -361,10 +361,28 @@ for date_prev in date_of_interest:
         replace_dict_if_unknown('cxa89982990826b66d86ef31275e93275dfddabfde', jknown_address, 'peek_2')
         replace_dict_if_unknown('cxcaef4255ec5cb784594655fa5ff62ce09a4f8dfa', jknown_address, 'peek_3')
         replace_dict_if_unknown('cxfb832c213401d824b9725b5cca8d75b734fd830b', jknown_address, 'rev_share')
-        replace_dict_if_unknown('cx40d59439571299bca40362db2a7d8cae5b0b30b0', jknown_address, 'balanced_check_1')
-        replace_dict_if_unknown('cx624af53e8954abed2acf18e6f8c9f35eae918244', jknown_address, 'balanced_check_2')
         replace_dict_if_unknown('cxbb2871f468a3008f80b08fdde5b8b951583acf06', jknown_address, 'Stably_USD')
         replace_dict_if_unknown('cx7d8caa66cbe1a96876e0bc2bda4fc60e5f9781e6', jknown_address, 'ICX_Card')
+        replace_dict_if_unknown('cx82c8c091b41413423579445032281bca5ac14fc0', jknown_address, 'Craft')
+
+        replace_dict_if_unknown('cx66d4d90f5f113eba575bf793570135f9b10cece1', jknown_address, 'balanced_loans')
+        replace_dict_if_unknown('cx43e2eec79eb76293c298f2b17aec06097be606e0', jknown_address, 'balanced_staking')
+        replace_dict_if_unknown('cx203d9cd2a669be67177e997b8948ce2c35caffae', jknown_address, 'balanced_dividends')
+        replace_dict_if_unknown('cxf58b9a1898998a31be7f1d99276204a3333ac9b3', jknown_address, 'balanced_reserve')
+        replace_dict_if_unknown('cx835b300dcfe01f0bdb794e134a0c5628384f4367', jknown_address, 'balanced_daofund')
+        replace_dict_if_unknown('cx10d59e8103ab44635190bd4139dbfd682fa2d07e', jknown_address, 'balanced_rewards')
+        replace_dict_if_unknown('cxa0af3165c08318e988cb30993b3048335b94af6c', jknown_address, 'balanced_dex')
+        replace_dict_if_unknown('cx40d59439571299bca40362db2a7d8cae5b0b30b0', jknown_address, 'balanced_rebalancing')
+        replace_dict_if_unknown('cx44250a12074799e26fdeee75648ae47e2cc84219', jknown_address, 'balanced_governance')
+        replace_dict_if_unknown('cxe647e0af68a4661566f5e9861ad4ac854de808a2', jknown_address, 'balanced_oracle')
+        replace_dict_if_unknown('cx2609b924e33ef00b648a409245c7ea394c467824', jknown_address, 'balanced_sicx')
+        replace_dict_if_unknown('cx88fd7df7ddff82f7cc735c871dc519838cb235bb', jknown_address, 'balanced_bnUSD')
+        replace_dict_if_unknown('cxf61cd5a45dc9f91c15aa65831a30a90d59a09619', jknown_address, 'balanced_baln')
+        replace_dict_if_unknown('cxcfe9d1f83fa871e903008471cca786662437e58d', jknown_address, 'balanced_bwt')
+        replace_dict_if_unknown('cx13f08df7106ae462c8358066e6d47bb68d995b6d', jknown_address, 'balanced_dividends_old')
+        replace_dict_if_unknown('cxaf244cf3c7164fe6f996f398a9d99c4d4a85cf15', jknown_address, 'balanced_airdrip')
+        replace_dict_if_unknown('cx624af53e8954abed2acf18e6f8c9f35eae918244', jknown_address, 'balanced_retirebnUSD_1')
+        replace_dict_if_unknown('cxd4d8444d9ad73d80b5a1691e51dc4a4108d09473', jknown_address, 'balanced_retirebnUSD_2')
 
         # jknown_address['cxb0b6f777fba13d62961ad8ce11be7ef6c4b2bcc6'] = 'ICONbet \nDAOdice (new)'
         # jknown_address['cx38fd2687b202caf4bd1bda55223578f39dbb6561'] = 'ICONbet \nDAOlette (new)'
@@ -509,17 +527,18 @@ for date_prev in date_of_interest:
 
             #balanced
             df['group'] = np.where(df['group'] == 'Balance', 'Balanced', df['group'])
-            df['group'] = np.where(df['to'] == 'cx43e2eec79eb76293c298f2b17aec06097be606e0', 'Balanced', df['group'])
-            df['group'] = np.where(df['to'] == 'cxaf244cf3c7164fe6f996f398a9d99c4d4a85cf15', 'Balanced', df['group'])
-            df['group'] = np.where(df['to'] == 'cx2609b924e33ef00b648a409245c7ea394c467824', 'Balanced', df['group'])
-            df['group'] = np.where(df['to'] == 'cxd4d8444d9ad73d80b5a1691e51dc4a4108d09473', 'Balanced', df['group'])
+            df['group'] = np.where(df['group'].str.contains('balanced_', case=False), 'Balanced', df['group'])
 
             #omm
             df['group'] = np.where(df['group'].str.contains('omm', case=False), 'Omm', df['group'])
             df['group'] = np.where(df['group'].str.contains('ICON USD', case=False), 'Omm', df['group'])
 
+            #Craft
+            df['group'] = np.where(df['to'] == 'cx9c4698411c6d9a780f605685153431dcda04609f', 'Craft', df['group'])
+            df['group'] = np.where(df['to'] == 'cx82c8c091b41413423579445032281bca5ac14fc0', 'Craft', df['group'])
+
             #iAM
-            df['group'] = np.where(df['to'] == 'cx210ded1e8e109a93c89e9e5a5d0dcbc48ef90394', 'iAM', df['group'])
+            df['group'] = np.where(df['to'] == 'cx210ded1e8e109a93c89e9e5a5d0dcbc48ef90394', 'iAM ', df['group'])
 
             #Bridge
             df['group'] = np.where(df['to'] == 'cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f', 'Bridge', df['group'])
