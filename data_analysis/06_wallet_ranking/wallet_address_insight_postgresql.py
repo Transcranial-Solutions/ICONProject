@@ -62,12 +62,23 @@ def collect_addresses():
         # postgreSQL_Query = "SELECT block_number FROM public.transactions ORDER BY block_number DESC limit 100"
 
 
-        postgreSQL_Query = "REFRESH MATERIALIZED VIEW wallet_address"
-        cursor.execute(postgreSQL_Query)
-        print("Refreshing wallet_address database")
-        wallet_from_address = cursor.fetchall()
+        # postgreSQL_Query = "REFRESH MATERIALIZED VIEW wallet_address"
+        # cursor.execute(postgreSQL_Query)
+        # print("Refreshing wallet_address database")
+        # wallet_from_address = cursor.fetchall()
 
-        postgreSQL_Query = "SELECT * FROM public.wallet_address"
+        # postgreSQL_Query = "DROP TABLE IF EXISTS temp_table; \
+        #             CREATE TEMP TABLE temp_table AS\
+        #             SELECT timestamp, s.to_address FROM public.transactions s\
+        #             UNION ALL\
+        #             SELECT timestamp, t.from_address FROM public.transactions t;\
+        #             WITH added_row_number AS (SELECT *,\
+        #                 ROW_NUMBER() OVER(PARTITION BY to_address ORDER BY timestamp) AS row_number\
+        #               FROM temp_table)\
+        #             SELECT timestamp, to_address as address\
+        #             FROM added_row_number\
+        #             WHERE row_number = 1 and to_address <> '';"
+        postgreSQL_Query = "SELECT * FROM public.wallet_creation"
         cursor.execute(postgreSQL_Query)
         print("Selecting from_address")
         wallet_from_address = cursor.fetchall()
@@ -77,9 +88,9 @@ def collect_addresses():
         # dataframe
         # wallet_address = pd.DataFrame(wallet_from_address, columns=['block_number', 'from_address', 'to_address', 'timestamp'])
         # wallet_address = pd.DataFrame(wallet_from_address, columns=['block_number'])
-        wallet_address = pd.DataFrame(wallet_from_address, columns=['address'])
+        wallet_address = pd.DataFrame(wallet_from_address, columns=['timestamp','address'])
 
-        print(wallet_address)
+        # print(wallet_address)
 
 
     except (Exception, psycopg2.Error) as error:
@@ -106,15 +117,17 @@ def collect_addresses():
     bad_address = wallet_address[bad_address_idx]
 
     # adding 'hx' prefix to the bad addresses
-    fixed_address = 'hx' + bad_address
+    fixed_address = pd.concat([bad_address['timestamp'], 'hx' + bad_address['address']], axis=1)
     wallet_address[bad_address_idx] = fixed_address
 
     # selecting wallets with 'hx' prefix
-    wallet_address = wallet_address[
-        wallet_address['address'].str[:2].str.contains('hx', case=False, regex=True, na=False)]
+    # wallet_address = wallet_address[
+    #     wallet_address['address'].str[:2].str.contains('hx', case=False, regex=True, na=False)]
 
     # remove dups because sometimes there can be
     wallet_address = wallet_address.drop_duplicates().reset_index(drop=True)
+
+    print(len(wallet_address))
 
     # remove addresses that are not 42 characters long
     wallet_address = wallet_address.drop(wallet_address[wallet_address['address'].str.len() != 42].index)
@@ -122,11 +135,8 @@ def collect_addresses():
     # lower-case addresses in case of bug
     wallet_address['address'] = wallet_address['address'].str.lower()
 
-    # to series
-    wallet_address = wallet_address.address
-
     # how many wallets
-    len_wallet_address = len(wallet_address)
+    print(len(wallet_address))
 
     wallet_address.to_csv(os.path.join(dataPath, 'wallet_address_' + today + '.csv'), index=False)
 
@@ -135,3 +145,62 @@ def collect_addresses():
     return wallet_address
 
 df = collect_addresses()
+
+
+
+def timestamp_to_date(df, timestamp, datetype, dateformat):
+    df['digits'] = df[timestamp].astype(str).str.count('\d')
+
+    df1 = df[df['digits'] == 19]
+    df1[datetype] = pd.to_datetime(df1[timestamp]).dt.strftime(dateformat)
+
+    df2 = df[df['digits'] == 16]
+    df2[datetype] = pd.to_datetime(df2[timestamp] * 1000).dt.strftime(dateformat)
+
+    removed_data_count = str(len(df.loc[(df['digits'] != 16) & (df['digits'] != 19)]))
+    print("Removed data: " + removed_data_count)
+
+    df = pd.concat([df1, df2]).drop(columns='digits').sort_values(by=[timestamp,'address']).drop(columns=timestamp).reset_index(drop=True)
+    return df
+
+
+# df = timestamp_to_date(df, 'timestamp', 'date', '%Y-%m-%d')
+df = timestamp_to_date(df, 'timestamp', 'month', '%Y-%m')
+
+
+df_hx = df[df['address'].str[:2].str.contains('hx', case=False, regex=True, na=False)]
+df_cx = df[df['address'].str[:2].str.contains('cx', case=False, regex=True, na=False)]
+
+df_hx_count = df_hx.groupby('month').count().reset_index()
+df_cx_count = df_cx.groupby('month').count()
+
+
+df_hx_count['cum_count'] = df_hx_count['address'].cumsum()
+
+
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import seaborn as sns
+
+sns.set(style="ticks", rc={"lines.linewidth": 2})
+plt.style.use(['dark_background'])
+f, ax = plt.subplots(figsize=(12, 8))
+sns.lineplot(x='month', y='cum_count', data=df_hx_count, palette=sns.color_palette('husl', n_colors=2))
+h,l = ax.get_legend_handles_labels()
+
+
+# ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. format(x/1e6) + ' M'))
+ymin, ymax = ax.get_ylim()
+ymax_set = ymax*1.2
+ax.set_ylim([ymin,ymax_set])
+sns.despine(offset=10, trim=True)
+plt.tight_layout()
+
+ax.set_xlabel('Time', fontsize=14, weight='bold', labelpad=10)
+ax.set_ylabel('Count', fontsize=14, weight='bold', labelpad=10)
+ax.set_title('Cumulative wallet counts', fontsize=14, weight='bold', linespacing=1.5)
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. format(x/1000) + ' K'))
+
+
+ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha="right")
+plt.tight_layout()
