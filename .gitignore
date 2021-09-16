@@ -27,3 +27,7 @@ data_analysis/06_wallet_ranking/data/wallets.csv
 data_analysis/06_wallet_ranking/data/address_1000001_2000000.csv
 data_analysis/06_wallet_ranking/data/address_1_1000000.csv
 data_analysis/06_wallet_ranking/data/wallet_address_2021-09-10.csv
+data_analysis/06_wallet_ranking/data/address_5000001_6000000.csv
+data_analysis/06_wallet_ranking/data/address_2000001_3000000.csv
+data_analysis/06_wallet_ranking/data/address_3000001_4000000.csv
+data_analysis/06_wallet_ranking/data/address_4000001_5000000.csv
