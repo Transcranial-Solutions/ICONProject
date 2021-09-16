@@ -649,6 +649,82 @@ for date_prev in date_of_interest:
 
     plt.savefig(os.path.join(resultPath, 'tx_summary_' + date_prev + '.png'))
 
+    # donuts
+    plot_df_donut = to_group[to_group.index !="System"]
+
+    def get_donut_df(df, col_num):
+        df_out = df.iloc[:,col_num].sort_values(ascending=False).to_frame().reset_index()
+        df_out['top_10'] = np.arange(df_out.shape[0])
+        df_out['group'] = np.where(df_out['top_10'] > 9, 'Others', df_out['group'])
+        df_out = df_out.groupby('group').sum().sort_values(by='top_10').drop(columns='top_10')
+        return df_out
+
+    def plot_donut_df(df_col=0, title='Regular Tx', add_string=""):
+        df_regular_tx = get_donut_df(plot_df_donut, df_col)
+
+        df_regular_tx['percent'] = df_regular_tx / df_regular_tx.sum()
+        df_regular_tx['percent'] = df_regular_tx['percent'].astype(float).map("{:.2%}".format)
+
+        plt.style.use(['dark_background'])
+        fig, ax = plt.subplots(figsize=(10, 6), subplot_kw=dict(aspect="equal"))
+        fig.patch.set_facecolor('black')
+
+        cmap = plt.get_cmap("Set3")
+        these_colors = cmap(np.array(range(len(df_regular_tx[0:]))))
+
+        my_circle = plt.Circle((0,0), 0.7, color='black')
+
+        wedges, texts = plt.pie(df_regular_tx.reset_index().iloc[:,1],
+                                           labels=df_regular_tx.reset_index().iloc[:,0],
+                                           counterclock=False,
+                                           startangle=90,
+                                           colors=these_colors,
+                                           textprops={'fontsize': 9, 'weight': 'bold'}, rotatelabels=True)
+
+        for text, color in zip(texts, these_colors):
+            text.set_color(color)
+
+        # for plotting (legend)
+        label_text = df_regular_tx.reset_index().iloc[:,0] \
+                     + ' (' + df_regular_tx.reset_index().iloc[:,1].astype(int).apply('{:,}'.format).astype(str) \
+                     + ' || ' + df_regular_tx.reset_index().iloc[:,2] + ')'
+
+        ax.text(0., 0.05, totals.reset_index()[df_col:df_col+1]['index'][df_col] + ': ' + totals.reset_index()[df_col:df_col+1][0][df_col] + add_string,
+                horizontalalignment='center',
+                verticalalignment='center',
+                linespacing=2,
+                fontsize=10,
+                weight='bold')
+
+        if df_col == 0:
+            ax.text(0., -0.05, '(' + system_tx.split('\n')[0] + ')',
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    linespacing=2,
+                    fontsize=9,
+                    weight='bold')
+
+        plt.legend(wedges, label_text,
+                  # title="Number of P-Reps Voted (ICX)",
+                  loc="lower left",
+                  bbox_to_anchor=(1, 0, 0.5, 1),
+                    fontsize=10)
+
+        ax.set_title(title + ' (' + date_prev + ')', fontsize=14, weight='bold', x=0.99, y=1.15)
+
+        p=plt.gcf()
+        p.gca().add_artist(my_circle)
+        plt.axis('equal')
+        plt.show()
+        plt.tight_layout()
+
+        plt.savefig(os.path.join(resultPath, title + '_' + date_prev + '.png'))
+
+    plot_donut_df(df_col=0, title='Regular Tx', add_string="")
+    plot_donut_df(df_col=1, title='Fees Burned', add_string=" ICX")
+    plot_donut_df(df_col=2, title='Internal Tx', add_string="")
+    plot_donut_df(df_col=3, title='Internal Events', add_string="")
+
     print(date_prev + ' is done!')
 
 def run_all():
