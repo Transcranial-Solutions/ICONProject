@@ -651,6 +651,10 @@ for date_prev in date_of_interest:
 
     # donuts
     plot_df_donut = to_group[to_group.index !="System"]
+    plot_df_donut = plot_df_donut.reindex(sorted(plot_df_donut.columns), axis=1)
+
+    totals_reused = totals.reset_index().sort_values(by='index')
+    totals_reused = totals_reused.set_index(['index'])
 
     def get_donut_df(df, col_num):
         df_out = df.iloc[:,col_num].sort_values(ascending=False).to_frame().reset_index()
@@ -659,7 +663,7 @@ for date_prev in date_of_interest:
         df_out = df_out.groupby('group').sum().sort_values(by='top_10').drop(columns='top_10')
         return df_out
 
-    def plot_donut_df(df_col=0, title='Regular Tx', add_string=""):
+    def plot_donut_df(df_col=3, title='Regular Tx', add_string=""):
         df_regular_tx = get_donut_df(plot_df_donut, df_col)
 
         df_regular_tx['percent'] = df_regular_tx / df_regular_tx.sum()
@@ -675,28 +679,44 @@ for date_prev in date_of_interest:
         my_circle = plt.Circle((0,0), 0.7, color='black')
 
         wedges, texts = plt.pie(df_regular_tx.reset_index().iloc[:,1],
-                                           labels=df_regular_tx.reset_index().iloc[:,0],
-                                           counterclock=False,
-                                           startangle=90,
-                                           colors=these_colors,
-                                           textprops={'fontsize': 9, 'weight': 'bold'}, rotatelabels=True)
+                                        labels=df_regular_tx.reset_index().iloc[:,0],
+                                        counterclock=False,
+                                        startangle=90,
+                                        colors=these_colors,
+                                        textprops={'fontsize': 9, 'weight': 'bold'}, rotatelabels=True)
 
         for text, color in zip(texts, these_colors):
             text.set_color(color)
 
         # for plotting (legend)
         label_text = df_regular_tx.reset_index().iloc[:,0] \
-                     + ' (' + df_regular_tx.reset_index().iloc[:,1].astype(int).apply('{:,}'.format).astype(str) \
-                     + ' || ' + df_regular_tx.reset_index().iloc[:,2] + ')'
+                    + ' (' + df_regular_tx.reset_index().iloc[:,1].astype(int).apply('{:,}'.format).astype(str) \
+                    + ' || ' + df_regular_tx.reset_index().iloc[:,2] + ')'
 
-        ax.text(0., 0.05, totals.reset_index()[df_col:df_col+1]['index'][df_col] + ': ' + totals.reset_index()[df_col:df_col+1][0][df_col] + add_string,
+        if df_col in [0,2]:
+            ax.text(0., 0., totals_reused.reset_index()[df_col:df_col+1]['index'][df_col] + ': ' + totals_reused.reset_index()[df_col:df_col+1][0][df_col] + add_string,
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    linespacing=2,
+                    fontsize=10,
+                    weight='bold')
+
+        if df_col == 1:
+            ax.text(0., 0., totals_reused.reset_index()[df_col:df_col+1]['index'][df_col] + ': \n' + totals_reused.reset_index()[df_col:df_col+1][0][df_col] + add_string,
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    linespacing=2,
+                    fontsize=10,
+                    weight='bold')
+
+        if df_col == 3:
+            ax.text(0., 0.05, totals_reused.reset_index()[df_col:df_col+1]['index'][df_col] + ': ' + totals_reused.reset_index()[df_col:df_col+1][0][df_col] + add_string,
                 horizontalalignment='center',
                 verticalalignment='center',
                 linespacing=2,
                 fontsize=10,
                 weight='bold')
 
-        if df_col == 0:
             ax.text(0., -0.05, '(' + system_tx.split('\n')[0] + ')',
                     horizontalalignment='center',
                     verticalalignment='center',
@@ -705,9 +725,9 @@ for date_prev in date_of_interest:
                     weight='bold')
 
         plt.legend(wedges, label_text,
-                  # title="Number of P-Reps Voted (ICX)",
-                  loc="lower left",
-                  bbox_to_anchor=(1, 0, 0.5, 1),
+                    # title="Number of P-Reps Voted (ICX)",
+                    loc="lower left",
+                    bbox_to_anchor=(1, 0, 0.5, 1),
                     fontsize=10)
 
         ax.set_title(title + ' (' + date_prev + ')', fontsize=14, weight='bold', x=0.99, y=1.15)
@@ -720,10 +740,10 @@ for date_prev in date_of_interest:
 
         plt.savefig(os.path.join(resultPath, title + '_' + date_prev + '.png'))
 
-    plot_donut_df(df_col=0, title='Regular Tx', add_string="")
-    plot_donut_df(df_col=1, title='Fees Burned', add_string=" ICX")
+    plot_donut_df(df_col=0, title='Fees Burned', add_string=" ICX")
+    plot_donut_df(df_col=3, title='Regular Tx', add_string="")
     plot_donut_df(df_col=2, title='Internal Tx', add_string="")
-    plot_donut_df(df_col=3, title='Internal Events', add_string="")
+    plot_donut_df(df_col=1, title='Internal Events', add_string="")
 
     print(date_prev + ' is done!')
 
