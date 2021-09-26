@@ -51,8 +51,8 @@ prep_vote_path = os.path.join(misc_data_path, "prep_votes")
 
 workers = 2
 # assign date here
-date_prev = date(2021, 9, 11)
-date_now = date(2021, 9, 18)
+date_prev = date(2021, 9, 18)
+date_now = date(2021, 9, 25)
 
 prep_df_1 = pd.read_csv(os.path.join(prep_vote_path, 'prep_votes_' + date_prev.strftime("%Y_%m_%d") + '.csv'))
 prep_df_1 = prep_df_1[['validator_name', 'cum_votes_update']]
