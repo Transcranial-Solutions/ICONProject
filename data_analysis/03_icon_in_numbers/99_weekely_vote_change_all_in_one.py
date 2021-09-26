@@ -734,11 +734,11 @@ def plot_vote_change(ymin_mult=1.0, ymax_mult=1.4,
     plt.tight_layout()
 
 ymin_mult = 1.0
-ymax_mult = 4
+ymax_mult = 1.0
 plot_vote_change(ymin_mult=ymin_mult, ymax_mult=ymax_mult,  # these multiplier to change ylims
-                 ymin_val=-3000000, ymax_val=3500000, ytick_scale=500000,
+                 ymin_val=-2000000, ymax_val=9000000, ytick_scale=1000000,
                  # these are actual ylims & tick interval20
-                 voter_mult=ymin_mult * 0.95, voter_diff_mult=ymin_mult * 1.05,  # voter change multiplier
+                 voter_mult=ymin_mult * 0.90, voter_diff_mult=ymin_mult * 1.05,  # voter change multiplier
                  top10_1_mult=ymax_mult * 0.7, top10_2_mult=ymax_mult * 0.62,  # where top 10 streak locates
                  topF_1_mult=ymax_mult * 0.4, topF_2_mult=ymax_mult * 0.33,
                  title=my_title)  # where top first locates
@@ -923,7 +923,7 @@ def plot_voter_change(ymin_mult=1.1, ymax_mult=1.3,
 ymin_mult = 1.0
 ymax_mult = 2.5
 plot_voter_change(ymin_mult=ymin_mult, ymax_mult=ymax_mult,
-                  ymin_val=-200, ymax_val=250, ytick_scale=50,
+                  ymin_val=-100, ymax_val=120, ytick_scale=20,
                   first_time_voter_mult=ymin_mult * 0.92, new_voter_mult=ymin_mult * 1.01,  ## change these
                   top10_1_mult=ymax_mult * 0.7, top10_2_mult=ymax_mult * 0.62,
                   topF_1_mult=ymax_mult * 0.4, topF_2_mult=ymax_mult * 0.33,
@@ -1768,11 +1768,11 @@ if run_this == 1:
     # temp_this_term_change = temp_this_term_change[temp_this_term_change['validator_name'] != 'NEOPLY']
     # adjust these numbers to get proper plot
     ymin_mult = 1.0
-    ymax_mult = 2
+    ymax_mult = 3.0
     plot_vote_change(ymin_mult=ymin_mult, ymax_mult=ymax_mult,  # these multiplier to change ylims
-                     ymin_val=-1000000, ymax_val=1500000, ytick_scale=500000,
+                     ymin_val=-800000, ymax_val=1000000, ytick_scale=200000,
                      # these are actual ylims & tick interval20
-                     voter_mult=ymin_mult * 0.93, voter_diff_mult=ymin_mult * 1.01,  # voter change multiplier
+                     voter_mult=ymin_mult * 0.90, voter_diff_mult=ymin_mult * 1.05,  # voter change multiplier
                      top10_1_mult=ymax_mult * 0.7, top10_2_mult=ymax_mult * 0.62,  # where top 10 streak locates
                      topF_1_mult=ymax_mult * 0.4, topF_2_mult=ymax_mult * 0.33,
                      title=my_title)  # where top first locates
@@ -1831,7 +1831,7 @@ if run_this == 1:
     ymin_mult = 1.0
     ymax_mult = 2.5
     plot_voter_change(ymin_mult=ymin_mult, ymax_mult=ymax_mult,
-                      ymin_val=-200, ymax_val=250, ytick_scale=50,
+                      ymin_val=-100, ymax_val=120, ytick_scale=20,
                       first_time_voter_mult=ymin_mult * 0.92, new_voter_mult=ymin_mult * 1.01,  ## change these
                       top10_1_mult=ymax_mult * 0.7, top10_2_mult=ymax_mult * 0.62,
                       topF_1_mult=ymax_mult * 0.4, topF_2_mult=ymax_mult * 0.33,
