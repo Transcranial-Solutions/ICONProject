@@ -78,7 +78,7 @@ use_specified_date = 0 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2021_06_01"; day_2 = "2021_08_15"
+    day_1 = "2021_09_08"; day_2 = "2021_09_11"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
@@ -115,7 +115,7 @@ elif 'https' not in api_endpoint:
 # this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 # this_address = 'hxe701834d9a55b1e9de0e1d2ee349bee77e50025a'
 # this_address = 'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8' #velic_stav
-this_address = 'hx94a7cd360a40cbf39e92ac91195c2ee3c81940a6'
+this_address = 'hxa390d24fdcba68515b492ffc553192802706a121'
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
