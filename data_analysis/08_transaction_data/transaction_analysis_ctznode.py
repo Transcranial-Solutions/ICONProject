@@ -218,8 +218,6 @@ for date_prev in date_of_interest:
         add_dict_if_noexist('hx1a5f0ce1d0d49054379a554f644f39a66a979b04', jknown_address, 'circle_arb_1_related')
         add_dict_if_noexist('hx5b802623eb53c6a90df9f29e5808596f3c2bf63e', jknown_address, 'circle_arb_2_related')
 
-    add_know_addresses()
-
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Contract Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
     tx_type = 'contract'
@@ -364,6 +362,7 @@ for date_prev in date_of_interest:
         replace_dict_if_unknown('cxbb2871f468a3008f80b08fdde5b8b951583acf06', jknown_address, 'Stably_USD')
         replace_dict_if_unknown('cx7d8caa66cbe1a96876e0bc2bda4fc60e5f9781e6', jknown_address, 'ICX_Card')
         replace_dict_if_unknown('cx82c8c091b41413423579445032281bca5ac14fc0', jknown_address, 'Craft')
+        replace_dict_if_unknown('cx8683d50b9f53275081e13b64fba9d6a56b7c575d', jknown_address, 'gangstabet_trade')
 
         replace_dict_if_unknown('cx66d4d90f5f113eba575bf793570135f9b10cece1', jknown_address, 'balanced_loans')
         replace_dict_if_unknown('cx43e2eec79eb76293c298f2b17aec06097be606e0', jknown_address, 'balanced_staking')
@@ -524,31 +523,34 @@ for date_prev in date_of_interest:
         df['group'] = np.where(unified_protocol, 'UP', df['group'])
 
         def manual_grouping(df):
-
-            #balanced
+            # balanced
             df['group'] = np.where(df['group'] == 'Balance', 'Balanced', df['group'])
             df['group'] = np.where(df['group'].str.contains('balanced_', case=False), 'Balanced', df['group'])
+            df['group'] = np.where(df['group'].str.contains('circle_arb', case=False), 'Balanced', df['group'])
 
-            #omm
+            # omm
             df['group'] = np.where(df['group'].str.contains('omm', case=False), 'Omm', df['group'])
             df['group'] = np.where(df['group'].str.contains('ICON USD', case=False), 'Omm', df['group'])
 
-            #Craft
+            # Craft
             df['group'] = np.where(df['to'] == 'cx9c4698411c6d9a780f605685153431dcda04609f', 'Craft', df['group'])
             df['group'] = np.where(df['to'] == 'cx82c8c091b41413423579445032281bca5ac14fc0', 'Craft', df['group'])
 
-            #iAM
+            # iAM
             df['group'] = np.where(df['to'] == 'cx210ded1e8e109a93c89e9e5a5d0dcbc48ef90394', 'iAM ', df['group'])
 
-            #Bridge
+            # Bridge
             df['group'] = np.where(df['to'] == 'cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f', 'Bridge', df['group'])
             df['group'] = np.where(df['to'] == 'cx0eb215b6303142e37c0c9123abd1377feb423f0e', 'Bridge', df['group'])
 
-
-            #iconbet
+            # iconbet
             df['group'] = np.where(df['group'].str.contains('SicBo', case=False), 'ICONbet', df['group'])
             df['group'] = np.where(df['group'].str.contains('Jungle Jackpot', case=False), 'ICONbet', df['group'])
             df['group'] = np.where(df['group'] == 'TapToken', 'ICONbet', df['group'])
+
+            # gangstabet
+            df['group'] = np.where(df['group'].str.contains('gangstabet', case=False), 'GangstaBet', df['group'])
+            df['group'] = np.where(df['to'] == 'cx8683d50b9f53275081e13b64fba9d6a56b7c575d', 'GangstaBet', df['group'])
 
             # futureicx
             # df['group'] = np.where(df['group'] == 'FutureICX', 'FutureICX', df['group'])
