@@ -68,6 +68,8 @@ df['Total Supply'] = df['Total Supply'].astype('int')
 df['Public Treasury \xa0'] = df['Public Treasury \xa0'].astype('int')
 df['total_staked_ICX'] = df['total_staked_ICX'].astype('int')
 
+df = df.reset_index()
+
 df.to_csv(os.path.join(outDataPath, 'icx_stat_compiled.csv'), index=False)
 
 
