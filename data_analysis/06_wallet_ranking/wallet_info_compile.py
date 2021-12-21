@@ -133,15 +133,144 @@ exchange_details = pd.DataFrame(exchange_details)
 
 all_df =[]
 for k in range(len(listData)):
-    this_date = re.findall(r'exchange_wallet_balance_(.+?).csv', listData[k])[0].replace("_", "/")
+    # this_date = re.findall(r'exchange_wallet_balance_(.+?).csv', listData[k])[0].replace("_", "/")
     df = pd.read_csv(listData[k]) #.head(1)
-    df['date'] = this_date
-    cols = list(df.columns)
-    cols = [cols[-1]] + cols[:-1]
-    df = df[cols]
+    # df['date'] = this_date
+    # cols = list(df.columns)
+    # cols = [cols[-1]] + cols[:-1]
+    # df = df[cols]
     all_df.append(df)
 
 df = pd.concat(all_df)
+
+
+# convert timestamp to datetime
+def timestamp_to_date(df, timestamp, dateformat):
+    return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
+
+def fix_bad_wallet_address(df):
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+    ## cleaning
+    # drop NaN
+    df = df.dropna()
+
+    # finding bad address -- e.g. no 'hx' prefix
+    bad_address_idx = ~df['address'].str[:2].str.contains('hx|cx', case=False, regex=True, na=False)
+    bad_address = df[bad_address_idx]
+    print(bad_address)
+
+    # adding 'hx' prefix to the bad addresses
+    fixed_address = bad_address.copy()
+    fixed_address['address'] = 'hx' + bad_address['address']
+    df[bad_address_idx] = fixed_address
+
+    # lower-case addresses in case of bug
+    df.address = df.address.str.lower()
+    # df['timestamp'] = df['timestamp'].astype(int)
+
+
+    return(df)
+
+def get_first_wallet_address(df):
+
+    # selecting wallets with 'hx' prefix
+    # wallet_address = df[df['address'].str[:2].str.contains(type, case=False, regex=True, na=False)]
+    df = df.sort_values(by=['address','timestamp']).groupby('address').first().reset_index()
+
+    # remove dups because sometimes there can be
+    df = df.drop_duplicates().sort_values('timestamp').reset_index(drop=True)
+
+    # remove addresses that are not 42 characters long
+    df = df.drop(df[df['address'].str.len() != 42].index)
+    return df
+
+
+df = fix_bad_wallet_address(df)
+df = get_first_wallet_address(df)
+
+df['date'] = timestamp_to_date(df, 'timestamp', dateformat="%Y-%m-%d")
+df['month'] = timestamp_to_date(df, 'timestamp', dateformat="%Y-%m")
+
+wallet_hx = df[df['address'].str[:2].str.contains('hx', case=False, regex=True, na=False)]
+wallet_cx = df[df['address'].str[:2].str.contains('cx', case=False, regex=True, na=False)]
+
+
+
+def count_wallet_by_interval(df, interval):
+    df = df.groupby(interval)['address'].count().reset_index()
+    df['cum_address'] = df['address'].cumsum()
+    return df
+
+interval = 'month'
+ydata = 'cum_address'
+count_hx = count_wallet_by_interval(wallet_hx, interval=interval)
+
+sns.set(style="ticks", rc={"lines.linewidth": 2})
+plt.style.use(['dark_background'])
+f, ax = plt.subplots(figsize=(12, 8))
+sns.lineplot(x=interval, y=ydata, data=count_hx, palette=sns.color_palette('husl', n_colors=2))
+h,l = ax.get_legend_handles_labels()
+
+ax.set_xlabel('Time', fontsize=14, weight='bold', labelpad=10)
+ax.set_ylabel('Wallets', fontsize=14, weight='bold', labelpad=10)
+ax.set_title('Cumulative number of wallets created per ' + interval , fontsize=14, weight='bold', linespacing=1.5)
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. format(x/10e2) + ' K'))
+ymin, ymax = ax.get_ylim()
+ymax_set = ymax*1.1
+ax.set_ylim([ymin,ymax_set])
+sns.despine(offset=10, trim=True)
+
+plt.tight_layout()
+ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
+
+n = 2  # Keeps every n-th label
+[l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
+plt.tight_layout()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # re-attaching names as they have changed over time
 df = df.drop(columns='names')
