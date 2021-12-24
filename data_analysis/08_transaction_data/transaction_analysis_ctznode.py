@@ -90,6 +90,9 @@ else:
 
 print(date_of_interest)
 
+if len(date_of_interest) == 1:
+    date_prev = date_of_interest[0]
+
 
 for date_prev in date_of_interest:
 
@@ -465,6 +468,8 @@ for date_prev in date_of_interest:
     to_def = tx_df[['to','to_def']].drop_duplicates().sort_values(by='to')
 
 
+
+
     # check_from = tx_df.groupby(['from'])['tx_fees']\
     #     .agg({'count','sum'})\
     #     .sort_values(by='count', ascending=False)\
@@ -504,6 +509,7 @@ for date_prev in date_of_interest:
     def grouping_wrapper(df, in_col):
         def wallet_grouping(df, in_col, in_name, else_name):
             df['group'] = np.where(df[in_col].str.contains(in_name, case=False, regex=True), in_name, else_name)
+            df['group'] = np.where(df['to'] == 'System', 'System', df['group'])
             return df
 
         these_incols = ['bithumb', 'upbit','velic','bitvavo','unkEx_c','unkEx_d','kraken',
@@ -573,7 +579,7 @@ for date_prev in date_of_interest:
     to_final = reduce(lambda left,right: pd.merge(left,right,on=['to','to_def']), tos)
     to_final_grouping = grouping_wrapper(to_final, in_col='to_def')
 
-    to_final_grouping.to_csv(os.path.join(resultPath, 'tx_summary_' + date_prev + '.csv'), index=False)
+    # to_final_grouping.to_csv(os.path.join(resultPath, 'tx_summary_' + date_prev + '.csv'), index=False)
 
     # to_group = to_final_grouping.groupby('group').agg('sum').sort_values(by='Regular Tx', ascending=False) #.reset_index()
     to_group = to_final_grouping.groupby('group').agg('sum').sort_values(by='Fees burned', ascending=False) #.reset_index()
@@ -611,7 +617,7 @@ for date_prev in date_of_interest:
     ax1.set_ylabel('Transactions', labelpad=10)
     ax1.set_xticklabels(ax1.get_xticklabels(), rotation=90, ha="center")
     ax2 = ax1.twinx()
-    lines = plt.plot(to_group[fees_burned], marker='.', linestyle='dotted', mfc='none', mec='b', markersize=12)
+    lines = plt.plot(to_group[fees_burned], marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black', markersize=8)
 
     xmin, xmax = ax1.get_xlim()
     ymin, ymax = ax1.get_ylim()
@@ -622,12 +628,15 @@ for date_prev in date_of_interest:
         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
 
     ax2.set_ylabel('Fees burned (ICX)', labelpad=10)
-    plt.setp(lines, 'color', 'tab:blue', 'linewidth', 1.0)
+    plt.setp(lines, 'color', 'white', 'linewidth', 1.0)
     # ax1.legend(loc='upper center', bbox_to_anchor=(0.4, 0.95),
     #           fancybox=True, shadow=True, ncol=5)
-    color = 'tab:blue'
-    m_line = mlines.Line2D([], [], color=color, label='Total ' + fees_burned, linewidth=1, marker='.', linestyle='dotted', mfc='none', mec='b')
-    plt.legend(handles=[m_line], loc='upper right', fontsize='small', bbox_to_anchor=(0.98, 0.99), frameon=False)
+    color = 'white'
+    m_line = mlines.Line2D([], [], color=color, label='Total ' + fees_burned, linewidth=1, marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black')
+    leg = plt.legend(handles=[m_line], loc='upper right', fontsize='medium', bbox_to_anchor=(0.98, 0.999), frameon=False)
+    for text in leg.get_texts():
+        plt.setp(text, color='cyan')
+
     plt.tight_layout(rect=[0,0,1,1])
 
     ax1.text(xmax*0.97, ymax*0.88, all_tx,
@@ -648,8 +657,12 @@ for date_prev in date_of_interest:
             linespacing = 1.5,
             fontsize=8)
 
+    ax2.spines['right'].set_color('cyan')
+    ax2.yaxis.label.set_color('cyan')
+    ax2.tick_params(axis='y', colors="cyan")
 
-    plt.savefig(os.path.join(resultPath, 'tx_summary_' + date_prev + '.png'))
+
+    # plt.savefig(os.path.join(resultPath, 'tx_summary_' + date_prev + '.png'))
 
     # donuts
     plot_df_donut = to_group[to_group.index !="System"]
