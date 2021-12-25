@@ -73,18 +73,18 @@ def extract_values(obj, key):
 
 
 # today's date
-date_is_range = 1 # if date is range (1) or is one  date (0)
-use_specified_date = 0 # yes(1) no(0)
+date_is_range = 0 # if date is range (1) or is one  date (0)
+use_specified_date = 1 # yes(1) no(0)
 
 # date is range
-if date_is_range == 1:
-    day_1 = "2021_12_01"; day_2 = "2021_12_18"
+if date_is_range == 0:
+    day_1 = "2021_12_23"; day_2 = "2021_12_24"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2021_06_14"
+   day_1 = "2021_12_24"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -101,7 +101,7 @@ elif 'https' not in api_endpoint:
     api_endpoint_mod = 'https://' + api_endpoint
 
 # wallet of interest
-this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
+# this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'hx1729b35b690d51e9944b2e94075acff986ea0675' # Binance cold
 # this_address = 'hx54d6f19c3d16b2ef23c09c885ca1ba776aaa80e2' #ubik
 # this_address = 'hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2' #velic
@@ -117,6 +117,8 @@ this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8' #velic_stav
 # this_address = 'hxa390d24fdcba68515b492ffc553192802706a121'
 
+this_address = 'hxb86afed8db896012664b0fa6c874fe0e3001edaf'
+
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
 rm_exch = 0
@@ -126,8 +128,8 @@ tx_flow = 'both' # 'in', 'out', 'both'
 tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet)', 'token_txlist (token that has been xferred), 'token_list'
 
 # does not work with range
-first_degree = 1 # this is for getting only 1 interaction (WOI <-> wallet_x)
-further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
+first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
+further_degree = 2 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
