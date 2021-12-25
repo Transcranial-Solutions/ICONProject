@@ -37,7 +37,7 @@ projectPath = os.path.join(currPath, "")
 if not os.path.exists(projectPath):
     os.mkdir(projectPath)
     
-dataPath = os.path.join(projectPath, "../06_wallet_ranking/data")
+dataPath = os.path.join(projectPath, "06_wallet_ranking\\data")
 if not os.path.exists(dataPath):
     os.mkdir(dataPath)
 
@@ -247,7 +247,6 @@ def get_my_unstakes(method, address, output, len_wallet_address):
 
     return(df)
 
-
 # get balance function
 def get_balance(address, len_wallet_address):
     try:
@@ -257,6 +256,20 @@ def get_balance(address, len_wallet_address):
     df = {'address': address, 'balance': balance}
     return(df)
 
+
+def get_bond(address):
+    call = CallBuilder().from_(tester_address)\
+                    .to('cx0000000000000000000000000000000000000000')\
+                    .params({"address": address})\
+                    .method('getBond')\
+                    .build()
+    result = icon_service.call(call)
+
+    try:
+        df = {'totalBonded': parse_icx(result['totalBonded']), 'address': address}
+    except:
+        df = {'totalBonded': np.nan, 'address': address}
+    return(df)
 
 from itertools import cycle, islice
 
@@ -273,6 +286,7 @@ all_staked = []
 all_delegating = []
 all_balance = []
 all_unstakes = []
+all_bonded = []
 
 start = time()
 with ThreadPoolExecutor(max_workers=max_workers_value) as executor:
@@ -281,7 +295,8 @@ with ThreadPoolExecutor(max_workers=max_workers_value) as executor:
         all_staked.append(executor.submit(get_my_values, "getStake", wallet_address_clean[i], "stake", len_wallet_address))
         all_delegating.append(executor.submit(get_my_values, "getDelegation", wallet_address_clean[i], "totalDelegated", len_wallet_address))
         all_balance.append(executor.submit(get_balance, wallet_address_clean[i], len_wallet_address))
-        all_unstakes.append(executor.submit(get_my_unstakes, "getStake", wallet_address_clean[i], "unstakes", len_wallet_address))         
+        all_unstakes.append(executor.submit(get_my_unstakes, "getStake", wallet_address_clean[i], "unstakes", len_wallet_address))
+        # all_bonded.append(executor.submit(get_bond, wallet_address_clean[i]))
 
 print("workers complete")
 
@@ -303,7 +318,11 @@ for task in tqdm(as_completed(all_balance), desc="balance\t", total=len_wallet_a
 
 temp_unstakes = []
 for task in tqdm(as_completed(all_unstakes), desc="unstakes\t", total=len_wallet_address):
-    temp_unstakes.append(task.result()) 
+    temp_unstakes.append(task.result())
+
+# temp_bonded = []
+# for task in tqdm(as_completed(all_bonded), desc="bonds\t", total=len_wallet_address):
+#     temp_bonded.append(task.result())
 
 
 print("building dataframes...")
@@ -319,6 +338,8 @@ if len(temp_balance) > 0:
     data_frames.append(pd.DataFrame(temp_balance))
 if len(temp_unstakes) > 0: 
     data_frames.append(pd.DataFrame(temp_unstakes))
+# if len(temp_bonded) > 0:
+#     data_frames.append(pd.DataFrame(temp_bonded))
 
 total_supply = round(loop_to_icx(icon_service.get_total_supply()))
 total_supply_text = '{:,}'.format(total_supply) + ' ICX'
@@ -367,8 +388,8 @@ all_df_prev = pd.read_csv(os.path.join(windows_path_prev, "exchange_wallet_balan
 
 # getting only exchange wallets
 def get_exchange_amount(df):
-    total_exchange = df[['address', 'names', 'balance', 'totalDelegated', 'total']]\
-        .rename(columns={'balance':'Available ICX', 'totalDelegated': 'Delegated ICX', 'names':'Exchanges'})\
+    total_exchange = df[['address', 'names', 'balance', 'totalDelegated', 'stake', 'total']]\
+        .rename(columns={'balance':'Available ICX', 'totalDelegated': 'Delegated ICX', 'stake':'Staked ICX', 'names':'Exchanges'})\
         .sort_values('total', ascending=False)\
         .reset_index(drop=True)
     return total_exchange
@@ -422,7 +443,7 @@ def group_exchanges(df):
 total_exchange_now = get_exchange_amount(all_df)
 total_exchange_now = group_exchanges(total_exchange_now)
 total_exchange_now_grouped = total_exchange_now\
-    .groupby('group')[['Available ICX','Delegated ICX','total']]\
+    .groupby('group')[['Available ICX','Delegated ICX','Staked ICX','total']]\
     .agg(sum)\
     .reset_index()\
     .rename(columns={'group': 'Exchanges'})\
@@ -438,7 +459,7 @@ total_exchange_prev = get_exchange_amount(all_df_prev)
 total_exchange_prev = group_exchanges(total_exchange_prev)
 
 total_exchange_prev_grouped = total_exchange_prev\
-    .groupby('group')[['Available ICX','Delegated ICX','total']]\
+    .groupby('group')[['Available ICX','Delegated ICX','Staked ICX','total']]\
     .agg(sum)\
     .reset_index()\
     .rename(columns={'group': 'Exchanges'})\
@@ -456,6 +477,7 @@ def reindex_exchanges(df_now, df_prev, keep_these, my_index):
         df_prev = df_prev.rename(columns={'Exchanges_x':'Exchanges'}).drop(columns = 'Exchanges_y')
     df_prev['Available ICX'] = np.where(df_prev['Available ICX'].isna(), 0, df_prev['Available ICX'])
     df_prev['Delegated ICX'] = np.where(df_prev['Delegated ICX'].isna(), 0, df_prev['Delegated ICX'])
+    df_prev['Staked ICX'] = np.where(df_prev['Staked ICX'].isna(), 0, df_prev['Staked ICX'])
     df_prev['total'] = np.where(df_prev['total'].isna(), 0, df_prev['total'])
 
     df_prev = df_prev.set_index(my_index)
@@ -468,10 +490,14 @@ total_exchange_prev_grouped = reindex_exchanges(total_exchange_now_grouped, tota
 
 total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Available ICX')
 total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Delegated ICX')
+total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Staked ICX')
+
 total_exchange_now = total_exchange_now.drop(columns='total')
 
 total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Available ICX')
 total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Delegated ICX')
+total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Staked ICX')
+
 total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'total')
 total_exchange_now_grouped = total_exchange_now_grouped.drop(columns='total')
 
@@ -520,7 +546,7 @@ render_mpl_table(total_exchange_now.drop(columns='group'),
                 " (Δ since " + day_prev_text + ")" + 
                 "\n Total Supply: " + total_supply_text)
 
-plt.savefig(os.path.join(windows_path, "exchange_wallets_" + day_today + "_vs_" + day_prev + ".png"))
+# plt.savefig(os.path.join(windows_path, "exchange_wallets_" + day_today + "_vs_" + day_prev + ".png"))
 
 # grouped
 render_mpl_table(total_exchange_now_grouped,
@@ -532,4 +558,4 @@ render_mpl_table(total_exchange_now_grouped,
                 " (Δ since " + day_prev_text + ")" + 
                 "\n Total Supply: " + total_supply_text)
 
-plt.savefig(os.path.join(windows_path, "exchange_wallets_grouped_" + day_today + "_vs_" + day_prev + ".png"))
+# plt.savefig(os.path.join(windows_path, "exchange_wallets_grouped_" + day_today + "_vs_" + day_prev + ".png"))
