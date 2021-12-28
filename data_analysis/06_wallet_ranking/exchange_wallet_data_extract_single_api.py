@@ -379,7 +379,7 @@ if not os.path.exists(windows_path):
     os.makedirs(windows_path)
 
 # saving this term's exchange wallet balance
-all_df.to_csv(os.path.join(windows_path, 'exchange_wallet_balance_' + day_today + '.csv'), index=False)
+# all_df.to_csv(os.path.join(windows_path, 'exchange_wallet_balance_' + day_today + '.csv'), index=False)
 
 # reading previous term data
 windows_path_prev = "E:/GitHub/ICONProject/data_analysis/06_wallet_ranking/results/" + day_prev
