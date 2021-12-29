@@ -16,7 +16,8 @@
 from urllib.request import Request, urlopen
 import json
 import pandas as pd
-# import numpy as np
+from scipy import stats
+import numpy as np
 import os
 from datetime import date, datetime, timedelta
 import glob
@@ -103,18 +104,36 @@ for k in range(len(listData)):
 
 df = pd.concat(all_df)
 df['date'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
-df.index = pd.DatetimeIndex(df['date']).floor('D')
-all_days = pd.date_range(df.index.min(), df.index.max(), freq='D')
-df = df.reindex(all_days)
-df.reset_index(inplace=True)
-df = df.drop(columns='date').rename(columns={'index':'date'})
-df['date'] = df['date'].dt.date
-df.set_index('date', inplace=True)
 
-# interpolate
-df = df.interpolate()
+def interploate_data(df):
+    df.index = pd.DatetimeIndex(df['date']).floor('D')
+    all_days = pd.date_range(df.index.min(), df.index.max(), freq='D')
+    df = df.reindex(all_days)
+    df.reset_index(inplace=True)
+    df = df.drop(columns='date').rename(columns={'index':'date'})
+    df['date'] = df['date'].dt.date
+    df.set_index('date', inplace=True)
 
-# putting back the date
-df = df.reset_index()
+    # interpolate
+    df = df.interpolate()
+
+    # putting back the date
+    df = df.reset_index()
+    return df
+
+df = interploate_data(df)
 
 df.to_csv(os.path.join(resultPath, 'icx_tracker_compiled.csv'), index=False)
+
+
+old_df = pd.read_csv(os.path.join(inPath, 'icon_community\\icx_stat_compiled.csv'))
+old_df = old_df.drop(columns=['Total Staked \xa0','Circulation Staked \xa0','Total Voted \xa0','total_staked_ICX']).rename(columns={'Market Cap (USD)':'marketCap', 'Total Supply': 'icxSupply', 'Circulating Supply':'icxCirculation', 'Public Treasury \xa0': 'publicTreasury'})
+
+new_df = old_df.append(df).reset_index(drop=True)
+
+
+new_df = new_df[(np.abs(stats.zscore(new_df['marketCap'])) < 3)]
+
+new_df = interploate_data(new_df)
+
+new_df.to_csv(os.path.join(resultPath, 'icx_tracker_compiled_all.csv'), index=False)
