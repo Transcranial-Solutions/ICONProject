@@ -296,7 +296,7 @@ with ThreadPoolExecutor(max_workers=max_workers_value) as executor:
         all_delegating.append(executor.submit(get_my_values, "getDelegation", wallet_address_clean[i], "totalDelegated", len_wallet_address))
         all_balance.append(executor.submit(get_balance, wallet_address_clean[i], len_wallet_address))
         all_unstakes.append(executor.submit(get_my_unstakes, "getStake", wallet_address_clean[i], "unstakes", len_wallet_address))
-        # all_bonded.append(executor.submit(get_bond, wallet_address_clean[i]))
+        all_bonded.append(executor.submit(get_bond, wallet_address_clean[i]))
 
 print("workers complete")
 
@@ -320,9 +320,9 @@ temp_unstakes = []
 for task in tqdm(as_completed(all_unstakes), desc="unstakes\t", total=len_wallet_address):
     temp_unstakes.append(task.result())
 
-# temp_bonded = []
-# for task in tqdm(as_completed(all_bonded), desc="bonds\t", total=len_wallet_address):
-#     temp_bonded.append(task.result())
+temp_bonded = []
+for task in tqdm(as_completed(all_bonded), desc="bonds\t", total=len_wallet_address):
+    temp_bonded.append(task.result())
 
 
 print("building dataframes...")
@@ -338,8 +338,8 @@ if len(temp_balance) > 0:
     data_frames.append(pd.DataFrame(temp_balance))
 if len(temp_unstakes) > 0: 
     data_frames.append(pd.DataFrame(temp_unstakes))
-# if len(temp_bonded) > 0:
-#     data_frames.append(pd.DataFrame(temp_bonded))
+if len(temp_bonded) > 0:
+    data_frames.append(pd.DataFrame(temp_bonded))
 
 total_supply = round(loop_to_icx(icon_service.get_total_supply()))
 total_supply_text = '{:,}'.format(total_supply) + ' ICX'
