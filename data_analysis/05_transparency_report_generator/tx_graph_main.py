@@ -73,12 +73,12 @@ def extract_values(obj, key):
 
 
 # today's date
-date_is_range = 0 # if date is range (1) or is one  date (0)
+date_is_range = 1 # if date is range (1) or is one  date (0)
 use_specified_date = 0 # yes(1) no(0)
 
 # date is range
-if date_is_range == 0:
-    day_1 = "2021_12_23"; day_2 = "2021_12_24"
+if date_is_range == 1:
+    day_1 = "2018_01_01"; day_2 = "2021_12_29"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
