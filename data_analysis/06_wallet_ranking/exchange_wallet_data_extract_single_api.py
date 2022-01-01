@@ -388,8 +388,8 @@ all_df_prev = pd.read_csv(os.path.join(windows_path_prev, "exchange_wallet_balan
 
 # getting only exchange wallets
 def get_exchange_amount(df):
-    total_exchange = df[['address', 'names', 'balance', 'totalDelegated', 'stake', 'total']]\
-        .rename(columns={'balance':'Available ICX', 'totalDelegated': 'Delegated ICX', 'stake':'Staked ICX', 'names':'Exchanges'})\
+    total_exchange = df[['address', 'names', 'balance', 'totalDelegated', 'staking_but_not_delegating', 'totalBonded', 'total']]\
+        .rename(columns={'balance':'Available', 'totalDelegated': 'Delegated', 'staking_but_not_delegating':'Staked (not delegated)', 'totalBonded':'Bonded' ,'names':'Exchanges'})\
         .sort_values('total', ascending=False)\
         .reset_index(drop=True)
     return total_exchange
@@ -443,7 +443,7 @@ def group_exchanges(df):
 total_exchange_now = get_exchange_amount(all_df)
 total_exchange_now = group_exchanges(total_exchange_now)
 total_exchange_now_grouped = total_exchange_now\
-    .groupby('group')[['Available ICX','Delegated ICX','Staked ICX','total']]\
+    .groupby('group')[['Available','Delegated','Staked (not delegated)', 'Bonded', 'total']]\
     .agg(sum)\
     .reset_index()\
     .rename(columns={'group': 'Exchanges'})\
@@ -459,7 +459,7 @@ total_exchange_prev = get_exchange_amount(all_df_prev)
 total_exchange_prev = group_exchanges(total_exchange_prev)
 
 total_exchange_prev_grouped = total_exchange_prev\
-    .groupby('group')[['Available ICX','Delegated ICX','Staked ICX','total']]\
+    .groupby('group')[['Available','Delegated','Staked (not delegated)', 'Bonded', 'total']]\
     .agg(sum)\
     .reset_index()\
     .rename(columns={'group': 'Exchanges'})\
@@ -475,9 +475,10 @@ def reindex_exchanges(df_now, df_prev, keep_these, my_index):
     df_prev = pd.merge(df_now[keep_these], df_prev, how='left', on=my_index)
     if len(keep_these) > 1:
         df_prev = df_prev.rename(columns={'Exchanges_x':'Exchanges'}).drop(columns = 'Exchanges_y')
-    df_prev['Available ICX'] = np.where(df_prev['Available ICX'].isna(), 0, df_prev['Available ICX'])
-    df_prev['Delegated ICX'] = np.where(df_prev['Delegated ICX'].isna(), 0, df_prev['Delegated ICX'])
-    df_prev['Staked ICX'] = np.where(df_prev['Staked ICX'].isna(), 0, df_prev['Staked ICX'])
+    df_prev['Available'] = np.where(df_prev['Available'].isna(), 0, df_prev['Available'])
+    df_prev['Delegated'] = np.where(df_prev['Delegated'].isna(), 0, df_prev['Delegated'])
+    df_prev['Staked (not delegated)'] = np.where(df_prev['Staked (not delegated)'].isna(), 0, df_prev['Staked (not delegated)'])
+    df_prev['Bonded'] = np.where(df_prev['Bonded'].isna(), 0, df_prev['Bonded'])
     df_prev['total'] = np.where(df_prev['total'].isna(), 0, df_prev['total'])
 
     df_prev = df_prev.set_index(my_index)
@@ -488,24 +489,28 @@ def reindex_exchanges(df_now, df_prev, keep_these, my_index):
 total_exchange_prev = reindex_exchanges(total_exchange_now, total_exchange_prev, ['address','Exchanges'], 'address')
 total_exchange_prev_grouped = reindex_exchanges(total_exchange_now_grouped, total_exchange_prev_grouped, ['Exchanges'], 'Exchanges')
 
-total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Available ICX')
-total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Delegated ICX')
-total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Staked ICX')
+total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Available')
+total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Delegated')
+total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Staked (not delegated)')
+total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'Bonded')
+total_exchange_now = add_val_differences(total_exchange_now, total_exchange_prev, 'total')
 
-total_exchange_now = total_exchange_now.drop(columns='total')
 
-total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Available ICX')
-total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Delegated ICX')
-total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Staked ICX')
+# total_exchange_now = total_exchange_now.drop(columns='total')
+
+total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Available')
+total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Delegated')
+total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Staked (not delegated)')
+total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'Bonded')
 
 total_exchange_now_grouped = add_val_differences(total_exchange_now_grouped, total_exchange_prev_grouped, 'total')
-total_exchange_now_grouped = total_exchange_now_grouped.drop(columns='total')
+# total_exchange_now_grouped = total_exchange_now_grouped.drop(columns='total')
 
 
 # function to make table
 import six
 
-def render_mpl_table(data, col_width=4.0, row_height=0.425, font_size=12, title = 'my_title',
+def render_mpl_table(data, col_width=4.0, row_height=0.425, font_size=10, title = 'my_title',
                     header_color='#40466e', row_colors=['black', 'black'], edge_color='w',
                     bbox=[0, 0, 1, 1], header_columns=0,
                     ax=None, **kwargs):
@@ -541,6 +546,7 @@ render_mpl_table(total_exchange_now.drop(columns='group'),
                 header_color='tab:pink',
                 header_columns=0,
                 col_width=5,
+                font_size=10,
                 title="Major Exchange Wallets - " + 
                 day_today_text + 
                 " (Δ since " + day_prev_text + ")" + 
@@ -553,6 +559,7 @@ render_mpl_table(total_exchange_now_grouped,
                 header_color='tab:pink',
                 header_columns=0,
                 col_width=5,
+                font_size=12,
                 title="Major Exchanges (grouped) - " + 
                 day_today_text + 
                 " (Δ since " + day_prev_text + ")" + 
