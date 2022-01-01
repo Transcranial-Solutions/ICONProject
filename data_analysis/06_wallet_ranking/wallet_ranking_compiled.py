@@ -23,6 +23,7 @@ import json
 from datetime import date, datetime
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import matplotlib.lines as mlines
 import seaborn as sns
 
 
@@ -197,7 +198,7 @@ def group_exchanges(df):
 df_grouped = group_exchanges(df)
 
 df_grouped = df_grouped\
-    .groupby(['date','group'])[['balance','totalDelegated','total']]\
+    .groupby(['date','group'])[['balance','totalDelegated','stake','total']]\
     .agg(sum)\
     .reset_index()\
     .rename(columns={'group': 'Exchanges'})\
@@ -289,94 +290,85 @@ df_grouped_total_corr = pd.merge(df_grouped_total, df_price_short, how='left', o
 from matplotlib.ticker import StrMethodFormatter
 import math
 
+def plot_this(input='balance', title='Exchange ICX Balance'):
+    sns.set(style="ticks", rc={"lines.linewidth": 2})
+    plt.style.use(['dark_background'])
+    f, ax = plt.subplots(figsize=(12, 8))
+    sns.lineplot(x='date', y=input, hue='Exchanges', data=df_grouped) #, palette=sns.color_palette('husl'))
+    # sns.lineplot(x='date', y='balance', data=df_grouped_total, alpha=0.5, linewidth=10) #, palette=sns.color_palette('husl'))
 
-sns.set(style="ticks", rc={"lines.linewidth": 2})
-plt.style.use(['dark_background'])
-f, ax = plt.subplots(figsize=(12, 8))
-sns.lineplot(x='date', y='balance', hue='Exchanges', data=df_grouped) #, palette=sns.color_palette('husl'))
-# sns.lineplot(x='date', y='balance', data=df_grouped_total, alpha=0.5, linewidth=10) #, palette=sns.color_palette('husl'))
+    h,l = ax.get_legend_handles_labels()
+    ax.legend(reversed(h), reversed(l),
+               loc='center', bbox_to_anchor=(0.5, -0.18),
+               fancybox=True, shadow=True, ncol=5)
+    # plt.tight_layout(rect=[0,0,1,1])
 
-h,l = ax.get_legend_handles_labels()
-ax.legend(reversed(h), reversed(l),
-           loc='center', bbox_to_anchor=(0.5, -0.18),
-           fancybox=True, shadow=True, ncol=5)
-# plt.tight_layout(rect=[0,0,1,1])
+    ax.set_xlabel('Date', fontsize=14, weight='bold', labelpad=10)
+    ax.set_ylabel('Amount ($ICX)', fontsize=14, weight='bold', labelpad=10)
+    ax.set_title(title, fontsize=14, weight='bold', linespacing=1.5, pad=10)
+    ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. format(x/10e5) + ' M'))
+    ymin, ymax = ax.get_ylim()
+    ymax_set = ymax*1.2
+    ax.set_ylim([ymin,ymax_set])
+    ax2 = ax.twinx()
+    sns.lineplot(x='date', y='close_price', ax=ax2, data=df_price_short, color='teal', alpha=0.5, linewidth=8)
+    ymin2, ymax2 = ax2.get_ylim()
+    ax2.set_ylim([0,math.ceil(ymax2)])
+    ax2.yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}' + ' ICX'))
+    ax2.set_ylabel('Close Price (USD)', fontsize=14, weight='bold', labelpad=10)
 
-ax.set_xlabel('Date', fontsize=14, weight='bold', labelpad=10)
-ax.set_ylabel('Amount (ICX)', fontsize=14, weight='bold', labelpad=10)
-ax.set_title('Exchange ICX Balance', fontsize=14, weight='bold', linespacing=1.5)
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. format(x/10e5) + ' M'))
-ymin, ymax = ax.get_ylim()
-ymax_set = ymax*1.2
-ax.set_ylim([ymin,ymax_set])
-ax2 = ax.twinx()
-sns.lineplot(x='date', y='close_price', ax=ax2, data=df_price_short, color='teal', alpha=0.5, linewidth=8)
-ymin2, ymax2 = ax2.get_ylim()
-ax2.set_ylim([0,math.ceil(ymax2)])
-ax2.yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}' + ' ICX'))
-ax2.set_ylabel('Close Price (USD)', fontsize=14, weight='bold', labelpad=10)
+    ax2.spines['right'].set_color('teal')
+    ax2.yaxis.label.set_color('teal')
+    ax2.tick_params(axis='y', colors="teal")
 
-plt.tight_layout()
-# ax.set_yscale('log')
+    color = 'teal'
+    m_line = mlines.Line2D([], [], color=color, label='$ICX price', linewidth=7,
+                           mfc='teal', mec='teal', alpha=0.5)
+    leg = plt.legend(handles=[m_line], loc='upper right', fontsize='medium', bbox_to_anchor=(0.98, 0.999), frameon=False)
 
-# sns.despine(offset=10, trim=False)
+    plt.tight_layout()
+    # ax.set_yscale('log')
+
+    # sns.despine(offset=10, trim=False)
 
 
+plot_this(input='balance', title='Exchange ICX Balance')
 
-sns.set(style="ticks", rc={"lines.linewidth": 2})
-plt.style.use(['dark_background'])
-f, ax = plt.subplots(figsize=(12, 8))
-sns.lineplot(x='date', y='totalDelegated', hue='Exchanges', data=df_grouped) #, palette=sns.color_palette('husl'))
-# sns.lineplot(x='date', y='balance', data=df_grouped_total, alpha=0.5, linewidth=10) #, palette=sns.color_palette('husl'))
+plot_this(input='totalDelegated', title='Exchange ICX Delegating')
 
-h,l = ax.get_legend_handles_labels()
-ax.legend(reversed(h), reversed(l),
-           loc='center', bbox_to_anchor=(0.5, -0.18),
-           fancybox=True, shadow=True, ncol=5)
-# plt.tight_layout(rect=[0,0,1,1])
+plot_this(input='stake', title='Exchange ICX Staking')
 
-ax.set_xlabel('Date', fontsize=14, weight='bold', labelpad=10)
-ax.set_ylabel('Amount (ICX)', fontsize=14, weight='bold', labelpad=10)
-ax.set_title('Exchange ICX Staking', fontsize=14, weight='bold', linespacing=1.5)
-ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'. format(x/10e5) + ' M'))
-ymin, ymax = ax.get_ylim()
-ymax_set = ymax*1.2
-ax.set_ylim([ymin,ymax_set])
-ax2 = ax.twinx()
-sns.lineplot(x='date', y='close_price', ax=ax2, data=df_price_short, color='teal', alpha=0.5, linewidth=8)
-ymin2, ymax2 = ax2.get_ylim()
-ax2.set_ylim([0,math.ceil(ymax2)])
-ax2.yaxis.set_major_formatter(StrMethodFormatter('{x:,.2f}' + ' ICX'))
-ax2.set_ylabel('Close Price (USD)', fontsize=14, weight='bold', labelpad=10)
+plot_this(input='total', title='Exchange total ICX')
 
-plt.tight_layout()
+
+
 
 
 import scipy.stats as sp
 from scipy import stats
 
-def corr_plot(df, inVar1, inVar2, this_xlabel, this_ylabel, this_title):
-
-    # m_var1 = df.groupby('validator_name')[[inVar1]].apply(np.median).reset_index(name='var1')
-    # m_var2 = df.groupby('validator_name')[[inVar2]].apply(np.median).reset_index(name='var2')
-    # m_days_ranking = pd.merge(m_var1, m_var2, on='validator_name', how='left')
-
-    # plot
-    sns.set(style="ticks")
-    plt.style.use("dark_background")
-    g = sns.jointplot(inVar1, inVar2, data=df,
-                      kind="reg", height=6, truncate=False, color='m',
-                      joint_kws={'scatter_kws': dict(alpha=0.5)}
-                      ).annotate(sp.pearsonr)
-    g.set_axis_labels(this_xlabel, this_ylabel, fontsize=14, weight='bold', labelpad=10)
-    g = g.ax_marg_x
-    g.set_title(this_title, fontsize=12, weight='bold')
-    plt.tight_layout()
-
-
-corr_plot(df_grouped_total_corr,
-          'total',
-          'close_price',
-          'Exchange Total Balance',
-          'ICX Price' + ' (' + which_currency + ')',
-          'Exchange Balance vs ICX Price')
+# def corr_plot(df, inVar1, inVar2, this_xlabel, this_ylabel, this_title):
+#
+#     # m_var1 = df.groupby('validator_name')[[inVar1]].apply(np.median).reset_index(name='var1')
+#     # m_var2 = df.groupby('validator_name')[[inVar2]].apply(np.median).reset_index(name='var2')
+#     # m_days_ranking = pd.merge(m_var1, m_var2, on='validator_name', how='left')
+#
+#     # plot
+#     sns.set(style="ticks")
+#     plt.style.use("dark_background")
+#     g = sns.jointplot(inVar1, inVar2, data=df,
+#                       kind="reg", height=6, truncate=False, color='m',
+#                       joint_kws={'scatter_kws': dict(alpha=0.5)}
+#                       )#.annotate(sp.pearsonr)
+#     g.set_axis_labels(this_xlabel, this_ylabel, fontsize=14, weight='bold', labelpad=10)
+#     g = g.ax_marg_x
+#     g.set_title(this_title, fontsize=12, weight='bold')
+#     plt.tight_layout()
+#
+#
+# corr_plot(df_grouped_total_corr,
+#           'total',
+#           'close_price',
+#           'Exchange Total Balance',
+#           'ICX Price' + ' (' + which_currency + ')',
+#           'Exchange Balance vs ICX Price')
