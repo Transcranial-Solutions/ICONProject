@@ -186,7 +186,8 @@ for date_prev in date_of_interest:
 
         add_dict_if_noexist('hxbdd5ba518b70408acd023a18e4d6b438c7f11655', jknown_address, 'Somesing Exchange')
 
-        add_dict_if_noexist('hx037c73025819e490e9a01a7e954f9b46d89b0245', jknown_address, 'MyID_related')
+        add_dict_if_noexist('hx037c73025819e490e9a01a7e954f9b46d89b0245', jknown_address, 'MyID_related_1')
+        add_dict_if_noexist('hx92b7608c53825241069a280982c4d92e1b228c84', jknown_address, 'MyID_related_2')
         add_dict_if_noexist('hx522bff55a62e0c75a1b51855b0802cfec6a92e84', jknown_address, '3-min_tx_bot_out')
         add_dict_if_noexist('hx11de4e28be4845de3ea392fd8d758655bf766ca7', jknown_address, '3-min_tx_bot_in')
 
@@ -221,6 +222,8 @@ for date_prev in date_of_interest:
         add_dict_if_noexist('hx1a5f0ce1d0d49054379a554f644f39a66a979b04', jknown_address, 'circle_arb_1_related')
         add_dict_if_noexist('hx5b802623eb53c6a90df9f29e5808596f3c2bf63e', jknown_address, 'circle_arb_2_related')
 
+
+    add_know_addresses()
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Contract Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
     tx_type = 'contract'
@@ -753,7 +756,7 @@ for date_prev in date_of_interest:
         plt.show()
         plt.tight_layout()
 
-        plt.savefig(os.path.join(resultPath, title + '_' + date_prev + '.png'))
+        # plt.savefig(os.path.join(resultPath, title + '_' + date_prev + '.png'))
 
     plot_donut_df(df_col=0, title='Fees Burned', add_string=" ICX")
     plot_donut_df(df_col=3, title='Regular Tx', add_string="")
