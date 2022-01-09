@@ -37,6 +37,10 @@ from functools import reduce
 import re
 import random
 import codecs
+import dns.resolver
+import json
+import requests
+
 
 desired_width=320
 pd.set_option('display.width', desired_width)
@@ -172,8 +176,8 @@ date_today = today.strftime("%Y-%m-%d")
 
 
 # to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 1
-date_prev = "2021-08-11"
+use_specific_prev_date = 0
+date_prev = "2022-01-08"
 
 if use_specific_prev_date == 1:
     date_of_interest = [date_prev]
@@ -181,7 +185,7 @@ elif use_specific_prev_date == 0:
     date_of_interest = [yesterday(date_today)]
 elif use_specific_prev_date == 2:
     # for loop between dates
-    day_1 = "2021-08-12"; day_2 = "2021-08-19"
+    day_1 = "2022-01-07"; day_2 = "2022-01-08"
     date_of_interest = pd.date_range(start=day_1, end=day_2, freq='D').strftime("%Y-%m-%d").to_list()
 else:
     date_of_interest=[]
@@ -189,6 +193,23 @@ else:
 
 print(date_of_interest)
 
+remote = "https://ctz.solidwallet.io/api/v3"
+data = {'jsonrpc':'2.0', 'method': 'icx_getLastBlock','id': 1223}
+def get_height(endpoint: str) -> int:
+        payload = json.dumps(data)
+        payload = payload.encode()
+        req = requests.post(endpoint, data=payload)
+        response_data = req.json()
+        return response_data["result"]["height"]
+remote_height = get_height(remote)
+
+
+
+# resolve
+this_ip = dns.resolver.resolve('mercator.transcranial-solutions.dev')[0].to_text()
+main_ip = "http://" + this_ip + ":9000/api/v3"
+
+local_ip = "http://127.0.0.1:9000/api/v3"
 
 for date_prev in date_of_interest:
 
@@ -200,8 +221,12 @@ for date_prev in date_of_interest:
     # icon_service = IconService(HTTPProvider("http://localhost:9000/api/v3", request_kwargs={"timeout": 60}))
 
     # localhost
-    icon_service = IconService(HTTPProvider("http://127.0.0.1:9000/api/v3", request_kwargs={"timeout": 60}))
-    # block = icon_service.get_block(38000000)
+    try:
+        icon_service = IconService(HTTPProvider(local_ip, request_kwargs={"timeout": 60}))
+        block = icon_service.get_block(remote_height)
+    except:
+        icon_service = IconService(HTTPProvider(main_ip, request_kwargs={"timeout": 60}))
+        block = icon_service.get_block(remote_height)
 
 
     ## Creating Wallet if does not exist (only done for the first time)
