@@ -203,13 +203,28 @@ def get_height(endpoint: str) -> int:
         return response_data["result"]["height"]
 remote_height = get_height(remote)
 
-
-
 # resolve
 this_ip = dns.resolver.resolve('mercator.transcranial-solutions.dev')[0].to_text()
 main_ip = "http://" + this_ip + ":9000/api/v3"
 
 local_ip = "http://127.0.0.1:9000/api/v3"
+
+
+
+## Creating Wallet if does not exist (only done for the first time)
+tester_wallet = os.path.join(walletPath, "test_keystore_1")
+
+if os.path.exists(tester_wallet):
+    wallet = KeyWallet.load(tester_wallet, "abcd1234*")
+else:
+    wallet = KeyWallet.create()
+    wallet.get_address()
+    wallet.get_private_key()
+    wallet.store(tester_wallet, "abcd1234*")
+
+tester_address = wallet.get_address()
+
+
 
 for date_prev in date_of_interest:
 
@@ -228,19 +243,6 @@ for date_prev in date_of_interest:
         icon_service = IconService(HTTPProvider(main_ip, request_kwargs={"timeout": 60}))
         block = icon_service.get_block(remote_height)
 
-
-    ## Creating Wallet if does not exist (only done for the first time)
-    tester_wallet = os.path.join(walletPath, "test_keystore_1")
-
-    if os.path.exists(tester_wallet):
-        wallet = KeyWallet.load(tester_wallet, "abcd1234*")
-    else:
-        wallet = KeyWallet.create()
-        wallet.get_address()
-        wallet.get_private_key()
-        wallet.store(tester_wallet, "abcd1234*")
-
-    tester_address = wallet.get_address()
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ block Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     # reading from the data extracted previously
