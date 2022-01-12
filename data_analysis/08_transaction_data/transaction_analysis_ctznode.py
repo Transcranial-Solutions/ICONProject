@@ -58,6 +58,8 @@ walletPath = os.path.join(currPath, "wallet")
 if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
+basicstatPath = os.path.join(currPath,"output\\icon_tracker\\data\\")
+
 
 # get yesterday function
 def yesterday(string=False):
@@ -109,6 +111,10 @@ for date_prev in date_of_interest:
 
     tx_df = clean_tx_df(tx_df, from_this='from', to_this='to')
 
+    #iglobal
+    basic_stat_df = pd.read_csv(os.path.join(basicstatPath, 'basic_icx_stat_df_' + date_prev + '.csv'), low_memory=False)
+    iglobal = basic_stat_df['iglobal'][0]
+    daily_issuance = iglobal*12/365
 
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -594,6 +600,8 @@ for date_prev in date_of_interest:
 
     totals = to_group.agg('sum')
 
+    daily_burned_percentage = "{:.2%}".format(totals['Fees burned']/daily_issuance)
+
     all_tx = 'Total Transactions: ' + '{:,}'.format(totals['Regular Tx'].astype(int) + totals['Internal Tx'].astype(int)) + '\n' + \
              'Total Events (including Tx): ' + '{:,}'.format(totals['Regular Tx'].astype(int) + totals['Internal Tx'].astype(int) + totals['Internal Event (excluding Tx)'].astype(int))
 
@@ -605,6 +613,7 @@ for date_prev in date_of_interest:
                              'Internal Event (excluding Tx)': 'Internal Event (excluding Tx: ' + totals['Internal Event (excluding Tx)'] + ')'})
 
     fees_burned = 'Fees burned' + ' (' + totals['Fees burned'] + ' ICX)'
+    fees_burned_label = 'Fees burned' + ' (' + totals['Fees burned'] + ' ICX' + ' / ' + daily_burned_percentage + ' of daily inflation)'
 
     plot_df = to_group.drop(columns=fees_burned)
 
@@ -635,7 +644,7 @@ for date_prev in date_of_interest:
     # ax1.legend(loc='upper center', bbox_to_anchor=(0.4, 0.95),
     #           fancybox=True, shadow=True, ncol=5)
     color = 'white'
-    m_line = mlines.Line2D([], [], color=color, label='Total ' + fees_burned, linewidth=1, marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black')
+    m_line = mlines.Line2D([], [], color=color, label='Total ' + fees_burned_label, linewidth=1, marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black')
     leg = plt.legend(handles=[m_line], loc='upper right', fontsize='medium', bbox_to_anchor=(0.98, 0.999), frameon=False)
     for text in leg.get_texts():
         plt.setp(text, color='cyan')
