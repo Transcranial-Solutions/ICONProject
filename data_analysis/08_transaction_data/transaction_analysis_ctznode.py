@@ -545,7 +545,11 @@ for date_prev in date_of_interest:
 
             # omm
             df['group'] = np.where(df['group'].str.contains('omm', case=False), 'Omm', df['group'])
-            df['group'] = np.where(df['group'].str.contains('ICON USD', case=False), 'Omm', df['group'])
+            # df['group'] = np.where(df['group'].str.contains('ICON USD', case=False), 'Omm', df['group'])
+
+            # Optimus
+            df['group'] = np.where(df['group'].str.contains('optimus', case=False), 'Optimus', df['group'])
+            df['group'] = np.where(df['group'].str.contains('finance token', case=False), 'Optimus', df['group'])
 
             # Craft
             df['group'] = np.where(df['to'] == 'cx9c4698411c6d9a780f605685153431dcda04609f', 'Craft', df['group'])
