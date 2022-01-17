@@ -34,6 +34,7 @@ if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ #
 # using solidwallet
 default_ctz_api = "https://ctz.solidwallet.io/api/v3"
@@ -145,3 +146,18 @@ def get_my_values(method, address, output):
 
 print(get_my_values("queryIScore", "hx0b047c751658f7ce1b2595da34d57a0e7dad357d", "estimatedICX"))
 
+
+
+## Seed Addresses ##
+import requests
+url = "http://34.133.160.215:9000"
+cid = requests.get(f"{url}/admin/chain").json()[0]["cid"]
+seed_dict = requests.get(f"{url}/admin/chain/{cid}").json()
+p2p_ifo = seed_dict["module"]["network"]["p2p"]
+merged_p2p_info = {**p2p_ifo["roots"], **p2p_ifo["seeds"]}
+address_dict = {}
+for node_address, ip_address in zip(merged_p2p_info.values(), merged_p2p_info.keys()):
+    if ":" in ip_address:
+        ip_address = ip_address.split(":")[0]
+    address_dict[node_address] = ip_address
+print(address_dict)
