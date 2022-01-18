@@ -1,3 +1,3 @@
-call python E:\GitHub\ICONProject\data_analysis\05_transparency_report_generator\tx_graph_token_transfer.py
+call python E:\GitHub\ICONProject\data_analysis\10_token_transfer\token_transfer.py
 
 
