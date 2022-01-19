@@ -413,7 +413,7 @@ table_now['Value Transferred in USD'] = table_now['Amount'] * table_now['Price i
 table_now = table_now.drop(columns='index')
 
 ICX_price = pd.DataFrame({'IRC Token': 'ICX'}, ICX_price).reset_index()
-table_now.append(ICX_price).reset_index(drop=True)
+table_now = table_now.append(ICX_price).reset_index(drop=True)
 
 day_today = title_date.replace("-","_")
 day_today_text = title_date.replace("-","/")
