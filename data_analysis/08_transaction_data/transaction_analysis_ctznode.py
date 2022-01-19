@@ -59,6 +59,7 @@ if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
 basicstatPath = os.path.join(currPath,"output\\icon_tracker\\data\\")
+tokentransferPath = os.path.join(currPath,"10_token_transfer\\results\\")
 
 
 # get yesterday function
@@ -102,6 +103,20 @@ for date_prev in date_of_interest:
     # data loading
     # windows_path = "E:/GitHub/ICONProject/data_analysis/08_transaction_data/data/"
     tx_df = pd.read_csv(os.path.join(dataPath, 'tx_final_' + date_prev + '.csv'), low_memory=False)
+
+    # for token transfer value
+    date_prev_underscore = date_prev.replace("-", "_")
+    tokentransfer_date_Path = os.path.join(tokentransferPath, date_prev_underscore)
+    token_transfer_df = pd.read_csv(
+        os.path.join(tokentransfer_date_Path, 'IRC_token_transfer_' + date_prev_underscore + '.csv'), low_memory=False)
+
+    token_transfer_value = token_transfer_df['Value Transferred in USD'].sum()
+
+    icx_price = token_transfer_df[token_transfer_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
+    icx_transfer_value = tx_df['value'].sum() * icx_price
+
+    total_transfer_value = icx_transfer_value + token_transfer_value
+    total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
 
     def clean_tx_df(tx_df, from_this='from', to_this='to'):
         tx_df[from_this] = np.where(tx_df[from_this].isnull(), 'System', tx_df[from_this])
@@ -554,6 +569,9 @@ for date_prev in date_of_interest:
             # Craft
             df['group'] = np.where(df['to'] == 'cx9c4698411c6d9a780f605685153431dcda04609f', 'Craft', df['group'])
             df['group'] = np.where(df['to'] == 'cx82c8c091b41413423579445032281bca5ac14fc0', 'Craft', df['group'])
+            df['group'] = np.where(df['to'] == 'cx7ecb16e4c143b95e01d05933c17cb986cfe618e6', 'Craft', df['group'])
+            df['group'] = np.where(df['to'] == 'cx5ce7d060eef6ebaf23fa8a8717d3a5c8f0a3fda9', 'Craft', df['group'])
+            df['group'] = np.where(df['to'] == 'cx2d86ce51600803e187ce769129d1f6442bcefb5b', 'Craft', df['group'])
 
             # iAM
             df['group'] = np.where(df['to'] == 'cx210ded1e8e109a93c89e9e5a5d0dcbc48ef90394', 'iAM ', df['group'])
@@ -607,7 +625,8 @@ for date_prev in date_of_interest:
     daily_burned_percentage = "{:.2%}".format(totals['Fees burned']/daily_issuance)
 
     all_tx = 'Total Transactions: ' + '{:,}'.format(totals['Regular Tx'].astype(int) + totals['Internal Tx'].astype(int)) + '\n' + \
-             'Total Events (including Tx): ' + '{:,}'.format(totals['Regular Tx'].astype(int) + totals['Internal Tx'].astype(int) + totals['Internal Event (excluding Tx)'].astype(int))
+             'Total Events (including Tx): ' + '{:,}'.format(totals['Regular Tx'].astype(int) + totals['Internal Tx'].astype(int) + totals['Internal Event (excluding Tx)'].astype(int)) + '\n' + \
+        total_transfer_value_text
 
     totals = totals.astype(int).map("{:,}".format)
 
@@ -655,7 +674,7 @@ for date_prev in date_of_interest:
 
     plt.tight_layout(rect=[0,0,1,1])
 
-    ax1.text(xmax*0.97, ymax*0.88, all_tx,
+    ax1.text(xmax*0.97, ymax*0.82, all_tx,
             horizontalalignment='right',
             verticalalignment='center',
             linespacing = 1.5,
