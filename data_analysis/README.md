@@ -1,8 +1,9 @@
 # Data Analysis
 
-Currently it extracts data from publicly available sources, such as 
+Extracts data from publicly available sources, such as 
 Icon Vote Monitor by Everstake (https://iconvotemonitor.com/) and 
 ICON Foundation websites (https://tracker.icon.foundation/governance).
+Also directly from the chain.
 
 ## 01_voting_behaviour
 This is for the analysis of voting behaviour in ICON network.
