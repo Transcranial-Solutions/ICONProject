@@ -1,6 +1,6 @@
 #########################################################################
-## Project: Wallet extraction                                          ##
-## Date: August 2021                                                   ##
+## Project: Block and date extraction                                  ##
+## Date: January 2022                                                  ##
 ## Author: Tono / Sung Wook Chung (Transcranial Solutions)             ##
 ## transcranial.solutions@gmail.com                                    ##
 ##                                                                     ##
