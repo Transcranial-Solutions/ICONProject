@@ -415,6 +415,9 @@ table_now = table_now.drop(columns='index')
 ICX_price = pd.DataFrame({'IRC Token': 'ICX'}, ICX_price).reset_index()
 table_now = table_now.append(ICX_price).reset_index(drop=True)
 
+
+
+
 day_today = title_date.replace("-","_")
 day_today_text = title_date.replace("-","/")
 
@@ -444,6 +447,9 @@ table_now.to_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + 
 # reading previous term data
 windows_path_prev = "E:/GitHub/ICONProject/data_analysis/10_token_transfer/results/" + day_prev
 table_prev = pd.read_csv(os.path.join(windows_path_prev, 'IRC_token_transfer_' + day_prev + '.csv'))
+
+# table_now = pd.read_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + '.csv'))
+# table_prev = pd.read_csv(os.path.join(windows_path_prev, 'IRC_token_transfer_' + day_prev + '.csv'))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Load previous data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 ## removing ICX from the data (leaving ICX in the saved data for other purposes)
