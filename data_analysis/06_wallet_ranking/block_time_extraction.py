@@ -46,8 +46,8 @@ pd.set_option('display.max_columns',10)
 workers = 8
 
 start_block = 1
-interval = 1000
-end_block = 10000
+interval = 500
+end_block = 100000
 
 currPath = os.getcwd()
 if not "06_wallet_ranking" in currPath:
@@ -202,7 +202,7 @@ block_df = run_block()
 def timestamp_to_date(df, timestamp, dateformat):
     return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
 
-timestamp_to_date(block_df, 'timestamp', '%YY-%MM-%DD')
+timestamp_to_date(block_df, 'timestamp', '%Y-%m-%d %H:%M:%S')
 
 
 # block_df.to_csv(os.path.join(dataPath, 'address_' + str(start_block) + '_' + str(end_block) + '.csv'), index=False)
