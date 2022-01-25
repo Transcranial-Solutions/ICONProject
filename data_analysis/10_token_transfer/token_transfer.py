@@ -96,6 +96,13 @@ if date_is_range == 0 and use_specified_date == 0:
    date_of_interest = [day_to_text(day_1)]
 
 
+# title based on range or not
+if date_is_range == 1:
+    title_date = date_of_interest[0] + ' ~ ' + date_of_interest[-1]
+else:
+    title_date = date_of_interest[0]
+
+
 # wallet of interest
 this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 
@@ -341,15 +348,6 @@ def collect_data(tx_type=tx_type, date_of_interest=date_of_interest, this_addres
 # getting token_txlist information from icon transaction page
 token_xfer_df = collect_data(tx_type='token_txlist', date_of_interest=date_of_interest)
 token_xfer_df[['amount']] = token_xfer_df[['amount']].apply(pd.to_numeric, errors='coerce', axis=1)
-
-# title based on range or not
-if date_is_range == 1:
-    title_date = date_of_interest[0] + ' ~ ' + date_of_interest[-1]
-else:
-    title_date = date_of_interest[0]
-
-
-
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Token price data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
