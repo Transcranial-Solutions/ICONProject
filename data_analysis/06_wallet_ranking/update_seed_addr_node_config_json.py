@@ -14,6 +14,7 @@ import pandas as pd
 import os
 import requests
 import json
+import random
 
 desired_width = 320
 pd.set_option('display.width', desired_width)
@@ -42,6 +43,10 @@ for node_address, ip_address in zip(merged_p2p_info.values(), merged_p2p_info.ke
 
 top_22_ip = list(address_dict.values())[0:21]
 top_22_ip = [s + ':7100' for s in top_22_ip]
+
+# including random shuffling
+random.shuffle(top_22_ip)
+
 top_22_ip_str = ','.join(top_22_ip)
 
 
