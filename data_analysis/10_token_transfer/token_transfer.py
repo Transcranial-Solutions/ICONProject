@@ -74,6 +74,7 @@ def extract_values(obj, key):
   return results
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Date ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # today's date
 date_is_range = 0 # if date is range (1) or is one  date (0)
 use_specified_date = 0 # yes(1) no(0)
@@ -95,14 +96,32 @@ if date_is_range == 0 and use_specified_date == 0:
    day_1 = today.strftime("%Y_%m_%d")
    date_of_interest = [day_to_text(day_1)]
 
-
 # title based on range or not
 if date_is_range == 1:
     title_date = date_of_interest[0] + ' ~ ' + date_of_interest[-1]
 else:
     title_date = date_of_interest[0]
 
+day_today = title_date.replace("-","_")
+day_today_text = title_date.replace("-","/")
 
+# to use specific date, otherwise use yesterday
+use_specific_prev_date = 0
+day_prev = "2021_02_08"
+
+if use_specific_prev_date == 1:
+    day_prev = day_prev
+else:
+    today = datetime.utcnow() - timedelta(1) ### IMPORTANT !! NOTE THAT THIS IS 1 DAY BEFORE !!!
+    day_prev = yesterday(today)
+day_prev_text = day_prev.replace("_","/")
+
+windows_path = "E:/GitHub/ICONProject/data_analysis/10_token_transfer/results/" + day_today
+
+if not os.path.exists(windows_path):
+    os.makedirs(windows_path)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Some things from legacy code that it requires ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # wallet of interest
 this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 
@@ -113,6 +132,11 @@ tx_type = 'token_txlist' # 'normal', 'internal', 'contract', 'token (individual 
 # this is for getting only 1 interaction (WOI <-> wallet_x)
 first_degree = 1
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Converter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# loop to icx converter
+def loop_to_icx(loop):
+    icx = loop / 1000000000000000000
+    return(icx)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Contract Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
@@ -351,11 +375,6 @@ token_xfer_df[['amount']] = token_xfer_df[['amount']].apply(pd.to_numeric, error
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Token price data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# loop to icx converter
-def loop_to_icx(loop):
-    icx = loop / 1000000000000000000
-    return(icx)
-
 def request_into_df(url):
     req_url = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     req_url_json = json.load(urlopen(req_url))
@@ -416,24 +435,7 @@ table_now = table_now.append(ICX_price).reset_index(drop=True)
 
 
 
-day_today = title_date.replace("-","_")
-day_today_text = title_date.replace("-","/")
 
-# to use specific date, otherwise use yesterday
-use_specific_prev_date = 0
-day_prev = "2021_02_08"
-
-if use_specific_prev_date == 1:
-    day_prev = day_prev
-else:
-    today = datetime.utcnow() - timedelta(1) ### IMPORTANT !! NOTE THAT THIS IS 1 DAY BEFORE !!!
-    day_prev = yesterday(today)
-day_prev_text = day_prev.replace("_","/")
-
-windows_path = "E:/GitHub/ICONProject/data_analysis/10_token_transfer/results/" + day_today
-
-if not os.path.exists(windows_path):
-    os.makedirs(windows_path)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Save ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # saving this term's token transfer
