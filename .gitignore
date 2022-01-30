@@ -17,7 +17,12 @@ data_analysis/06_wallet_ranking/results/wallet_balance/*.csv
 data_analysis/output/vote_status_per_day.csv
 
 data_analysis/08_transaction_data/data/*.csv
-data_analysis/08_transaction_data/results/*.png
+data_analysis/08_transaction_data/results/2019/*.png
+data_analysis/08_transaction_data/results/2020/*.png
+data_analysis/08_transaction_data/results/2021/*.png
+data_analysis/08_transaction_data/results/2022/*.png
+data_analysis/08_transaction_data/results/2023/*.png
+
 data_analysis/wallet/test_keystore_1
 
 data_analysis/08_transaction_data/wallet/test_keystore_1
