@@ -52,7 +52,7 @@ if not os.path.exists(walletPath):
 
 
 
-listData = glob.glob(os.path.join(resultPath, "tx_summary_*.csv"))
+listData = glob.glob(os.path.join(resultPath, "\\*\\tx_summary_*.csv"), recursive=True)
 
 
 all_df =[]
