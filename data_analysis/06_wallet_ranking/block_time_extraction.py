@@ -15,9 +15,10 @@
 # import json library
 # import urllib
 # from urllib.request import Request, urlopen
-# import json
+import json
 import pandas as pd
 import numpy as np
+import requests
 # import matplotlib.pyplot as plt
 # from pandas.core.groupby.generic import DataFrameGroupBy
 # import pylab as pl
@@ -38,16 +39,29 @@ import re
 import itertools
 import random
 import codecs
+import math
 
-desired_width=320
+desired_width = 320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
 
-workers = 8
+workers = 4
+
+data = {'jsonrpc':'2.0', 'method': 'icx_getLastBlock','id': 1223}
+def get_height(endpoint: str) -> int:
+        payload = json.dumps(data)
+        payload = payload.encode()
+        req = requests.post(endpoint, data=payload)
+        response_data = req.json()
+        return response_data["result"]["height"]
+
+remote = "http://34.133.160.215:9000/api/v3" # rhizome
+
+block_height_now = get_height(remote)
 
 start_block = 1
-interval = 500
-end_block = 100000
+interval = 2000
+end_block = math.floor(block_height_now/interval)*interval + start_block #40000000
 
 currPath = os.getcwd()
 if not "06_wallet_ranking" in currPath:
@@ -200,12 +214,12 @@ block_df = run_block()
 
 # convert timestamp to datetime
 def timestamp_to_date(df, timestamp, dateformat):
-    return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
+    return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.tz_localize('UTC').dt.strftime(dateformat)
 
-timestamp_to_date(block_df, 'timestamp', '%Y-%m-%d %H:%M:%S')
+block_df['datetime'] = timestamp_to_date(block_df, 'timestamp', '%Y-%m-%d %H:%M:%S')
 
 
-# block_df.to_csv(os.path.join(dataPath, 'address_' + str(start_block) + '_' + str(end_block) + '.csv'), index=False)
+block_df.to_csv(os.path.join(dataPath, 'block_time_' + str(start_block) + '_' + str(end_block) + '.csv'), index=False)
 
 def run_all():
     if __name__ == "__main__":
