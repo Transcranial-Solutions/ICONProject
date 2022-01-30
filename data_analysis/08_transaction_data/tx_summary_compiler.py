@@ -51,7 +51,6 @@ if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
 
-
 listData = glob.glob(os.path.join(resultPath, "\\*\\tx_summary_*.csv"), recursive=True)
 
 
@@ -65,10 +64,18 @@ for k in range(len(listData)):
     df = df[cols]
     all_df.append(df)
 
+## SAVE
 df = pd.concat(all_df)
-
 df.to_csv(os.path.join(resultPath, 'compiled_tx_summary.csv'), index=False)
 
+df_summarised = df.groupby(['date', 'group']).agg('sum').reset_index()
+df.to_csv(os.path.join(resultPath, 'compiled_tx_summary_group.csv'), index=False)
+
+df_summarised_more = df.groupby(['date']).agg('sum').reset_index()
+df.to_csv(os.path.join(resultPath, 'compiled_tx_summary_date.csv'), index=False)
+
+
+## plot
 df['date'] = pd.to_datetime(df['date'], format='%Y/%m/%d')
 df['week'] = pd.to_datetime(df['date'], unit='s').dt.strftime("%Y-%U")
 df['month'] = pd.to_datetime(df['date'], unit='s').dt.strftime("%Y-%m")
