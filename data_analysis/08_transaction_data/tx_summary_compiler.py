@@ -69,10 +69,10 @@ df = pd.concat(all_df)
 df.to_csv(os.path.join(resultPath, 'compiled_tx_summary.csv'), index=False)
 
 df_summarised = df.groupby(['date', 'group']).agg('sum').reset_index()
-df.to_csv(os.path.join(resultPath, 'compiled_tx_summary_group.csv'), index=False)
+df_summarised.to_csv(os.path.join(resultPath, 'compiled_tx_summary_group.csv'), index=False)
 
 df_summarised_more = df.groupby(['date']).agg('sum').reset_index()
-df.to_csv(os.path.join(resultPath, 'compiled_tx_summary_date.csv'), index=False)
+df_summarised_more.to_csv(os.path.join(resultPath, 'compiled_tx_summary_date.csv'), index=False)
 
 
 ## plot
