@@ -399,9 +399,44 @@ token_price_balanced = request_into_df(url='https://balanced.geometry.io/api/v1/
 # unifi protocol
 token_price_unifi = request_into_df(url='https://assets.unifiprotocol.com/pools-icon.json')
 
+# token price simple
 token_price_balanced['Price in USD'] = token_price_balanced['tokens'].apply(lambda x: x.get('price'))
 token_price_balanced['Price in USD'] = loop_to_icx(token_price_balanced['Price in USD'].apply(int, base=16))
 token_price_balanced = token_price_balanced.drop(columns=['tokens', 'timestamp'])
+
+bnusd_in_usd = token_price_balanced[token_price_balanced['index'] == 'bnUSD']['Price in USD'].iloc[0]
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FIN price (if does not exist)
+if not any(token_price_balanced['index'] == 'FIN'):
+    from iconsdk.builder.call_builder import CallBuilder
+    from iconsdk.icon_service import IconService
+    from iconsdk.providers.http_provider import HTTPProvider
+
+    DEX_CONTRACT = "cxa0af3165c08318e988cb30993b3048335b94af6c"
+    nid = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+    EXA = 10 ** 18
+
+    finbnusdpricecall = CallBuilder().from_("hx0000000000000000000000000000000000000001") \
+        .to(DEX_CONTRACT) \
+        .method("getPrice") \
+        .params({"_id": "31"}) \
+        .build()
+    finbnusdpriceresult = nid.call(finbnusdpricecall)
+
+    finbnusdindec = int(finbnusdpriceresult, 16)
+    finbnusdfloatindec = float(finbnusdindec)
+    finbnusdconverted = finbnusdfloatindec / EXA
+
+    # convert fin_bnusd into fin_usd value
+    fin_in_usd = pd.DataFrame({'index': ['FIN'], 'Price in USD': [finbnusdconverted * bnusd_in_usd]})
+
+    # add FIN price to token price list
+    token_price_balanced = token_price_balanced.append(fin_in_usd).reset_index(drop=True)
+else:
+    pass
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # ICX price
 ICX_price = token_price_balanced[token_price_balanced['index'] == 'ICX']['Price in USD']
