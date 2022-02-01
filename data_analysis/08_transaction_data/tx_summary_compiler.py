@@ -23,9 +23,9 @@ import matplotlib.ticker as ticker
 import matplotlib.lines as mlines
 
 
-start_date = '2021-12-01'
-end_date = '2021-12-31'
-my_title = 'Transactions (December 2021)'
+start_date = '2022-01-01'
+end_date = '2022-01-31'
+my_title = 'Transactions (January 2022)'
 interval = 'date'
 
 
@@ -51,8 +51,8 @@ if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
 
-listData = glob.glob(os.path.join(resultPath, "\\*\\tx_summary_*.csv"), recursive=True)
-
+listData = glob.glob(os.path.join(resultPath, "\\**\\tx_summary_*.csv"), recursive=True)
+listData = [x for x in listData if "weekly" not in x] # removing weekly data
 
 all_df =[]
 for k in range(len(listData)):
