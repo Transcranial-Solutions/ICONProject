@@ -10,7 +10,7 @@
 ## GNU General Public License for more details.                        ##
 #########################################################################
 
-# High-level information from ICX tracker
+# Using Geometry's new Icon tracker
 
 # import json library
 from urllib.request import Request, urlopen
@@ -26,6 +26,7 @@ from iconsdk.icon_service import IconService
 from iconsdk.providers.http_provider import HTTPProvider
 from iconsdk.builder.call_builder import CallBuilder
 from iconsdk.wallet.wallet import KeyWallet
+import math
 
 desired_width=320
 pd.set_option('display.width', desired_width)
@@ -35,7 +36,7 @@ pd.set_option('display.max_columns',10)
 currPath = os.getcwd()
 inPath = os.path.join(currPath, "output")
 
-resultPath = os.path.join(inPath, "icon_tracker")
+resultPath = os.path.join(inPath, "prep_info")
 if not os.path.exists(resultPath):
     os.mkdir(resultPath)
 
@@ -50,7 +51,7 @@ if not os.path.exists(walletPath):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ wallet ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 ## Creating Wallet if does not exist (only done for the first time)
-tester_wallet = os.path.join(walletPath, "wallet/test_keystore_1")
+tester_wallet = os.path.join(walletPath, "test_keystore_1")
 
 if os.path.exists(tester_wallet):
     wallet = KeyWallet.load(tester_wallet, "abcd1234*")
@@ -146,28 +147,35 @@ def extract_values(obj, key):
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX tracker Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-tracker_url = Request('https://tracker.icon.foundation/v3/main/mainInfo', headers={'User-Agent': 'Mozilla/5.0'})
+tracker_url = Request('https://tracker.icon.community/api/v1/preps', headers={'User-Agent': 'Mozilla/5.0'})
 jtracker_url = json.load(urlopen(tracker_url))
 
-def extract_json(json_dict):
-    marketCap = extract_values(json_dict, 'marketCap')
-    icxSupply = extract_values(json_dict, 'icxSupply')
-    icxCirculationy = extract_values(json_dict, 'icxCirculationy')
-    publicTreasury = extract_values(json_dict, 'publicTreasury')
-
-    # combining strings into list
-    icxdata = {'marketCap': marketCap,
-         'icxSupply': icxSupply,
-         'icxCirculation': icxCirculationy,
-         'publicTreasury': publicTreasury}
-
-    # convert into dataframe
-    return(pd.DataFrame(data=icxdata))
-
-
-
-icx_df = extract_json(jtracker_url)
+icx_df = pd.DataFrame(jtracker_url)
 icx_df['iglobal'] = iglobal
+
+first_column = icx_df.pop('name')
+icx_df.insert(0, 'name', first_column)
+
+
+
+# bond and power
+icx_df['bonded'] = icx_df['bonded'].astype(float)
+icx_df['bonded'] = loop_to_icx(icx_df['bonded'])
+
+icx_df['power'] = icx_df['power'].astype(float)
+icx_df['power'] = loop_to_icx(icx_df['power'])
+
+icx_df['bond_percentage'] = icx_df['bonded'] / icx_df['delegated']
+icx_df['bond_percentage'] = icx_df['bond_percentage'].apply('{:,.2%}'.format)
+
+icx_df = icx_df.sort_values(by=['delegated', 'bonded', 'name'], ascending=False)
+icx_df['rank_by_delegation'] = np.arange(len(icx_df)) + 1
+
+icx_df = icx_df.sort_values(by=['bonded', 'delegated'], ascending=False)
+icx_df['rank_by_bond'] = np.arange(len(icx_df)) + 1
+
+icx_df = icx_df.reset_index(drop=True)
+
 
 # today date
 # today = date.today()
@@ -178,48 +186,6 @@ day_excel = today.strftime("%d/%m/%Y")
 icx_df.insert(loc=0, column='date', value=day_excel)
 
 # save as csv
-icx_df.to_csv(os.path.join(dataPath, 'basic_icx_stat_df_' + day_today + '.csv'), index=False)
+icx_df.to_csv(os.path.join(dataPath, 'prep_info_' + day_today + '.csv'), index=False)
 
-listData = glob.glob(os.path.join(dataPath, "basic*.csv"))
-
-
-all_df =[]
-for k in range(len(listData)):
-    df = pd.read_csv(listData[k]).head(1)
-    all_df.append(df)
-
-df = pd.concat(all_df)
-df['date'] = pd.to_datetime(df['date'], format='%d/%m/%Y')
-
-def interploate_data(df):
-    df.index = pd.DatetimeIndex(df['date']).floor('D')
-    all_days = pd.date_range(df.index.min(), df.index.max(), freq='D')
-    df = df.reindex(all_days)
-    df.reset_index(inplace=True)
-    df = df.drop(columns='date').rename(columns={'index':'date'})
-    df['date'] = df['date'].dt.date
-    df.set_index('date', inplace=True)
-
-    # interpolate
-    df = df.interpolate()
-
-    # putting back the date
-    df = df.reset_index()
-    return df
-
-df = interploate_data(df)
-
-df.to_csv(os.path.join(resultPath, 'icx_tracker_compiled.csv'), index=False)
-
-
-old_df = pd.read_csv(os.path.join(inPath, 'icon_community\\icx_stat_compiled.csv'))
-old_df = old_df.drop(columns=['Total Staked \xa0','Circulation Staked \xa0','Total Voted \xa0','total_staked_ICX']).rename(columns={'Market Cap (USD)':'marketCap', 'Total Supply': 'icxSupply', 'Circulating Supply':'icxCirculation', 'Public Treasury \xa0': 'publicTreasury'})
-
-new_df = old_df.append(df).reset_index(drop=True)
-
-
-new_df = new_df[(np.abs(stats.zscore(new_df['marketCap'])) < 3)]
-
-new_df = interploate_data(new_df)
-
-new_df.to_csv(os.path.join(resultPath, 'icx_tracker_compiled_all.csv'), index=False)
+print(' ### Done extracting p-rep info from geometry tracker. ### ')
