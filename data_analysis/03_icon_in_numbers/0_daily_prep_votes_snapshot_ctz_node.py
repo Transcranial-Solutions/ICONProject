@@ -198,3 +198,4 @@ if __name__ == '__main__':
 
   merged_df.to_csv(os.path.join(outDataPath, 'prep_votes_final_' + day1 + '.csv'), index=False)
 
+  print(' ### Done getting P-Rep vote information using a complicated method. ### ')
