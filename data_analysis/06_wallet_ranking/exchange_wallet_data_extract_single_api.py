@@ -56,6 +56,13 @@ def yesterday(string=False):
         return yesterday.strftime('%Y_%m_%d')
     return yesterday
 
+# get day before yesterday function
+def day_before_yesterday(string=False):
+    dby = datetime.utcnow() - timedelta(2)
+    if string:
+        return dby.strftime('%Y_%m_%d')
+    return dby
+
 # today's date
 # today = date.today()
 today = datetime.utcnow()
@@ -65,12 +72,16 @@ day_today_text = day_today.replace("_","/")
 # to use specific date, otherwise use yesterday
 use_specific_prev_date = 0
 day_prev = "2021_02_08"
+day_prev_prev = "2021_02_07"
 
 if use_specific_prev_date == 1:
     day_prev = day_prev
+    day_prev_prev = day_prev_prev
 else:
     day_prev = yesterday(today)
+    day_prev_prev = day_before_yesterday(today)
 day_prev_text = day_prev.replace("_","/")
+day_prev_prev_text = day_prev_prev.replace("_","/")
 
 
 
@@ -383,7 +394,17 @@ if not os.path.exists(windows_path):
 
 # reading previous term data
 windows_path_prev = "E:/GitHub/ICONProject/data_analysis/06_wallet_ranking/results/" + day_prev
-all_df_prev = pd.read_csv(os.path.join(windows_path_prev, "exchange_wallet_balance_" + day_prev + '.csv'))
+
+df_prev_fn = os.path.join(windows_path_prev, "exchange_wallet_balance_" + day_prev + '.csv')
+if os.path.isfile(df_prev_fn):
+    all_df_prev = pd.read_csv(df_prev_fn)
+else:
+    windows_path_prev_prev = "E:/GitHub/ICONProject/data_analysis/06_wallet_ranking/results/" + day_prev_prev
+    all_df_prev_prev = pd.read_csv(os.path.join(windows_path_prev_prev, "exchange_wallet_balance_" + day_prev_prev + '.csv'))
+    all_df_prev = pd.concat([all_df, all_df_prev_prev]).groupby(['address','names']).mean().reset_index()
+    all_df_prev.to_csv(os.path.join(windows_path_prev, 'exchange_wallet_balance_' + all_df_prev + '.csv'), index=False)
+
+
 
 
 # getting only exchange wallets
