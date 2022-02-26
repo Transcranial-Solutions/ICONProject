@@ -411,6 +411,7 @@ for date_prev in date_of_interest:
         replace_dict_if_unknown('cxd4d8444d9ad73d80b5a1691e51dc4a4108d09473', jknown_address, 'balanced_retirebnUSD_2')
 
         replace_dict_if_unknown('cx1a29259a59f463a67bb2ef84398b30ca56b5830a', jknown_address, 'omm token')
+        replace_dict_if_unknown('cxcb455f26a2c01c686fa7f30e1e3661642dd53c0d', jknown_address, 'omm lending')
 
         # jknown_address['cxb0b6f777fba13d62961ad8ce11be7ef6c4b2bcc6'] = 'ICONbet \nDAOdice (new)'
         # jknown_address['cx38fd2687b202caf4bd1bda55223578f39dbb6561'] = 'ICONbet \nDAOlette (new)'
