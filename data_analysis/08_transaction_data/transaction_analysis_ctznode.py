@@ -689,9 +689,10 @@ for date_prev in date_of_interest:
                loc='upper right', bbox_to_anchor=(1, 1.07),
                frameon=False, fancybox=True, shadow=True, ncol=3)
 
-    ax1.text(xmax*1.00, ymax*-0.40, system_tx,
+    ax1.text(xmax*1.07, ymax*-0.12, system_tx,
             horizontalalignment='right',
             verticalalignment='center',
+            rotation=90,
             linespacing = 1.5,
             fontsize=8)
 
