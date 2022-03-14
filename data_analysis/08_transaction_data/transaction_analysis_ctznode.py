@@ -410,10 +410,22 @@ for date_prev in date_of_interest:
         replace_dict_if_unknown('cx624af53e8954abed2acf18e6f8c9f35eae918244', jknown_address, 'balanced_retirebnUSD_1')
         replace_dict_if_unknown('cxd4d8444d9ad73d80b5a1691e51dc4a4108d09473', jknown_address, 'balanced_retirebnUSD_2')
 
-        replace_dict_if_unknown('cx1a29259a59f463a67bb2ef84398b30ca56b5830a', jknown_address, 'omm token')
-        replace_dict_if_unknown('cxcb455f26a2c01c686fa7f30e1e3661642dd53c0d', jknown_address, 'omm lending')
+        replace_dict_if_unknown('cx1a29259a59f463a67bb2ef84398b30ca56b5830a', jknown_address, 'omm_token')
+        replace_dict_if_unknown('cxcb455f26a2c01c686fa7f30e1e3661642dd53c0d', jknown_address, 'omm_lending')
 
-        replace_dict_if_unknown('cxcb455f26a2c01c686fa7f30e1e3661642dd53c0d', jknown_address, 'optimus withdrawal')
+        # replace_dict_if_unknown('cxcb455f26a2c01c686fa7f30e1e3661642dd53c0d', jknown_address, 'optimus withdrawal')
+
+        replace_dict_if_unknown('cxaa99a164586883eed0322d62a31946dfa9491fa6', jknown_address, 'optimus_rewards')
+        replace_dict_if_unknown('cxa0af3165c08318e988cb30993b3048335b94af6c', jknown_address, 'optimus_baln')
+        replace_dict_if_unknown('cx7b1843b7ef5368a080ccf59c0a9d1bdec474f9f6', jknown_address, 'optimus_dividends')
+        replace_dict_if_unknown('cx5faae53c4dbd1fbe4a2eb4aab6565030f10da5c6', jknown_address, 'optimus_fee_handler')
+        replace_dict_if_unknown('cx9f734408d7434604bb9984fa5898a792670ea945', jknown_address, 'optimus_multisiglock_time_wallet')
+
+        replace_dict_if_unknown('cx6c8897b59a8e4a3f14865d74c1cc7a80fe82a48c', jknown_address, 'Monkey')
+        replace_dict_if_unknown('cx43fa2fa3cdc8c5d48abd612eada8169d3d9b5a73', jknown_address, 'Home Ground Pay')
+        replace_dict_if_unknown('cxe7c05b43b3832c04735e7f109409ebcb9c19e664', jknown_address, 'iAM')
+
+
 
         # jknown_address['cxb0b6f777fba13d62961ad8ce11be7ef6c4b2bcc6'] = 'ICONbet \nDAOdice (new)'
         # jknown_address['cx38fd2687b202caf4bd1bda55223578f39dbb6561'] = 'ICONbet \nDAOlette (new)'
