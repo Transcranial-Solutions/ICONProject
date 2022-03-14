@@ -78,13 +78,13 @@ use_specified_date = 1 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2018_06_30"; day_2 = "2018_06_30"
+    day_1 = "2022_03_06"; day_2 = "2022_03_06"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2018_06_30"
+   day_1 = "2022_03_06"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -124,11 +124,11 @@ NW_EW = 15
 rm_exch = 0
 rm_known = 0
 # from wallet or into the wallet
-tx_flow = 'both' # 'in', 'out', 'both'
+tx_flow = 'out' # 'in', 'out', 'both'
 tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet)', 'token_txlist (token that has been xferred), 'token_list'
 
 # does not work with range
-first_degree = 1 # this is for getting only 1 interaction (WOI <-> wallet_x)
+first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
 further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -334,6 +334,8 @@ jknown_address['cx14002628a4599380f391f708843044bc93dce27d'] = 'iAM Div'
 jknown_address['cx75e584ffe40cf361b3daa00fa6593198d47505d5'] = 'TAP Div'
 jknown_address['cxff66ea114d20f6518e89f1269b4a31d3620b9331'] = 'PGT Distro'
 jknown_address['cx953260a551584681e1f0492dce29e07d323ed5a6'] = 'ICONPOOL'
+jknown_address['cxcb455f26a2c01c686fa7f30e1e3661642dd53c0d'] = 'OMM Lending Pool'
+jknown_address['cx8683d50b9f53275081e13b64fba9d6a56b7c575d'] = 'GangstaBet'
 
 # making same table but with different column names
 known_address_details_to = pd.DataFrame(jknown_address.items(), columns=['dest_address', 'dest_def'])
