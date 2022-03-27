@@ -87,7 +87,8 @@ if date_is_range == 1:
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2021_04_29"
+   day_1 = "2022_03_25"
+   day_prev = "2022_03_24"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -106,10 +107,7 @@ day_today = title_date.replace("-","_")
 day_today_text = title_date.replace("-","/")
 
 # to use specific date, otherwise use yesterday
-use_specific_prev_date = 0
-day_prev = "2021_02_08"
-
-if use_specific_prev_date == 1:
+if use_specified_date == 1:
     day_prev = day_prev
 else:
     today = datetime.utcnow() - timedelta(1) ### IMPORTANT !! NOTE THAT THIS IS 1 DAY BEFORE !!!
@@ -394,7 +392,8 @@ def request_into_df(url):
     return(req_df)
 
 # balanced
-token_price_balanced = request_into_df(url='https://balanced.geometry.io/api/v1/stats/token-stats').reset_index()
+# token_price_balanced = request_into_df(url='https://balanced.geometry.io/api/v1/stats/token-stats').reset_index()
+token_price_balanced = request_into_df(url='https://balanced.sudoblock.io/api/v1/stats/token-stats').reset_index()
 
 # unifi protocol
 token_price_unifi = request_into_df(url='https://assets.unifiprotocol.com/pools-icon.json')
