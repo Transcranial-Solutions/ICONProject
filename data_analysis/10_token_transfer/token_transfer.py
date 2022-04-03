@@ -258,6 +258,10 @@ def Convert(lst1, lst2):
 contract_d = Convert(contract_address, contract_name)
 
 
+
+page_count = []
+tx_count = []
+page_count, tx_count = get_page_tx_count(tx_type='token_txlist')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~ Collecting data that meets date criteria Functions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 # collects data that meets date criteria
