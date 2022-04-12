@@ -70,9 +70,9 @@ day_today = today.strftime("%Y_%m_%d")
 day_today_text = day_today.replace("_","/")
 
 # to use specific date, otherwise use yesterday
-use_specific_prev_date = 0
-day_prev = "2021_02_08"
-day_prev_prev = "2021_02_07"
+use_specific_prev_date = 1
+day_prev = "2022_04_09"
+day_prev_prev = "2022_04_08"
 
 if use_specific_prev_date == 1:
     day_prev = day_prev
@@ -391,6 +391,7 @@ if not os.path.exists(windows_path):
 
 # saving this term's exchange wallet balance
 # all_df.to_csv(os.path.join(windows_path, 'exchange_wallet_balance_' + day_today + '.csv'), index=False)
+# all_df = pd.read_csv(os.path.join(windows_path_prev, "exchange_wallet_balance_" + day_prev + '.csv'))
 
 # reading previous term data
 windows_path_prev = "E:/GitHub/ICONProject/data_analysis/06_wallet_ranking/results/" + day_prev
@@ -403,8 +404,6 @@ else:
     all_df_prev_prev = pd.read_csv(os.path.join(windows_path_prev_prev, "exchange_wallet_balance_" + day_prev_prev + '.csv'))
     all_df_prev = pd.concat([all_df, all_df_prev_prev]).groupby(['address','names']).mean().reset_index()
     all_df_prev.to_csv(os.path.join(windows_path_prev, 'exchange_wallet_balance_' + all_df_prev + '.csv'), index=False)
-
-
 
 
 # getting only exchange wallets
