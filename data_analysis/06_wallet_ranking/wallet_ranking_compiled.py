@@ -41,7 +41,7 @@ if not os.path.exists(walletsPath):
 
 
 # getting 2021 05 data only
-listData = glob.glob((resultsPath + "\\2021_**\\*.csv"), recursive=True)
+listData = glob.glob((resultsPath + "\\202**\\*.csv"), recursive=True)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
