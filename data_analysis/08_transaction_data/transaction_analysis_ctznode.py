@@ -390,6 +390,7 @@ for date_prev in date_of_interest:
         replace_dict_if_unknown('cx7d8caa66cbe1a96876e0bc2bda4fc60e5f9781e6', jknown_address, 'ICX_Card')
         replace_dict_if_unknown('cx82c8c091b41413423579445032281bca5ac14fc0', jknown_address, 'Craft')
         replace_dict_if_unknown('cx8683d50b9f53275081e13b64fba9d6a56b7c575d', jknown_address, 'gangstabet_trade')
+        replace_dict_if_unknown('cx6139a27c15f1653471ffba0b4b88dc15de7e3267', jknown_address, 'gangstabet_token')
 
         replace_dict_if_unknown('cx66d4d90f5f113eba575bf793570135f9b10cece1', jknown_address, 'balanced_loans')
         replace_dict_if_unknown('cx43e2eec79eb76293c298f2b17aec06097be606e0', jknown_address, 'balanced_staking')
