@@ -27,6 +27,9 @@ from iconsdk.providers.http_provider import HTTPProvider
 from iconsdk.builder.call_builder import CallBuilder
 from iconsdk.wallet.wallet import KeyWallet
 import math
+import requests
+from bs4 import BeautifulSoup
+
 
 desired_width=320
 pd.set_option('display.width', desired_width)
@@ -147,8 +150,15 @@ def extract_values(obj, key):
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX tracker Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-tracker_url = Request('https://tracker.icon.community/api/v1/preps', headers={'User-Agent': 'Mozilla/5.0'})
-jtracker_url = json.load(urlopen(tracker_url))
+
+
+req = requests.get('https://tracker.icon.community/api/v1/preps')
+# jtracker_url = BeautifulSoup(req.text, 'html.parser')
+jtracker_url = json.loads(req.text)
+
+# tracker_url = Request('https://tracker.icon.community/api/v1/preps', headers={'User-Agent': 'Mozilla/5.0'})
+# jtracker_url = json.load(urlopen(tracker_url))
+
 
 icx_df = pd.DataFrame(jtracker_url)
 icx_df['iglobal'] = iglobal
