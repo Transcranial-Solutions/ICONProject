@@ -1,4 +1,4 @@
-#######!/bin/bash
+#!/bin/bash
 #!/home/tono/anaconda3/envs/IconProject/bin/python
 source ~/anaconda3/etc/profile.d/conda.sh
 conda activate IconProject
