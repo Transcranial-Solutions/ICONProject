@@ -4,11 +4,9 @@ MAILTO=''
 CRON_TZ=UTC
 TZ=UTC
 
-10-55 23 * * * /home/tono/ICONProject/1_daily_snapshot_before_12_UTC.sh >> /home/tono/ICONProject/logs/cron_1.log 2>&1
+10-55/15 23 * * * /home/tono/ICONProject/1_daily_snapshot_before_12_UTC.sh >> /home/tono/ICONProject/logs/cron_1.log 2>&1
 03 00-01 * * * /home/tono/ICONProject/2_daily_snapshot_after_12_UTC.sh >> /home/tono/ICONProject/logs/cron_2.log 2>&1
 00 02-04 * * * /home/tono/ICONProject/3_daily_git_push.sh >> /home/tono/ICONProject/logs/cron_3.log 2>&1
-
-*/1 05 * * * /home/tono/ICONProject/test.sh >> /home/tono/ICONProject/logs/cron_x.log 2>&1
 
 
 
