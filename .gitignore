@@ -70,3 +70,8 @@ data_analysis/06_wallet_ranking/data/wallet_balance_test.csv
 data_analysis/06_wallet_ranking/data/wallets.csv
 data_analysis/06_wallet_ranking/data/address_*.csv
 data_analysis/06_wallet_ranking/data/wallet_address_*.csv
+
+crontab_setting
+1_daily_snapshot_before_12_UTC.sh
+2_daily_snapshot_after_12_UTC.sh
+3_daily_git_push.sh

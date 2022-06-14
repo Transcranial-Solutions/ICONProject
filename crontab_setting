@@ -1,16 +1,17 @@
 
 
-
+MAILTO=''
 SHELL=/usr/bin/bash
 CRON_TZ=UTC
-PROJECT_DIR = /home/tono/IconProject
-
-10 23 * * * $PROJECT_DIR/1_daily_snapshot_before_12_UTC.sh >> $PROEJCT_DIR/logs/cron_1_1.log 2>&1
-25 23 * * * $PROJECT_DIR/1_daily_snapshot_before_12_UTC.sh >> $PROEJCT_DIR/logs/cron_1_2.log 2>&1
-40 23 * * * $PROJECT_DIR/1_daily_snapshot_before_12_UTC.sh >> $PROEJCT_DIR/logs/cron_1_3.log 2>&1
-55 23 * * * $PROJECT_DIR/1_daily_snapshot_before_12_UTC.sh >> $PROEJCT_DIR/logs/cron_1_4.log 2>&1
-
-03 00 * * * $PROJECT_DIR/2_daily_snapshot_after_12_UTC.sh >> $PROEJCT_DIR/logs/cron_2_1.log 2>&1
-03 01 * * * $PROJECT_DIR/2_daily_snapshot_after_12_UTC.sh >> $PROEJCT_DIR/logs/cron_2_2.log 2>&1
 
 
+10 23 * * * /home/tono/ICONProject/1_daily_snapshot_before_12_UTC.sh >> /home/tono/ICONProject/logs/cron_1_1.log 2>&1
+25 23 * * * /home/tono/ICONProject/1_daily_snapshot_before_12_UTC.sh >> /home/tono/ICONProject/logs/cron_1_2.log 2>&1
+40 23 * * * /home/tono/ICONProject/1_daily_snapshot_before_12_UTC.sh >> /home/tono/ICONProject/logs/cron_1_3.log 2>&1
+55 23 * * * /home/tono/ICONProject/1_daily_snapshot_before_12_UTC.sh >> /home/tono/ICONProject/logs/cron_1_4.log 2>&1
+
+03 00 * * * /home/tono/ICONProject/2_daily_snapshot_after_12_UTC.sh >> /home/tono/ICONProject/logs/cron_2_1.log 2>&1
+03 01 * * * /home/tono/ICONProject/2_daily_snapshot_after_12_UTC.sh >> /home/tono/ICONProject/logs/cron_2_2.log 2>&1
+
+
+00 02 * * * /home/tono/ICONProject/3_daily_git_push.sh >> /home/tono/ICONProject/logs/cron_3_1.log 2>&1
