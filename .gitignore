@@ -21,10 +21,8 @@ data_analysis/08_transaction_data/data/*.csv
 data_analysis/08_transaction_data/results/2019/*.png
 data_analysis/08_transaction_data/results/2020/*.png
 data_analysis/08_transaction_data/results/2021/*.png
-
-
 data_analysis/08_transaction_data/results/2022/*.png
-
+!data_analysis/08_transaction_data/results/2022/tx_summary_2022-0[6-9]*.png
 
 
 
