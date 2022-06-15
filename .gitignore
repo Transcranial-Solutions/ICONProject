@@ -75,3 +75,5 @@ crontab_setting
 1_daily_snapshot_before_12_UTC.sh
 2_daily_snapshot_after_12_UTC.sh
 3_daily_git_push.sh
+*.log
+3_daily_git_push (copy).sh

@@ -46,7 +46,7 @@ desired_width=320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns',10)
 
-workers = 2
+workers = 1
 
 
 projectPath = '/home/tono/ICONProject/data_analysis/08_transaction_data'

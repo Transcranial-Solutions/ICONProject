@@ -8,8 +8,8 @@ Created on Mon Jun 13 05:14:12 2022
 
 import os
 
-token_transfer_path = '/home/tono/ICONProject/data_analysis/daily/token_transfer'
-transaction_data_path = '/home/tono/ICONProject/data_analysis/daily/transaction_data'
+token_transfer_path = '/home/tono/ICONProject/data_analysis/10_token_transfer'
+transaction_data_path = '/home/tono/ICONProject/data_analysis/08_transaction_data'
 
 
 program_list = [os.path.join(token_transfer_path, "token_transfer_ubuntu.py"),

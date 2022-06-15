@@ -57,7 +57,7 @@ if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
 basicstatPath = os.path.join(dailyPath,"output/icon_tracker/data/")
-tokentransferPath = os.path.join(dailyPath,"token_transfer/results/")
+tokentransferPath = os.path.join(dailyPath,"10_token_transfer/results/")
 
 
 # get yesterday function
