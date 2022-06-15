@@ -23,6 +23,10 @@ data_analysis/08_transaction_data/results/2020/*.png
 data_analysis/08_transaction_data/results/2021/*.png
 data_analysis/08_transaction_data/results/2022/*.png
 
+!data_analysis/08_transaction_data/results/2022/tx_summary_2022-06-[15-30]*.png
+!data_analysis/08_transaction_data/results/2022/Fees\ Burned_2022-06-[15-30]*.png
+
+
 
 data_analysis/08_transaction_data/results/2023/*.png
 
