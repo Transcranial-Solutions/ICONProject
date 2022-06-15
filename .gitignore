@@ -1,41 +1,4 @@
 
-/home/tono/ICONProject/data_analysis/.idea/data_analysis.iml
-/home/tono/ICONProject/data_analysis/.idea/inspectionProfiles/profiles_settings.xml
-/home/tono/ICONProject/data_analysis/.idea/misc.xml
-/home/tono/ICONProject/data_analysis/.idea/modules.xml
-/home/tono/ICONProject/data_analysis/.idea/vcs.xml
-/home/tono/ICONProject/data_analysis/03_icon_in_numbers/delegation_data/icx_delegation_20201129.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/results/wallet_info_2020_11_30.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/results/wallet_info_2020_12_01.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/wallet_address_20201125.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/wallet_address_20201128.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/wallet_from_address_20201203.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/wallet_from_address_20201207.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/results/wallet_balance_2021_01_22.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/results/wallet_balance_2021_02_08.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/results/wallet_balance/*.csv
-/home/tono/ICONProject/data_analysis/output/vote_status_per_day.csv
-
-/home/tono/ICONProject/data_analysis/08_transaction_data/data/*.csv
-/home/tono/ICONProject/data_analysis/08_transaction_data/results/2019/*.png
-/home/tono/ICONProject/data_analysis/08_transaction_data/results/2020/*.png
-/home/tono/ICONProject/data_analysis/08_transaction_data/results/2021/*.png
-/home/tono/ICONProject/data_analysis/08_transaction_data/results/2022/*.png
-/home/tono/ICONProject/data_analysis/08_transaction_data/results/2023/*.png
-
-/home/tono/ICONProject/data_analysis/wallet/test_keystore_1
-/home/tono/ICONProject/data_analysis/10_token_transfer/wallet/test_keystore_1
-/home/tono/ICONProject/data_analysis/08_transaction_data/wallet/test_keystore_1
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/wallet/test_keystore_1
-
-
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/data/wallet_balance_2021-08-29.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/data/wallet_balance_2021-08-30.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/data/wallet_balance_test.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/data/wallets.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/data/address_*.csv
-/home/tono/ICONProject/data_analysis/06_wallet_ranking/data/wallet_address_*.csv
-
 
 data_analysis/.idea/data_analysis.iml
 data_analysis/.idea/inspectionProfiles/profiles_settings.xml
@@ -58,8 +21,18 @@ data_analysis/08_transaction_data/data/*.csv
 data_analysis/08_transaction_data/results/2019/*.png
 data_analysis/08_transaction_data/results/2020/*.png
 data_analysis/08_transaction_data/results/2021/*.png
+
+
 data_analysis/08_transaction_data/results/2022/*.png
+
+
+
+
+
 data_analysis/08_transaction_data/results/2023/*.png
+
+
+
 
 data_analysis/wallet/test_keystore_1
 
