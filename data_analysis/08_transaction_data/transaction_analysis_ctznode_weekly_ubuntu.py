@@ -828,7 +828,7 @@ def plot_donut_df(df_col=3, title='Regular Tx', add_string=""):
     # plt.show()
     plt.tight_layout()
 
-    plt.savefig(os.path.join(thisweekresultPath, title + '_' + start_date + '_to_' + end_date + '.png'))
+    plt.savefig(os.path.join(thisweekresultPath, title.replace(' ', '_') + '_' + start_date + '_to_' + end_date + '.png'))
 
 plot_donut_df(df_col=0, title='Fees Burned', add_string=" ICX")
 plot_donut_df(df_col=3, title='Regular Tx', add_string="")

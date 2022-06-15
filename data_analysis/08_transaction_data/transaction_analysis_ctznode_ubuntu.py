@@ -807,7 +807,7 @@ for date_prev in date_of_interest:
         # plt.show()
         plt.tight_layout()
 
-        plt.savefig(os.path.join(resultPath_year, title + '_' + date_prev + '.png'))
+        plt.savefig(os.path.join(resultPath_year, title.replace(' ', '_') + '_' + date_prev + '.png'))
 
     plot_donut_df(df_col=0, title='Fees Burned', add_string=" ICX")
     plot_donut_df(df_col=3, title='Regular Tx', add_string="")
