@@ -459,6 +459,10 @@ table_now = token_xfer_df.copy()
 table_now = table_now[['symbol','amount']].groupby(['symbol']).amount.agg(['sum', 'count']).reset_index()
 table_now = table_now.sort_values(by='count', ascending=False).reset_index(drop=True)
 table_now = table_now.rename(columns={'symbol': 'IRC Token', 'sum': 'Amount', 'count': 'No. of Transactions'})
+table_now['IRC Token'] = np.where(table_now['IRC Token'].str.startswith('fin') & table_now['IRC Token'].str.endswith('ICX'),
+                                  table_now['IRC Token'].str.split('fin').str[-1],
+                                  table_now['IRC Token'])
+
 
 
 from fuzzywuzzy import process
