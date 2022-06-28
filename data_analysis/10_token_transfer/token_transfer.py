@@ -1,6 +1,6 @@
 
 #########################################################################
-## Project: Token Transfer Data on ICON Netowkr                        ##
+## Project: Token Transfer Data on ICON Network                        ##
 ## Date: Jan 2022                                                      ##
 ## Author: Tono / Sung Wook Chung (Transcranial Solutions)             ##
 ## transcranial.solutions@gmail.com                                    ##
