@@ -199,7 +199,7 @@ def token_tx_using_newer_icon_tracker(total_pages=500):
         return jtracker_df
 
     total_pages = total_pages
-    page_count = range(0, total_pages)
+    page_count = range(1, total_pages)
 
     tx_all = []
     for k in tqdm(page_count):
@@ -236,7 +236,7 @@ def token_tx_using_original_icon_tracker(total_pages=500):
         return jtracker_df
 
     total_pages = total_pages
-    page_count = range(0, total_pages)
+    page_count = range(1, total_pages)
 
     tx_all = []
     for k in tqdm(page_count):
