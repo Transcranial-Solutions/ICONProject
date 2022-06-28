@@ -84,7 +84,7 @@ if date_is_range == 1:
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2022_03_06"
+   day_1 = "2022_06_26"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -107,7 +107,7 @@ this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2' #velic
 # this_address = 'hxa224bb59e9ba930f3919b57feef7656f1139d24b' # catalyst
 # this_address = 'hx2f3fb9a9ff98df2145936d2bfcaa3837a289496b'# transcranial sol
-# this_address = 'hx6332c8a8ce376a5fc7f976d1bc4805a5d8bf1310' # upbit 1
+# this_address = 'hx6332c8a8ce376a5fc7f976d1bc4805a5d8bf1310' # upbit hot 1
 
 # this_address = 'cx0000000000000000000000000000000000000000' # governance
 # this_address = 'hxf1ea3eb337432bddb4e01e0b926c671eff297af9'
@@ -124,12 +124,12 @@ NW_EW = 15
 rm_exch = 0
 rm_known = 0
 # from wallet or into the wallet
-tx_flow = 'out' # 'in', 'out', 'both'
+tx_flow = 'both' # 'in', 'out', 'both'
 tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet)', 'token_txlist (token that has been xferred), 'token_list'
 
 # does not work with range
 first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
-further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
+further_degree = 3 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
@@ -142,31 +142,10 @@ def add_dict_if_noexist(key, d, value):
 
 # add any known addresses here manually (if not exist)
 add_dict_if_noexist('hx02dd8846baddc171302fb88b896f79899c926a5a', jknown_address, 'ICON_Vote_Monitor')
-add_dict_if_noexist('hxa527f96d8b988a31083167f368105fc0f2ab1143', jknown_address, 'binance_us')
-
-add_dict_if_noexist('hx6332c8a8ce376a5fc7f976d1bc4805a5d8bf1310', jknown_address, 'upbit_hot1')
-add_dict_if_noexist('hxfdb57e23c32f9273639d6dda45068d85ee43fe08', jknown_address, 'upbit_hot2')
-add_dict_if_noexist('hx4a01996877ac535a63e0107c926fb60f1d33c532', jknown_address, 'upbit_hot3')
-add_dict_if_noexist('hx8d28bc4d785d331eb4e577135701eb388e9a469d', jknown_address, 'upbit_hot4')
-add_dict_if_noexist('hxf2b4e7eab4f14f49e5dce378c2a0389c379ac628', jknown_address, 'upbit_hot5')
-
-add_dict_if_noexist('hx6eb81220f547087b82e5a3de175a5dc0d854a3cd', jknown_address, 'bithumb_1')
-add_dict_if_noexist('hx0cdf40498ef03e6a48329836c604aa4cea48c454', jknown_address, 'bithumb_2')
-add_dict_if_noexist('hx6d14b2b77a9e73c5d5804d43c7e3c3416648ae3d', jknown_address, 'bithumb_3')
-
-add_dict_if_noexist('hxa390d24fdcba68515b492ffc553192802706a121', jknown_address, 'bitvavo_hot')
-add_dict_if_noexist('hxa390d24fdcba68515b492ffc553192802706a121', jknown_address, 'bitvavo_cold')
-
-add_dict_if_noexist('hx85532472e789802a943bd34a8aeb86668bc23265', jknown_address, 'unkEx_c1')
-add_dict_if_noexist('hx94a7cd360a40cbf39e92ac91195c2ee3c81940a6', jknown_address, 'unkEx_c2')
-
-add_dict_if_noexist('hxe5327aade005b19cb18bc993513c5cfcacd159e9', jknown_address, 'unkEx_d1')
-
 add_dict_if_noexist('hxddec6fb21f9618b537e930eaefd7eda5682d9dc8', jknown_address, 'ex_intermediary')
 
 add_dict_if_noexist('hx294c5d0699615fc8d92abfe464a2601612d11bf7', jknown_address, 'funnel_1')
 add_dict_if_noexist('hx44c0d5fab0c81fe01a052f5ffb83fd152e505202', jknown_address, 'facilitator_1')
-
 
 # add_dict_if_noexist('hx7a649b6b2d431849fd8e3db2d4ed371378eacf78', jknown_address, 'icf_related1')
 # add_dict_if_noexist('hx63862927a9c1389e277cd20a6168e51bd50af13e', jknown_address, 'icf_related2')
@@ -178,7 +157,6 @@ add_dict_if_noexist('hx9d9ad1bc19319bd5cdb5516773c0e376db83b644', jknown_address
 add_dict_if_noexist('hx0cc3a3d55ed55df7c8eee926a4fafb5412d0cca4', jknown_address, 'icf_delegate_2')
 add_dict_if_noexist('hxa9c54005bfa47bb8c3ff0d8adb5ddaac141556a3', jknown_address, 'icf_delegate_3')
 add_dict_if_noexist('hxc1481b2459afdbbde302ab528665b8603f7014dc', jknown_address, 'icf_delegate_4')
-
 add_dict_if_noexist('hx02ada5d31e0f3eafa7fdf069caebb8d9ac7272f7', jknown_address, 'icf_delegate_5')
 add_dict_if_noexist('hxf936493f53a45cfcf3bc1d35643dfda051f9534f', jknown_address, 'icf_delegate_6')
 add_dict_if_noexist('hx2d84173c2cfb0e5c4ca31fbd8e5df252fcad0992', jknown_address, 'icf_delegate_7')
@@ -207,6 +185,78 @@ add_dict_if_noexist('hx7135ddaeaf43d87ea73cbdd22ba202b13a2caf6a', jknown_address
 add_dict_if_noexist('hxb2d0da403832f9f94617f5037808fe655434e5b7', jknown_address, 'binance\nsweeper_20')
 add_dict_if_noexist('hx387f3016ee2e5fb95f2feb5ba36b0578d5a4b8cf', jknown_address, 'binance\nsweeper_21')
 add_dict_if_noexist('hx69221e58dfa8e3688fa8e2ad368d78bfa0fad104', jknown_address, 'binance\nsweeper_22')
+
+# exchange wallets
+exch_wallets = ['hx1729b35b690d51e9944b2e94075acff986ea0675',
+                    'hx99cc8eb746de5885f5e5992f084779fc0c2c135b',
+                    'hx9f0c84a113881f0617172df6fc61a8278eb540f5',
+                    'hxc4193cda4a75526bf50896ec242d6713bb6b02a3',
+                    'hxa527f96d8b988a31083167f368105fc0f2ab1143',
+                    'hx307c01535bfd1fb86b3b309925ae6970680eb30d',
+                    'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8',
+                    'hx14ea4bca6f205fecf677ac158296b7f352609871',
+                    'hx3881f2ba4e3265a11cf61dd68a571083c7c7e6a5',
+                    'hxd9fb974459fe46eb9d5a7c438f17ae6e75c0f2d1',
+                    'hx68646780e14ee9097085f7280ab137c3633b4b5f',
+                    'hxbf90314546bbc3ed980454c9e2a9766160389302',
+                    'hx562dc1e2c7897432c298115bc7fbcc3b9d5df294',
+                    'hxb7f3d4bb2eb521f3c68f85bbc087d1e56a816fd6',
+                    'hx294c5d0699615fc8d92abfe464a2601612d11bf7',
+                    'hxddec6fb21f9618b537e930eaefd7eda5682d9dc8',
+                    'hx6332c8a8ce376a5fc7f976d1bc4805a5d8bf1310',
+                    'hxfdb57e23c32f9273639d6dda45068d85ee43fe08',
+                    'hx4a01996877ac535a63e0107c926fb60f1d33c532',
+                    'hx8d28bc4d785d331eb4e577135701eb388e9a469d',
+                    'hxf2b4e7eab4f14f49e5dce378c2a0389c379ac628',
+                    'hx6eb81220f547087b82e5a3de175a5dc0d854a3cd',
+                    'hx0cdf40498ef03e6a48329836c604aa4cea48c454',
+                    'hx6d14b2b77a9e73c5d5804d43c7e3c3416648ae3d',
+                    'hx85532472e789802a943bd34a8aeb86668bc23265',
+                    'hx94a7cd360a40cbf39e92ac91195c2ee3c81940a6',
+                    'hxe5327aade005b19cb18bc993513c5cfcacd159e9',
+                    'hx23cb1d823ef96ac22ae30c986a78bdbf3da976df',
+                    'hxd7a34c15c2345d9f0891545350181c7b162d9e08',
+                    'hxa390d24fdcba68515b492ffc553192802706a121']
+
+exch_names = ['binance_cold_01',
+                  'binance_cold_02',
+                  'binance_cold_03',
+                  'binance_hot',
+                  'binance.us',
+                  'velic_hot',
+                  'velic_stave',
+                  'latoken',
+                  'coinex',
+                  'huobi',
+                  'kraken_hot',
+                  'upbit_hot_old',
+                  'upbit_cold',
+                  'crypto.com_hot_01',
+                  'crypto.com_hot_02',
+                  'crypto.com_cold_01',
+                  'upbit_hot_01',
+                  'upbit_hot_02',
+                  'upbit_hot_03',
+                  'upbit_hot_04',
+                  'upbit_hot_05',
+                  'bithumb_01',
+                  'bithumb_02',
+                  'bithumb_03',
+                  'unkEx_c_01',
+                  'unkEx_c_02',
+                  'unkEx_d_01',
+                  'bitvavo_cold_01',
+                  'bitvavo_cold_02',
+                  'bitvavo_hot']
+
+
+## adding exchange details here
+exch_details = {exch_wallets[i]: exch_names[i] for i in range(len(exch_wallets))}
+
+for k, v in exch_details.items():
+    add_dict_if_noexist(k, jknown_address, v)
+
+
 
 
 
