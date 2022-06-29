@@ -45,7 +45,7 @@ resultPath = os.path.join(projectPath, "results")
 if not os.path.exists(resultPath):
     os.mkdir(resultPath)
 
-walletPath = os.path.join(currPath, "wallet")
+walletPath = os.path.join(projectPath, "06_wallet_ranking\\wallet")
 if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
@@ -565,7 +565,7 @@ plt.style.use(['dark_background'])
 render_mpl_table(total_exchange_now.drop(columns='group'),
                 header_color='tab:pink',
                 header_columns=0,
-                col_width=5,
+                col_width=4,
                 font_size=10,
                 title="Major Exchange Wallets - " + 
                 day_today_text + 
@@ -578,7 +578,7 @@ render_mpl_table(total_exchange_now.drop(columns='group'),
 render_mpl_table(total_exchange_now_grouped,
                 header_color='tab:pink',
                 header_columns=0,
-                col_width=5,
+                col_width=4,
                 font_size=12,
                 title="Major Exchanges (grouped) - " + 
                 day_today_text + 

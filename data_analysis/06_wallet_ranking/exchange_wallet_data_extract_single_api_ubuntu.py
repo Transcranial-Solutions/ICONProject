@@ -605,7 +605,7 @@ plt.style.use(['dark_background'])
 render_mpl_table(total_exchange_now.drop(columns='group'),
                 header_color='tab:pink',
                 header_columns=0,
-                col_width=5,
+                col_width=4,
                 title="Major Exchange Wallets - " + 
                 day_today_text + 
                 " (Δ since " + day_prev_text + ")" + 
@@ -617,7 +617,7 @@ plt.savefig(os.path.join(windows_path, "exchange_wallets_" + day_today + "_vs_" 
 render_mpl_table(total_exchange_now_grouped,
                 header_color='tab:pink',
                 header_columns=0,
-                col_width=5,
+                col_width=4,
                 title="Major Exchanges (grouped) - " + 
                 day_today_text + 
                 " (Δ since " + day_prev_text + ")" + 
