@@ -260,14 +260,19 @@ def token_tx_using_original_icon_tracker(total_pages=500):
 
 
 
-## just adding multiple try catch so that hopefully it'll go through
-try:
-    token_xfer_df = token_tx_using_community_tracker(total_pages=500)
-except:
+def try_multiple_times_if_fails():
+    ## just adding multiple try catch so that hopefully it'll go through
     try:
-        token_xfer_df = token_tx_using_newer_icon_tracker(total_pages=500)
+        df = token_tx_using_community_tracker(total_pages=500)
     except:
-        token_xfer_df = token_tx_using_original_icon_tracker(total_pages=500)
+        try:
+            df = token_tx_using_newer_icon_tracker(total_pages=500)
+        except:
+            df = token_tx_using_original_icon_tracker(total_pages=500)
+    finally:
+        return df
+
+token_xfer_df = try_multiple_times_if_fails()
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Token price data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

@@ -294,14 +294,19 @@ def block_df_using_original_icon_tracker(page_count=500):
     return block_df
 
 
-## just adding multiple try catch so that hopefully it'll go through
-try:
-    block_df = block_df_using_community_tracker(total_pages=500)
-except:
+def try_multiple_times_if_fails():
+    ## just adding multiple try catch so that hopefully it'll go through
     try:
-        block_df = block_df_using_newer_icon_tracker(page_count=500)
+        df = block_df_using_community_tracker(total_pages=500)
     except:
-        block_df = block_df_using_original_icon_tracker(page_count=500)
+        try:
+            df = block_df_using_newer_icon_tracker(page_count=500)
+        except:
+            df = block_df_using_original_icon_tracker(page_count=500)
+    finally:
+        return df
+
+block_df = try_multiple_times_if_fails()
 
 
 windows_path = "/mnt/e/GitHub/Icon/ICONProject/data_analysis/08_transaction_data/data/"
