@@ -265,12 +265,9 @@ try:
     token_xfer_df = token_tx_using_community_tracker(total_pages=500)
 except:
     try:
-        token_xfer_df = token_tx_using_community_tracker(total_pages=500)
+        token_xfer_df = token_tx_using_newer_icon_tracker(total_pages=500)
     except:
-        try:
-            token_xfer_df = token_tx_using_newer_icon_tracker(total_pages=500)
-        except:
-            token_xfer_df = token_tx_using_original_icon_tracker(total_pages=500)
+        token_xfer_df = token_tx_using_original_icon_tracker(total_pages=500)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Token price data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

@@ -293,12 +293,9 @@ try:
     block_df = block_df_using_community_tracker(total_pages=500)
 except:
     try:
-        block_df = block_df_using_community_tracker(total_pages=500)
+        block_df = block_df_using_newer_icon_tracker(page_count=500)
     except:
-        try:
-            block_df = block_df_using_newer_icon_tracker(page_count=500)
-        except:
-            block_df = block_df_using_original_icon_tracker(page_count=500)
+        block_df = block_df_using_original_icon_tracker(page_count=500)
 
 
 block_df.to_csv(os.path.join(dataPath, 'transaction_blocks_' + date_prev + '.csv'), index=False)

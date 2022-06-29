@@ -299,12 +299,9 @@ try:
     block_df = block_df_using_community_tracker(total_pages=500)
 except:
     try:
-        block_df = block_df_using_community_tracker(total_pages=500)
+        block_df = block_df_using_newer_icon_tracker(page_count=500)
     except:
-        try:
-            block_df = block_df_using_newer_icon_tracker(page_count=500)
-        except:
-            block_df = block_df_using_original_icon_tracker(page_count=500)
+        block_df = block_df_using_original_icon_tracker(page_count=500)
 
 
 windows_path = "/mnt/e/GitHub/Icon/ICONProject/data_analysis/08_transaction_data/data/"
