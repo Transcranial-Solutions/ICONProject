@@ -167,7 +167,7 @@ def different_request_sleep_repeat(url, repeat=3):
     return known_address_url
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX tracker Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-req = different_request_sleep_repeat(url='https://tracker.icon.community/api/v1/preps', repeat=3)
+req = different_request_sleep_repeat(url='https://tracker.icon.community/api/v1/governance/preps', repeat=3)
 # req = requests.get('https://tracker.icon.community/api/v1/preps')
 # jtracker_url = BeautifulSoup(req.text, 'html.parser')
 jtracker_url = json.loads(req.text)
