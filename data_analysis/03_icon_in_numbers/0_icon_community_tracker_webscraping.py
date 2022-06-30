@@ -152,7 +152,7 @@ def extract_values(obj, key):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX tracker Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
-req = requests.get('https://tracker.icon.community/api/v1/preps')
+req = requests.get('https://tracker.icon.community/api/v1/governance/preps')
 # jtracker_url = BeautifulSoup(req.text, 'html.parser')
 jtracker_url = json.loads(req.text)
 
