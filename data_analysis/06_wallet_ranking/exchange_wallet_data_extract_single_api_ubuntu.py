@@ -457,7 +457,7 @@ def get_exchange_amount(df):
 def get_total(df):
     df['% Total'] = (df['total'] / df['total'].sum()).apply('{:.2%}'.format)
     df['% Total Supply'] = (df['total'] / total_supply).apply('{:.2%}'.format)
-    df['     % Total     |     % Total Supply'] = df['% Total']  + '     |     ' + df['% Total Supply'] + '                          '
+    df['     % Total     |     % Total Supply'] = df['% Total']  + '     |     ' + df['% Total Supply'] + '            '
     df = df.drop(columns=['% Total',  '% Total Supply'])
     df.loc['Total']= df.sum(numeric_only=True, axis=0)
     if 'address' in df.columns:
