@@ -283,7 +283,22 @@ for date_prev in date_of_interest:
             # blockTS = deep_get(blockInfo, "time_stamp")
             txHashes = extract_values_no_params(blockInfo, "txHash")
             txTS = extract_values(blockInfo, "timestamp")
+            
+            block_count = pd.Series(block_blockheight).count()
+            txHashes_count = pd.Series(txHashes).count()
+            txTS_count = pd.Series(txTS).count()
 
+            if block_count < txTS_count:
+                if block_count == 1 and txTS_count ==  2:
+                    txTS = [x for x in txTS if isinstance(x, int)][0]
+                else:
+                    txTS = [x for x in txTS if isinstance(x, int)]
+            
+            if block_count != txHashes_count:
+                l=[]
+                l.extend([block_blockheight] * txHashes_count)
+                block_blockheight = l
+            
             combined_block = {'blockHeight': block_blockheight,
                 # 'block_timestamp': blockTS,
                 'txHash': txHashes,
