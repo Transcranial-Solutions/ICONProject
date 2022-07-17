@@ -392,7 +392,8 @@ for date_prev in date_of_interest:
             return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
 
         def df_merge_all(block_df, tx_df):
-            tx_all = pd.merge(block_df, tx_df, on=["txHash","timestamp"], how="left")
+            # tx_all = pd.merge(block_df, tx_df, on=["txHash","timestamp"], how="left")
+            tx_all = pd.merge(block_df, tx_df, on=["txHash"], how="left")
             return(tx_all)
 
         def tx_data_cleaning_1(tx_all):
@@ -468,10 +469,16 @@ for date_prev in date_of_interest:
             return df
 
         def final_output():
-            tx_all = tx_data_cleaning_1(tx_all=tx_df)
+            tx_all = tx_data_cleaning_1(tx_all=tx_df.copy())
             tx_all = tx_data_cleaning_2(tx_all=tx_all)
-            tx_all = df_merge_all(block_df=block_df, tx_df=tx_all)
+            # tx_all = df_merge_all(block_df=block_df, tx_df=tx_all)
+            tx_all = df_merge_all(block_df=tx_all, tx_df=block_df.drop(columns='timestamp'))
+
             final_tx_df = tx_data_cleaning_3(df=tx_all)
+            final_tx_df['dataType'] = final_tx_df['dataType'].fillna('unknown')
+            
+            # in case there are some nans, we'll just fill with 0
+            final_tx_df = final_tx_df.fillna(0) 
 
             return final_tx_df
 
