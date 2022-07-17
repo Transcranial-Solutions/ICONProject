@@ -81,9 +81,9 @@ def tomorrow(doi = "2021-08-20"):
 today = datetime.utcnow()
 date_today = today.strftime("%Y-%m-%d")
 
-# to use specific date (1), otherwise use yesterday (0)
+# to use specific date (1), use yesterday (0), use range(2)
 use_specific_prev_date = 0
-date_prev = "2022-01-07"
+date_prev = "2022-07-15"
 
 if use_specific_prev_date == 1:
     date_of_interest = [date_prev]
@@ -91,7 +91,7 @@ elif use_specific_prev_date == 0:
     date_of_interest = [yesterday(date_today)]
 elif use_specific_prev_date == 2:
     # for loop between dates
-    day_1 = "2022-01-07"; day_2 = "2022-01-08"
+    day_1 = "2022-07-13"; day_2 = "2022-07-16"
     date_of_interest = pd.date_range(start=day_1, end=day_2, freq='D').strftime("%Y-%m-%d").to_list()
 else:
     date_of_interest=[]
