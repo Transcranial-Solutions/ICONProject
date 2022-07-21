@@ -351,6 +351,8 @@ for date_prev in date_of_interest:
 
             # removing some data here
             entries_to_remove = ('version','data','signature','blockHeight','blockHash','nid','nonce')
+            # entries_to_remove = ('version','data','signature','blockHash','nid','nonce')
+
             for k in entries_to_remove:
                 tx.pop(k, None)
             combined_tx = pd.json_normalize(tx)
@@ -361,6 +363,7 @@ for date_prev in date_of_interest:
 
             # removing some data here
             entries_to_remove = ('logsBloom','blockHeight','blockHash','to', 'scoreAddress')
+            
             for k in entries_to_remove:
                 tx_results.pop(k, None)
             combined_tx_results = pd.json_normalize(tx_results)
