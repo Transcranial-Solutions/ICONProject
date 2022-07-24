@@ -297,35 +297,82 @@ token_price_balanced = token_price_balanced.drop(columns=['tokens', 'timestamp']
 bnusd_in_usd = token_price_balanced[token_price_balanced['index'] == 'bnUSD']['Price in USD'].iloc[0]
 
 
+def get_token_price(token_price_balanced, bnusd_in_usd, token_name, token_contract_address):
+    if not any(token_price_balanced['index'] == token_name):
+        from iconsdk.builder.call_builder import CallBuilder
+        from iconsdk.icon_service import IconService
+        from iconsdk.providers.http_provider import HTTPProvider
+
+        DEX_CONTRACT = "cxa0af3165c08318e988cb30993b3048335b94af6c"
+        BNUSD_CONTRACT = "cx88fd7df7ddff82f7cc735c871dc519838cb235bb"
+        nid = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+        EXA = 10 ** 18
+
+        token_idcall = CallBuilder().from_("hx0000000000000000000000000000000000000001") \
+            .to(DEX_CONTRACT) \
+            .method("getPoolId") \
+            .params({"_token1Address": token_contract_address, "_token2Address": BNUSD_CONTRACT}) \
+            .build()
+        token_id = nid.call(token_idcall)
+        token_idint = int(token_id, 16)
+
+        token_bnusdpricecall = CallBuilder().from_("hx0000000000000000000000000000000000000001") \
+            .to(DEX_CONTRACT) \
+            .method("getPrice") \
+            .params({"_id": token_idint}) \
+            .build()
+
+        token_bnusdpriceresult = nid.call(token_bnusdpricecall)
+
+        token_bnusdindec = int(token_bnusdpriceresult, 16)
+        token_bnusdfloatindec = float(token_bnusdindec)
+        token_bnusdconverted = token_bnusdfloatindec / EXA
+
+        # convert fin_bnusd into fin_usd value
+        token_in_usd = pd.DataFrame({'index': [token_name], 'Price in USD': [token_bnusdconverted * bnusd_in_usd]})
+
+        # add token price to the existing list
+        token_price_balanced = token_price_balanced.append(token_in_usd).reset_index(drop=True)
+    else:
+        pass
+    return token_price_balanced
+
+
+
+## add token price if does not exist
+token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'FRAMD', "cx2aa9b28a657e3121b75d3d4fe65e569398645d56")
+token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'FIN', "cx785d504f44b5d2c8dac04c5a1ecd75f18ee57d16")
+token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'iAM', "cxe7c05b43b3832c04735e7f109409ebcb9c19e664")
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# FIN price (if does not exist)
-if not any(token_price_balanced['index'] == 'FIN'):
-    from iconsdk.builder.call_builder import CallBuilder
-    from iconsdk.icon_service import IconService
-    from iconsdk.providers.http_provider import HTTPProvider
-
-    DEX_CONTRACT = "cxa0af3165c08318e988cb30993b3048335b94af6c"
-    nid = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
-    EXA = 10 ** 18
-
-    finbnusdpricecall = CallBuilder().from_("hx0000000000000000000000000000000000000001") \
-        .to(DEX_CONTRACT) \
-        .method("getPrice") \
-        .params({"_id": "31"}) \
-        .build()
-    finbnusdpriceresult = nid.call(finbnusdpricecall)
-
-    finbnusdindec = int(finbnusdpriceresult, 16)
-    finbnusdfloatindec = float(finbnusdindec)
-    finbnusdconverted = finbnusdfloatindec / EXA
-
-    # convert fin_bnusd into fin_usd value
-    fin_in_usd = pd.DataFrame({'index': ['FIN'], 'Price in USD': [finbnusdconverted * bnusd_in_usd]})
-
-    # add FIN price to token price list
-    token_price_balanced = token_price_balanced.append(fin_in_usd).reset_index(drop=True)
-else:
-    pass
+# # FIN price (if does not exist)
+# if not any(token_price_balanced['index'] == 'FIN'):
+#     from iconsdk.builder.call_builder import CallBuilder
+#     from iconsdk.icon_service import IconService
+#     from iconsdk.providers.http_provider import HTTPProvider
+#
+#     DEX_CONTRACT = "cxa0af3165c08318e988cb30993b3048335b94af6c"
+#     nid = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+#     EXA = 10 ** 18
+#
+#     finbnusdpricecall = CallBuilder().from_("hx0000000000000000000000000000000000000001") \
+#         .to(DEX_CONTRACT) \
+#         .method("getPrice") \
+#         .params({"_id": "31"}) \
+#         .build()
+#     finbnusdpriceresult = nid.call(finbnusdpricecall)
+#
+#     finbnusdindec = int(finbnusdpriceresult, 16)
+#     finbnusdfloatindec = float(finbnusdindec)
+#     finbnusdconverted = finbnusdfloatindec / EXA
+#
+#     # convert fin_bnusd into fin_usd value
+#     fin_in_usd = pd.DataFrame({'index': ['FIN'], 'Price in USD': [finbnusdconverted * bnusd_in_usd]})
+#
+#     # add FIN price to token price list
+#     token_price_balanced = token_price_balanced.append(fin_in_usd).reset_index(drop=True)
+# else:
+#     pass
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # ICX price
