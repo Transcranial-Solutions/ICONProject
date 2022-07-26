@@ -426,6 +426,8 @@ for date_prev in date_of_interest:
         replace_dict_if_unknown('cx43fa2fa3cdc8c5d48abd612eada8169d3d9b5a73', jknown_address, 'Home Ground Pay')
         replace_dict_if_unknown('cxe7c05b43b3832c04735e7f109409ebcb9c19e664', jknown_address, 'iAM')
 
+        replace_dict_if_unknown('cxc2f3ea1c84cac895b3ab05681705d472002bfb1f', jknown_address, 'Mojos')
+
 
 
         # jknown_address['cxb0b6f777fba13d62961ad8ce11be7ef6c4b2bcc6'] = 'ICONbet \nDAOdice (new)'

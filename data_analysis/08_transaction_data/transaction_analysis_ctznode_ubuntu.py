@@ -461,6 +461,7 @@ for date_prev in date_of_interest:
         replace_dict_if_unknown('cx997849d3920d338ed81800833fbb270c785e743d', jknown_address, 'Wonderland')
         replace_dict_if_unknown('cx3ce3269704dd3a5e8e7d8012d4b383c4748ed7cc', jknown_address, 'Wonderland')
 
+        replace_dict_if_unknown('cxc2f3ea1c84cac895b3ab05681705d472002bfb1f', jknown_address, 'Mojos')
 
 
         for k, v in jknown_address.items():
