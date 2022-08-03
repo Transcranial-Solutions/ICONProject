@@ -472,7 +472,7 @@ def get_contract_info():
 
     replace_dict_if_unknown('cx6c8897b59a8e4a3f14865d74c1cc7a80fe82a48c', jknown_address, 'Monkeys')
     replace_dict_if_unknown('cx43fa2fa3cdc8c5d48abd612eada8169d3d9b5a73', jknown_address, 'Home Ground Pay')
-    replace_dict_if_unknown('cxe7c05b43b3832c04735e7f109409ebcb9c19e664', jknown_address, 'iAM')
+    replace_dict_if_unknown('cxe7c05b43b3832c04735e7f109409ebcb9c19e664', jknown_address, 'iAM ')
 
     replace_dict_if_unknown('cx0000000000000000000000000000000000000000', jknown_address, 'governance')
 
