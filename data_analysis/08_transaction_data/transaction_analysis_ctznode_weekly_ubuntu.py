@@ -483,6 +483,10 @@ def get_contract_info():
     replace_dict_if_unknown('cxc99c1dcc28c36a6383176c6d1aeea1e4d83e4a69', jknown_address, 'Wonderland')
     replace_dict_if_unknown('cx997849d3920d338ed81800833fbb270c785e743d', jknown_address, 'Wonderland')
     replace_dict_if_unknown('cx3ce3269704dd3a5e8e7d8012d4b383c4748ed7cc', jknown_address, 'Wonderland')
+    
+    replace_dict_if_unknown('cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f', jknown_address, 'Bridge')
+    replace_dict_if_unknown('cx0eb215b6303142e37c0c9123abd1377feb423f0e', jknown_address, 'Bridge')
+
 
     for k, v in jknown_address.items():
         if v == "-":
@@ -592,6 +596,7 @@ def grouping_wrapper(df, in_col):
 
         #Optimus
         df['group'] = np.where(df['group'].str.contains('optimus', case=False), 'Optimus', df['group'])
+        df['group'] = np.where(df['to_def'].str.contains('optimus', case=False), 'Optimus', df['group'])
         df['group'] = np.where(df['group'].str.contains('finance token', case=False), 'Optimus', df['group'])
 
 

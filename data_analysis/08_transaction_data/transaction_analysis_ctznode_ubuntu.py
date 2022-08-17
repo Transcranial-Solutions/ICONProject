@@ -462,6 +462,9 @@ for date_prev in date_of_interest:
         replace_dict_if_unknown('cx3ce3269704dd3a5e8e7d8012d4b383c4748ed7cc', jknown_address, 'Wonderland')
 
         replace_dict_if_unknown('cxc2f3ea1c84cac895b3ab05681705d472002bfb1f', jknown_address, 'Mojos')
+        
+        replace_dict_if_unknown('cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f', jknown_address, 'Bridge')
+        replace_dict_if_unknown('cx0eb215b6303142e37c0c9123abd1377feb423f0e', jknown_address, 'Bridge')
 
 
         for k, v in jknown_address.items():
@@ -573,6 +576,7 @@ for date_prev in date_of_interest:
 
             #Optimus
             df['group'] = np.where(df['group'].str.contains('optimus', case=False), 'Optimus', df['group'])
+            df['group'] = np.where(df['to_def'].str.contains('optimus', case=False), 'Optimus', df['group'])
             df['group'] = np.where(df['group'].str.contains('finance token', case=False), 'Optimus', df['group'])
 
 
