@@ -613,6 +613,9 @@ for date_prev in date_of_interest:
             # UP
             df['group'] = np.where(df['to'] == 'cxc432c12e6c91f8a685ee6ff50a653c8a056875e4', 'UP', df['group'])
 
+            # Inanis
+            df['group'] = np.where(df['group'].str.contains('Inanis', case=False), 'Inanis', df['group'])
+
             return df
 
         df = manual_grouping(df)
