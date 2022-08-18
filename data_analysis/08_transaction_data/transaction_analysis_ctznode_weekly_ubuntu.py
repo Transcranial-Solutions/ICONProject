@@ -635,7 +635,11 @@ def grouping_wrapper(df, in_col):
 
         # Inanis
         df['group'] = np.where(df['group'].str.contains('Inanis', case=False), 'Inanis', df['group'])
-        
+
+        # FRAMD
+        df['group'] = np.where(df['to_def'].str.contains('Yetis', case=False), 'FRAMD', df['group'])
+        df['group'] = np.where(df['group'].str.contains('FRAMD', case=False), 'FRAMD', df['group'])
+
         return df
 
     df = manual_grouping(df)
