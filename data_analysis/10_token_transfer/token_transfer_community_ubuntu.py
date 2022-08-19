@@ -388,6 +388,14 @@ token_price_balanced = token_price_balanced[token_price_balanced['index'] != 'IC
 
 token_price_all = token_price_balanced.append(token_price_unifi).reset_index(drop=True)
 
+
+token_xfer_df['token_name'] = np.where(token_xfer_df['token_name'] == '', 
+                                       'unknown_token', 
+                                       token_xfer_df['token_name'])
+
+token_xfer_df['symbol'] = np.where(token_xfer_df['symbol'] == '', 
+                                       '$unknown', 
+                                       token_xfer_df['symbol'])
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Data output ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
