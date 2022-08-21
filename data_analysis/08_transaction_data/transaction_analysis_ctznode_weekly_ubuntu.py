@@ -640,6 +640,8 @@ def grouping_wrapper(df, in_col):
         df['group'] = np.where(df['to_def'].str.contains('Yetis', case=False), 'FRAMD', df['group'])
         df['group'] = np.where(df['group'].str.contains('FRAMD', case=False), 'FRAMD', df['group'])
 
+        replace_dict_if_unknown('cxe5c2c460364acc5f8c1d5ca925930043d8d9c9dd', jknown_address, 'GangstaBet Crown')
+
         return df
 
     df = manual_grouping(df)

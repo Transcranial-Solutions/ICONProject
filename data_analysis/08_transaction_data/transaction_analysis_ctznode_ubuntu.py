@@ -466,6 +466,8 @@ for date_prev in date_of_interest:
         replace_dict_if_unknown('cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f', jknown_address, 'Bridge')
         replace_dict_if_unknown('cx0eb215b6303142e37c0c9123abd1377feb423f0e', jknown_address, 'Bridge')
 
+        replace_dict_if_unknown('cxe5c2c460364acc5f8c1d5ca925930043d8d9c9dd', jknown_address, 'GangstaBet Crown')
+
 
         for k, v in jknown_address.items():
             if v == "-":
