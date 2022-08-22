@@ -487,6 +487,7 @@ def get_contract_info():
     replace_dict_if_unknown('cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f', jknown_address, 'Bridge')
     replace_dict_if_unknown('cx0eb215b6303142e37c0c9123abd1377feb423f0e', jknown_address, 'Bridge')
 
+    replace_dict_if_unknown('cxe5c2c460364acc5f8c1d5ca925930043d8d9c9dd', jknown_address, 'GangstaBet Crown')
 
     for k, v in jknown_address.items():
         if v == "-":
@@ -622,6 +623,7 @@ def grouping_wrapper(df, in_col):
 
         #gangstabet
         df['group'] = np.where(df['group'].str.contains('gangstabet', case=False), 'GangstaBet', df['group'])
+        df['group'] = np.where(df['group'].str.contains('crown', case=False), 'GangstaBet', df['group'])
         df['group'] = np.where(df['to'] == 'cx8683d50b9f53275081e13b64fba9d6a56b7c575d', 'GangstaBet', df['group'])
         
         # futureicx
@@ -640,7 +642,6 @@ def grouping_wrapper(df, in_col):
         df['group'] = np.where(df['to_def'].str.contains('Yetis', case=False), 'FRAMD', df['group'])
         df['group'] = np.where(df['group'].str.contains('FRAMD', case=False), 'FRAMD', df['group'])
 
-        replace_dict_if_unknown('cxe5c2c460364acc5f8c1d5ca925930043d8d9c9dd', jknown_address, 'GangstaBet Crown')
 
         return df
 
