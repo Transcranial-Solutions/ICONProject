@@ -534,7 +534,8 @@ table_now.to_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + 
 
 
 
-
+table_now = pd.DataFrame()
+table_prev = pd.DataFrame()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Load previous data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # reading previous term data
 table_prev = pd.read_csv(os.path.join(windows_path_prev, 'IRC_token_transfer_' + day_prev + '.csv'))
