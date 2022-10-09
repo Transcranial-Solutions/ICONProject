@@ -24,6 +24,7 @@ from iconsdk.builder.call_builder import CallBuilder
 from iconsdk.wallet.wallet import KeyWallet
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import concurrent.futures
+import time
 from time import time, sleep
 from datetime import date, datetime, timedelta
 from tqdm import tqdm
@@ -188,12 +189,12 @@ def request_sleep_repeat(url, repeat=3):
             known_address_url = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
             random_sleep_except = random.uniform(3,6)
             print("Just pausing for " + str(random_sleep_except) + " seconds and try again \n")
-            sleep(random_sleep_except)
+            time.sleep(random_sleep_except)
             
         except:
             random_sleep_except = random.uniform(30,60)
             print("I've encountered an error! I'll pause for " + str(random_sleep_except) + " seconds and try again \n")
-            sleep(random_sleep_except)
+            time.sleep(random_sleep_except)
     return known_address_url
 
 known_address_url = request_sleep_repeat(url = 'https://iconwat.ch/data/thes', repeat=3)
@@ -368,7 +369,7 @@ def get_contract_info():
             except:
                 random_sleep_except = random.uniform(30,60)
                 print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-                sleep(random_sleep_except) #sleep the script for x seconds and....#
+                time.sleep(random_sleep_except) #sleep the script for x seconds and....#
                 continue
 
     temp_df = []

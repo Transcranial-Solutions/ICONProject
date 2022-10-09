@@ -23,7 +23,8 @@ from urllib.request import Request, urlopen
 import json
 import pandas as pd
 from datetime import date, datetime, timedelta
-from time import time
+from time import time, sleep
+import time
 import numpy as np
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed

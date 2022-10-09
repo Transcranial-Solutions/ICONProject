@@ -30,7 +30,8 @@ from iconsdk.providers.http_provider import HTTPProvider
 from iconsdk.wallet.wallet import KeyWallet
 from iconsdk.builder.call_builder import CallBuilder
 # from typing import Union
-from time import time
+from time import time, sleep
+import time
 from datetime import date, datetime, timedelta
 from tqdm import tqdm
 from functools import reduce

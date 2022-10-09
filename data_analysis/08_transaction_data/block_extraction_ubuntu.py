@@ -21,8 +21,8 @@ from functools import reduce
 from iconsdk.icon_service import IconService
 from iconsdk.providers.http_provider import HTTPProvider
 from iconsdk.wallet.wallet import KeyWallet
-from time import sleep
-from time import time
+from time import time, sleep
+import time
 from datetime import date, datetime, timedelta
 from tqdm import tqdm
 from functools import reduce
@@ -225,7 +225,7 @@ for k in pbar:
     except:
         random_sleep_except = random.uniform(30,60)
         print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-        sleep(random_sleep_except) #sleep the script for x seconds and....#
+        time.sleep(random_sleep_except) #sleep the script for x seconds and....#
         continue
 
 
