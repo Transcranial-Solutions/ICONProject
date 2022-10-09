@@ -24,7 +24,6 @@ import json
 import pandas as pd
 from datetime import date, datetime, timedelta
 from time import time, sleep
-import time
 import numpy as np
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -174,7 +173,7 @@ def token_tx_using_community_tracker(total_pages=500):
         except:
             random_sleep_except = random.uniform(200,300)
             print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-            time.sleep(random_sleep_except) #sleep the script for x seconds and....#
+            sleep(random_sleep_except) #sleep the script for x seconds and....#
             continue
 
     token_xfer_df = pd.concat(tx_all)
@@ -214,7 +213,7 @@ def token_tx_using_newer_icon_tracker(total_pages=500):
         except:
             random_sleep_except = random.uniform(200,300)
             print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-            time.sleep(random_sleep_except) #sleep the script for x seconds and....#
+            sleep(random_sleep_except) #sleep the script for x seconds and....#
             continue
 
     token_xfer_df = pd.concat(tx_all)
@@ -251,7 +250,7 @@ def token_tx_using_original_icon_tracker(total_pages=500):
         except:
             random_sleep_except = random.uniform(200,300)
             print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-            time.sleep(random_sleep_except) #sleep the script for x seconds and....#
+            sleep(random_sleep_except) #sleep the script for x seconds and....#
             continue
 
     token_xfer_df = pd.concat(tx_all)

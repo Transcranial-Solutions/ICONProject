@@ -31,7 +31,6 @@ from iconsdk.wallet.wallet import KeyWallet
 from iconsdk.builder.call_builder import CallBuilder
 # from typing import Union
 from time import time, sleep
-import time
 from datetime import date, datetime, timedelta
 from tqdm import tqdm
 from functools import reduce
@@ -332,7 +331,7 @@ for date_prev in date_of_interest:
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         # random_sleep_except = random.uniform(600,900)
         # print("I'll pause for"+str(random_sleep_except/60) + " minutes before doing another... \n")
-        # time.sleep(random_sleep_except) #sleep the script for x seconds and....#
+        # sleep(random_sleep_except) #sleep the script for x seconds and....#
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

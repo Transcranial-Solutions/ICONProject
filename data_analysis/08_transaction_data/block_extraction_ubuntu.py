@@ -22,7 +22,6 @@ from iconsdk.icon_service import IconService
 from iconsdk.providers.http_provider import HTTPProvider
 from iconsdk.wallet.wallet import KeyWallet
 from time import time, sleep
-import time
 from datetime import date, datetime, timedelta
 from tqdm import tqdm
 from functools import reduce
