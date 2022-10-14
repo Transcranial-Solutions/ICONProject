@@ -130,8 +130,8 @@ for these_dates in date_of_interest:
 
 
     #iglobal
-    basic_stat = pd.read_csv(os.path.join(basicstatPath, 'basic_icx_stat_df_' + these_dates + '.csv'), low_memory=False)
-    basic_stat_df.append(basic_stat)
+    # basic_stat = pd.read_csv(os.path.join(basicstatPath, 'basic_icx_stat_df_' + these_dates + '.csv'), low_memory=False)
+    # basic_stat_df.append(basic_stat)
 
 
 total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(sum(total_transfer_value_list))) + ' USD'
@@ -140,9 +140,13 @@ total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(sum
 tx_df = pd.concat(tx_df).reset_index(drop=True)
 
 # inflation
-basic_stat_df = pd.concat(basic_stat_df).reset_index(drop=True)
-basic_stat_df['daily_issuance'] = basic_stat_df['iglobal']*12/365
-weekly_issuance = basic_stat_df['daily_issuance'].sum()
+# basic_stat_df = pd.concat(basic_stat_df).reset_index(drop=True)
+# basic_stat_df['daily_issuance'] = basic_stat_df['iglobal']*12/365
+# weekly_issuance = basic_stat_df['daily_issuance'].sum()
+
+iglobal = 3_000_000
+daily_issuance = iglobal*12/365
+weekly_issuance = daily_issuance*7
 
 
 def clean_tx_df(tx_df, from_this='from', to_this='to'):

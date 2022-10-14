@@ -35,6 +35,8 @@ import matplotlib.lines as mlines
 import matplotlib.ticker as ticker
 import seaborn as sns
 import random
+import requests
+
 
 
 desired_width = 320
@@ -134,8 +136,9 @@ for date_prev in date_of_interest:
     tx_df = clean_tx_df(tx_df, from_this='from', to_this='to')
 
     #iglobal
-    basic_stat_df = pd.read_csv(os.path.join(basicstatPath, 'basic_icx_stat_df_' + date_prev + '.csv'), low_memory=False)
-    iglobal = basic_stat_df['iglobal'][0]
+    # basic_stat_df = pd.read_csv(os.path.join(basicstatPath, 'basic_icx_stat_df_' + date_prev + '.csv'), low_memory=False)
+    # iglobal = basic_stat_df['iglobal'][0]
+    iglobal = 3_000_000
     daily_issuance = iglobal*12/365
 
 
@@ -269,6 +272,52 @@ for date_prev in date_of_interest:
     tx_type = 'contract'
 
 
+    def token_tx_using_community_tracker(total_pages=500):
+        # functions to get transactions and the page count needed for webscraping
+        def get_tx_via_icon_community_tracker(skip_pages):
+            """ This function is used to extract json information from icon community site """
+            req = requests.get('https://tracker.icon.community/api/v1/addresses/contracts?limit=' + str(100) + '&skip=' + str(skip_pages),
+                                 headers={'User-Agent': 'Mozilla/5.0'})
+            jtracker = json.loads(req.text)
+            jtracker_df = pd.DataFrame(jtracker)
+            jtracker_df['datetime'] = timestamp_to_date(jtracker_df, 'block_timestamp', '%Y-%m-%d')
+            return jtracker_df
+    
+        skip = 100
+        total_pages = total_pages
+        last_page = total_pages * skip - skip
+        page_count = range(0, last_page, skip)
+    
+        tx_all = []
+        for k in tqdm(page_count):
+            try:
+                temp_df = get_tx_via_icon_community_tracker(k)
+                if date_of_interest[0] > temp_df['datetime'].iloc[0]:
+                    break
+                    print('Done collecting...')
+                else:
+                    tx_all.append(temp_df)
+    
+            except:
+                random_sleep_except = random.uniform(200,300)
+                print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
+                sleep(random_sleep_except) #sleep the script for x seconds and....#
+                continue
+    
+        token_xfer_df = pd.concat(tx_all)
+        token_xfer_df['transaction_fee'] = token_xfer_df['transaction_fee'].apply(hex_to_icx)
+        rename_these = {'to_address': 'dest_address',
+                        'value_decimal': 'amount',
+                        'transaction_fee': 'fee',
+                        'token_contract_symbol': 'symbol',
+                        'token_contract_name': 'token_name'}
+    
+        token_xfer_df.columns = [rename_these.get(i, i) for i in token_xfer_df.columns]
+        # tx_all = tx_all.rename(columns = rename_these)
+        return token_xfer_df
+
+
+
     # functions to get transactions and the page count needed for webscraping
     def get_tx_via_url(tx_type=tx_type,
                         page_count=1,
@@ -281,7 +330,7 @@ for date_prev in date_of_interest:
         if tx_type in ['contract']:
             
             tx_url = Request(
-                'https://tracker.icon.foundation/v3/contract/list?page=' + str(page_count) + '&count=' + str(tx_count),
+                'https://tracker.icon.community/api/v1/contract/list?page=' + str(page_count) + '&count=' + str(tx_count),
                 headers={'User-Agent': 'Mozilla/5.0'})
 
         # list of tokens
