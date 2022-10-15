@@ -22,6 +22,7 @@ from iconsdk.icon_service import IconService
 from iconsdk.providers.http_provider import HTTPProvider
 from iconsdk.builder.call_builder import CallBuilder
 from iconsdk.wallet.wallet import KeyWallet
+from typing import Union
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import concurrent.futures
 from time import time, sleep
@@ -61,7 +62,57 @@ if not os.path.exists(walletPath):
 basicstatPath = os.path.join(dailyPath,"output/icon_tracker/data/")
 tokentransferPath = os.path.join(dailyPath,"10_token_transfer/results/")
 
+## Creating Wallet if does not exist (only done for the first time)
+tester_wallet = os.path.join(walletPath, "test_keystore_1")
 
+if os.path.exists(tester_wallet):
+    wallet = KeyWallet.load(tester_wallet, "abcd1234*")
+else:
+    wallet = KeyWallet.create()
+    wallet.get_address()
+    wallet.get_private_key()
+    wallet.store(tester_wallet, "abcd1234*")
+
+tester_address = wallet.get_address()
+
+SYSTEM_ADDRESS = "cx0000000000000000000000000000000000000000"
+
+# using solidwallet
+icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+
+# loop to icx converter
+def loop_to_icx(loop):
+    icx = loop / 1000000000000000000
+    return(icx)
+
+def parse_icx(val: str) -> Union[float, int]:
+    """
+    Attempts to convert a string loop value into icx
+        Parameters:
+            val (str): Loop value
+        Returns:
+            (Union[float, int]): Will return the converted value as an int if successful, otherwise it will return NAN
+    """
+    try:
+        return loop_to_icx(int(val, 0))
+    except ZeroDivisionError:
+        return float("NAN")
+    except ValueError:
+        return float("NAN")
+
+def hex_to_int(val: str) -> Union[int, float]:
+    """
+    Attempts to convert a string based hex into int
+        Parameters:
+            val (str): Value in hex
+        Returns:
+            (Union[int, float]): Returns the value as an int if successful, otherwise a float NAN if not
+    """
+    try:
+        return int(val, 0)
+    except ValueError:
+        print(f"failed to convert {val} to int")
+        return float("NAN")
 # get yesterday function
 # def yesterday(string=False):
 #     yesterday = datetime.utcnow() - timedelta(1)
@@ -138,8 +189,29 @@ for date_prev in date_of_interest:
     #iglobal
     # basic_stat_df = pd.read_csv(os.path.join(basicstatPath, 'basic_icx_stat_df_' + date_prev + '.csv'), low_memory=False)
     # iglobal = basic_stat_df['iglobal'][0]
-    iglobal = 3_000_000
+    
+    # get iiss info
+    def get_iiss_info():
+        call = CallBuilder().from_(tester_address) \
+            .to(SYSTEM_ADDRESS) \
+            .method("getIISSInfo") \
+            .build()
+        result = icon_service.call(call)['variable']
+
+        df = {'Icps': hex_to_int(result['Icps']), 'Iglobal': parse_icx(result['Iglobal']),
+              'Iprep': hex_to_int(result['Iprep']),
+              'Irelay': hex_to_int(result['Irelay']), 'Ivoter': hex_to_int(result['Ivoter'])}
+
+        return df
+
+    iglobal = get_iiss_info()['Iglobal']
+
+    # iglobal = 3_000_000
     daily_issuance = iglobal*12/365
+    # weekly_issuance = daily_issuance*7
+    
+    # iglobal = 3_000_000
+    # daily_issuance =s iglobal*12/365
 
 
 
