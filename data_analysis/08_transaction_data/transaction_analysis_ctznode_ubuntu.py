@@ -194,7 +194,10 @@ for date_prev in date_of_interest:
     def replace_dict_if_unknown(key, d, value):
         if ("-" in d.values()) or (d.values() == None):
             d.update({key: value})
-
+            
+    # convert timestamp to datetime
+    def timestamp_to_date(df, timestamp, dateformat):
+        return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
 
     def add_know_addresses():
         # add any known addresses here manually (if not exist)
@@ -269,152 +272,41 @@ for date_prev in date_of_interest:
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Contract Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-    tx_type = 'contract'
-
-
-    def token_tx_using_community_tracker(total_pages=500):
-        # functions to get transactions and the page count needed for webscraping
-        def get_tx_via_icon_community_tracker(skip_pages):
-            """ This function is used to extract json information from icon community site """
-            req = requests.get('https://tracker.icon.community/api/v1/addresses/contracts?limit=' + str(100) + '&skip=' + str(skip_pages),
-                                 headers={'User-Agent': 'Mozilla/5.0'})
-            jtracker = json.loads(req.text)
-            jtracker_df = pd.DataFrame(jtracker)
-            jtracker_df['datetime'] = timestamp_to_date(jtracker_df, 'block_timestamp', '%Y-%m-%d')
-            return jtracker_df
-    
-        skip = 100
-        total_pages = total_pages
-        last_page = total_pages * skip - skip
-        page_count = range(0, last_page, skip)
-    
-        tx_all = []
-        for k in tqdm(page_count):
-            try:
-                temp_df = get_tx_via_icon_community_tracker(k)
-                if date_of_interest[0] > temp_df['datetime'].iloc[0]:
-                    break
-                    print('Done collecting...')
-                else:
-                    tx_all.append(temp_df)
-    
-            except:
-                random_sleep_except = random.uniform(200,300)
-                print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-                sleep(random_sleep_except) #sleep the script for x seconds and....#
-                continue
-    
-        token_xfer_df = pd.concat(tx_all)
-        token_xfer_df['transaction_fee'] = token_xfer_df['transaction_fee'].apply(hex_to_icx)
-        rename_these = {'to_address': 'dest_address',
-                        'value_decimal': 'amount',
-                        'transaction_fee': 'fee',
-                        'token_contract_symbol': 'symbol',
-                        'token_contract_name': 'token_name'}
-    
-        token_xfer_df.columns = [rename_these.get(i, i) for i in token_xfer_df.columns]
-        # tx_all = tx_all.rename(columns = rename_these)
-        return token_xfer_df
-
-
-
-    # functions to get transactions and the page count needed for webscraping
-    def get_tx_via_url(tx_type=tx_type,
-                        page_count=1,
-                        tx_count=1):
-        """ This function is used to extract json information from icon page (note that total number of
-        tx from the website is 500k max, so we can't go back too much """
-
-        # getting transaction information from icon transaction page
-        # contract information
-        if tx_type in ['contract']:
-            
-            tx_url = Request(
-                'https://tracker.icon.community/api/v1/contract/list?page=' + str(page_count) + '&count=' + str(tx_count),
-                headers={'User-Agent': 'Mozilla/5.0'})
-
-        # list of tokens
-        elif tx_type in ['token_list']:
-            tx_url = Request(
-                'https://tracker.icon.foundation/v3/token/list?page=' + str(page_count) + '&count=' + str(tx_count),
-                headers={'User-Agent': 'Mozilla/5.0'})
-
-
-        # all token transfer (different from main token tx which is on its own)
-        elif tx_type in ['token_txlist']:
-            tx_url = Request(
-                'https://tracker.icon.foundation/v3/token/txList?page=' + str(page_count) + '&count=' + str(tx_count),
-                headers={'User-Agent': 'Mozilla/5.0'})
-
-        # extracting info into json
-        jtx_url = json.load(urlopen(tx_url))
-
-        return jtx_url
-
-
-    def get_page_tx_count(tx_type=tx_type):
-        """ This function is to get the number of elements per page and number of page to be extracted """
-
-        if tx_type in ['contract', 'token_txlist']:
-            jtx_url = get_tx_via_url(tx_type=tx_type, page_count=1, tx_count=1)
-            totalSize = extract_values(jtx_url, 'listSize')
-
-        # to get the tx count (loading how many elements in a page, and how many pages there are) for web scraping
-        if totalSize[0] != 0:
-
-            # get page count to loop over
-            if totalSize[0] > 100:
-                tx_count = 100
-                page_count = round((totalSize[0] / tx_count) + 0.5)
-            else:
-                tx_count = totalSize[0]
-                page_count = 1
-
-        elif totalSize[0] == 0:
-            page_count = 0
-            tx_count = 0
-            print("No records found!")
-
-        return page_count, tx_count
-
-
-    # getting contract information from icon transaction page
-    page_count = []
-    tx_count = []
-    page_count, tx_count = get_page_tx_count(tx_type='contract')
-
 
     def get_contract_info():
-        # collecting contact info using multithreading
-        start = time()
-        known_contract_all = []
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            for k in range(0, page_count):
+        def token_tx_using_community_tracker(total_pages=100):
+            # functions to get transactions and the page count needed for webscraping
+            def get_tx_via_icon_community_tracker(skip_pages):
+                """ This function is used to extract json information from icon community site """
+                req = requests.get('https://tracker.icon.community/api/v1/addresses/contracts?search=&skip=' + str(skip_pages) + '&limit=' + str(100),
+                                     headers={'User-Agent': 'Mozilla/5.0'})
                 try:
-                    known_contract_all.append(
-                        executor.submit(get_tx_via_url, tx_type='contract', page_count=k + 1, tx_count=tx_count))
+                    jtracker = json.loads(req.text)
+                    jtracker_df = pd.DataFrame(jtracker)
                 except:
-                    random_sleep_except = random.uniform(30,60)
-                    print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-                    sleep(random_sleep_except) #sleep the script for x seconds and....#
-                    continue
+                    jtracker_df = pd.DataFrame()
+                return jtracker_df
+        
+            skip = 100
+            total_pages = total_pages
+            last_page = total_pages * skip - skip
+            page_count = range(0, last_page, skip)
+        
+            tx_all = []
+            for k in tqdm(page_count):
+                temp_df = get_tx_via_icon_community_tracker(k)
+                tx_all.append(temp_df)             
+        
+            df_contract = pd.concat(tx_all)
+    
+            return df_contract
 
-        temp_df = []
-        for task in as_completed(known_contract_all):
-            temp_df.append(task.result())
-
-        print(f'Time taken: {time() - start}')
-
-        # extracting information by labels
-        contract_address = extract_values(temp_df, 'address')
-        contract_name = extract_values(temp_df, 'contractName')
-
-        # converting list into dictionary
-        def Convert(lst1, lst2):
-            res_dct = {lst1[i]: lst2[i] for i in range(0, len(lst1), 1)}
-            return res_dct
-
-        contract_d = Convert(contract_address, contract_name)
+        df_contract = token_tx_using_community_tracker()
+        POSSIBLE_NANS = ['', ' ', np.nan]
+        df_contract['name'] = np.where(df_contract['name'].isin(POSSIBLE_NANS), '-', df_contract['name'])
+        # df_contract = df_contract[~df_contract['name'].isin(POSSIBLE_NANS)]
+        
+        contract_d = dict(zip(df_contract.address, df_contract.name))
 
         # updating known address with other contract addresses
         jknown_address.update(contract_d)

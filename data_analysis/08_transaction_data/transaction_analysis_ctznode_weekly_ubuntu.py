@@ -35,6 +35,7 @@ import matplotlib.lines as mlines
 import matplotlib.ticker as ticker
 import seaborn as sns
 import random
+import requests
 
 desired_width = 320
 pd.set_option('display.width', desired_width)
@@ -286,112 +287,39 @@ add_know_addresses()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Contract Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
-tx_type = 'contract'
-
-
-# functions to get transactions and the page count needed for webscraping
-    # functions to get transactions and the page count needed for webscraping
-def get_tx_via_url(tx_type=tx_type,
-                    page_count=1,
-                    tx_count=1):
-    """ This function is used to extract json information from icon page (note that total number of
-    tx from the website is 500k max, so we can't go back too much """
-
-    # getting transaction information from icon transaction page
-    # contract information
-    if tx_type in ['contract']:
-        
-        # tx_url = request_sleep_repeat(url = 'https://tracker.icon.foundation/v3/contract/list?page=' + str(page_count) + '&count=' + str(tx_count), repeat=3)
-
-        tx_url = Request(
-            'https://tracker.icon.foundation/v3/contract/list?page=' + str(page_count) + '&count=' + str(tx_count),
-            headers={'User-Agent': 'Mozilla/5.0'})
-
-    # list of tokens
-    elif tx_type in ['token_list']:
-        tx_url = Request(
-            'https://tracker.icon.foundation/v3/token/list?page=' + str(page_count) + '&count=' + str(tx_count),
-            headers={'User-Agent': 'Mozilla/5.0'})
-        # tx_url = request_sleep_repeat(url = 'https://tracker.icon.foundation/v3/token/list?page=' + str(page_count) + '&count=' + str(tx_count), repeat=3)
-
-
-    # all token transfer (different from main token tx which is on its own)
-    elif tx_type in ['token_txlist']:
-        tx_url = Request(
-            'https://tracker.icon.foundation/v3/token/txList?page=' + str(page_count) + '&count=' + str(tx_count),
-            headers={'User-Agent': 'Mozilla/5.0'})
-        # tx_url = request_sleep_repeat(url = 'https://tracker.icon.foundation/v3/token/txList?page=' + str(page_count) + '&count=' + str(tx_count), repeat=3)
-
-    # extracting info into json
-    jtx_url = json.load(urlopen(tx_url))
-
-    return jtx_url
-
-
-def get_page_tx_count(tx_type=tx_type):
-    """ This function is to get the number of elements per page and number of page to be extracted """
-
-    if tx_type in ['contract', 'token_txlist']:
-        jtx_url = get_tx_via_url(tx_type=tx_type, page_count=1, tx_count=1)
-        totalSize = extract_values(jtx_url, 'listSize')
-
-    # to get the tx count (loading how many elements in a page, and how many pages there are) for web scraping
-    if totalSize[0] != 0:
-
-        # get page count to loop over
-        if totalSize[0] > 100:
-            tx_count = 100
-            page_count = round((totalSize[0] / tx_count) + 0.5)
-        else:
-            tx_count = totalSize[0]
-            page_count = 1
-
-    elif totalSize[0] == 0:
-        page_count = 0
-        tx_count = 0
-        print("No records found!")
-
-    return page_count, tx_count
-
-
-# getting contract information from icon transaction page
-page_count = []
-tx_count = []
-page_count, tx_count = get_page_tx_count(tx_type='contract')
-
-
 def get_contract_info():
-    # collecting contact info using multithreading
-    start = time()
-    known_contract_all = []
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        for k in range(0, page_count):
+    def token_tx_using_community_tracker(total_pages=100):
+        # functions to get transactions and the page count needed for webscraping
+        def get_tx_via_icon_community_tracker(skip_pages):
+            """ This function is used to extract json information from icon community site """
+            req = requests.get('https://tracker.icon.community/api/v1/addresses/contracts?search=&skip=' + str(skip_pages) + '&limit=' + str(100),
+                                 headers={'User-Agent': 'Mozilla/5.0'})
             try:
-                known_contract_all.append(
-                    executor.submit(get_tx_via_url, tx_type='contract', page_count=k + 1, tx_count=tx_count))
+                jtracker = json.loads(req.text)
+                jtracker_df = pd.DataFrame(jtracker)
             except:
-                random_sleep_except = random.uniform(30,60)
-                print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-                sleep(random_sleep_except) #sleep the script for x seconds and....#
-                continue
+                jtracker_df = pd.DataFrame()
+            return jtracker_df
+    
+        skip = 100
+        total_pages = total_pages
+        last_page = total_pages * skip - skip
+        page_count = range(0, last_page, skip)
+    
+        tx_all = []
+        for k in tqdm(page_count):
+            temp_df = get_tx_via_icon_community_tracker(k)
+            tx_all.append(temp_df)             
+    
+        df_contract = pd.concat(tx_all)
 
-    temp_df = []
-    for task in as_completed(known_contract_all):
-        temp_df.append(task.result())
+        return df_contract
 
-    print(f'Time taken: {time() - start}')
-
-
-    # extracting information by labels
-    contract_address = extract_values(temp_df, 'address')
-    contract_name = extract_values(temp_df, 'contractName')
-
-    # converting list into dictionary
-    def Convert(lst1, lst2):
-        res_dct = {lst1[i]: lst2[i] for i in range(0, len(lst1), 1)}
-        return res_dct
-
-    contract_d = Convert(contract_address, contract_name)
+    df_contract = token_tx_using_community_tracker()
+    POSSIBLE_NANS = ['', ' ', np.nan]
+    df_contract['name'] = np.where(df_contract['name'].isin(POSSIBLE_NANS), '-', df_contract['name'])
+    
+    contract_d = dict(zip(df_contract.address, df_contract.name))
 
     # updating known address with other contract addresses
     jknown_address.update(contract_d)
@@ -442,7 +370,6 @@ def get_contract_info():
     replace_dict_if_unknown('cx8683d50b9f53275081e13b64fba9d6a56b7c575d', jknown_address, 'gangstabet_trade')
     replace_dict_if_unknown('cx6139a27c15f1653471ffba0b4b88dc15de7e3267', jknown_address, 'gangstabet_token')
 
-
     replace_dict_if_unknown('cx66d4d90f5f113eba575bf793570135f9b10cece1', jknown_address, 'balanced_loans')
     replace_dict_if_unknown('cx43e2eec79eb76293c298f2b17aec06097be606e0', jknown_address, 'balanced_staking')
     replace_dict_if_unknown('cx203d9cd2a669be67177e997b8948ce2c35caffae', jknown_address, 'balanced_dividends')
@@ -474,7 +401,7 @@ def get_contract_info():
     replace_dict_if_unknown('cx5faae53c4dbd1fbe4a2eb4aab6565030f10da5c6', jknown_address, 'optimus_fee_handler')
     replace_dict_if_unknown('cx9f734408d7434604bb9984fa5898a792670ea945', jknown_address, 'optimus_multisiglock_time_wallet')
 
-    replace_dict_if_unknown('cx6c8897b59a8e4a3f14865d74c1cc7a80fe82a48c', jknown_address, 'Monkeys')
+    replace_dict_if_unknown('cx6c8897b59a8e4a3f14865d74c1cc7a80fe82a48c', jknown_address, 'Monkey')
     replace_dict_if_unknown('cx43fa2fa3cdc8c5d48abd612eada8169d3d9b5a73', jknown_address, 'Home Ground Pay')
     replace_dict_if_unknown('cxe7c05b43b3832c04735e7f109409ebcb9c19e664', jknown_address, 'iAM ')
 
@@ -487,11 +414,14 @@ def get_contract_info():
     replace_dict_if_unknown('cxc99c1dcc28c36a6383176c6d1aeea1e4d83e4a69', jknown_address, 'Wonderland')
     replace_dict_if_unknown('cx997849d3920d338ed81800833fbb270c785e743d', jknown_address, 'Wonderland')
     replace_dict_if_unknown('cx3ce3269704dd3a5e8e7d8012d4b383c4748ed7cc', jknown_address, 'Wonderland')
+
+    replace_dict_if_unknown('cxc2f3ea1c84cac895b3ab05681705d472002bfb1f', jknown_address, 'Mojos')
     
     replace_dict_if_unknown('cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f', jknown_address, 'Bridge')
     replace_dict_if_unknown('cx0eb215b6303142e37c0c9123abd1377feb423f0e', jknown_address, 'Bridge')
 
     replace_dict_if_unknown('cxe5c2c460364acc5f8c1d5ca925930043d8d9c9dd', jknown_address, 'GangstaBet Crown')
+
 
     for k, v in jknown_address.items():
         if v == "-":
@@ -505,6 +435,7 @@ def get_contract_info():
         ~known_address_details_from['from'].str.startswith('binance\nsweeper', na=False)]
 
     return known_address_details_to, known_address_details_from, known_address_exception
+
 
 
 known_address_details_to, known_address_details_from, known_address_exception = get_contract_info()

@@ -65,7 +65,7 @@ def extract_values(obj, key):
 URI = "https://ctz.solidwallet.io"
 SYSTEM_ADDRESS = "cx0000000000000000000000000000000000000000"
 
-today = datetime.utcnow()
+today = datetime.utcnow() #- timedelta(days=1)
 day_today = today.strftime("%Y-%m-%d")
 day1 = today.strftime("%Y_%m_%d")
 
@@ -187,15 +187,15 @@ if __name__ == '__main__':
   df.to_csv(os.path.join(outDataPath, 'prep_top_100_votes_and_bond_' + day1 + '.csv'), index=False)
 
   # loading data to merge with prep votes
-  prep_votes = pd.read_csv(os.path.join(outDataPath, 'prep_votes_' + day1 + '.csv'))
+  # prep_votes = pd.read_csv(os.path.join(outDataPath, 'prep_votes_' + day1 + '.csv'))
 
-  merged_df = pd.merge(prep_votes, df, how='left', left_on='validator', right_on='address').drop(columns=['name','address'])
-  merged_df['delegation'] = np.where(merged_df['delegation'].isnull(), merged_df['cum_votes_update'], merged_df['delegation'])
-  merged_df = merged_df.fillna(0)
-  merged_df = merged_df.sort_values(by=['bond', 'delegation'], ascending=False)
-  merged_df['rank'] = np.arange(len(merged_df)) + 1
-  merged_df = merged_df.drop(columns=['cum_votes_update'])
+  # merged_df = pd.merge(prep_votes, df, how='left', left_on='validator', right_on='address').drop(columns=['name','address'])
+  # merged_df['delegation'] = np.where(merged_df['delegation'].isnull(), merged_df['cum_votes_update'], merged_df['delegation'])
+  # merged_df = merged_df.fillna(0)
+  # merged_df = merged_df.sort_values(by=['bond', 'delegation'], ascending=False)
+  # merged_df['rank'] = np.arange(len(merged_df)) + 1
+  # merged_df = merged_df.drop(columns=['cum_votes_update'])
 
-  merged_df.to_csv(os.path.join(outDataPath, 'prep_votes_final_' + day1 + '.csv'), index=False)
+  # merged_df.to_csv(os.path.join(outDataPath, 'prep_votes_final_' + day1 + '.csv'), index=False)
 
   print(' ### Done getting P-Rep vote information using a complicated method. ### ')
