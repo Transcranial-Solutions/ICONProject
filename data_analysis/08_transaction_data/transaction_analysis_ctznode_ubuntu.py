@@ -239,12 +239,12 @@ for date_prev in date_of_interest:
         results = extract(obj, arr, key)
         return results
     
-    def request_sleep_repeat(url, repeat=3):
+    def request_sleep_repeat(url, repeat=3, verify=True):
         for i in range(0,repeat):
             print(f"Trying {str(i)}...")
             try:
                 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
-                known_address_url = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                known_address_url = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, verify=verify)
                 random_sleep_except = random.uniform(3,6)
                 print("Just pausing for " + str(random_sleep_except) + " seconds and try again \n")
                 sleep(random_sleep_except)
@@ -254,9 +254,11 @@ for date_prev in date_of_interest:
                 print("I've encountered an error! I'll pause for " + str(random_sleep_except) + " seconds and try again \n")
                 sleep(random_sleep_except)
         return known_address_url
-
-    known_address_url = request_sleep_repeat(url = 'https://iconwat.ch/data/thes', repeat=3)
-    jknown_address = json.load(urlopen(known_address_url))
+    
+    # known_address_url = request_sleep_repeat(url = 'https://iconwat.ch/data/thes', repeat=3, verify=False)
+    known_address_url = request_sleep_repeat(url = 'http://iconwat.ch/data/thes', repeat=3, verify=False)
+    # jknown_address = json.load(urlopen(known_address_url))
+    jknown_address = known_address_url.json()
 
 
     def add_dict_if_noexist(key, d, value):
