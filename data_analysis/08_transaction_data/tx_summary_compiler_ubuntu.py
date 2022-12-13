@@ -21,11 +21,12 @@ import seaborn as sns
 import matplotlib.pyplot as plt  # for improving our visualizations
 import matplotlib.ticker as ticker
 import matplotlib.lines as mlines
+from tqdm import tqdm
 
 
-start_date = '2022-02-01'
-end_date = '2022-02-28'
-my_title = 'Transactions (February 2022)'
+start_date = '2022-11-01'
+end_date = '2022-11-30'
+my_title = 'Transactions (November 2022)'
 interval = 'date'
 
 
@@ -52,13 +53,27 @@ if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
 
-listData = glob.glob(os.path.join(resultPath, "/**/tx_summary_*.csv"), recursive=True)
-listData = [x for x in listData if "weekly" not in x] # removing weekly data
+def flatten(l):
+    return [i for sublist in l for i in sublist]
+
+# glob takes too long
+# listData = glob.glob(os.path.join(resultPath, "/**/tx_summary_*.csv"), recursive=True)
+# listData = [x for x in listData if "weekly" not in x] # removing weekly data
+
+folder_years = [i for i in os.listdir(resultPath) if i.isdigit()]
+
+all_files = []
+for fy in folder_years:
+    l_file = os.listdir(os.path.join(resultPath, fy))
+    l_file = [os.path.join(resultPath, fy, i) for i in l_file if '.csv' in i]
+    all_files.append(l_file)
+
+listData = sorted(flatten(all_files))
 
 all_df =[]
-for k in range(len(listData)):
-    this_date = re.findall(r'tx_summary_(.+?).csv', listData[k])[0].replace("_", "/")
-    df = pd.read_csv(listData[k])
+for dat in tqdm(listData):
+    this_date = re.findall(r'tx_summary_(.+?).csv', dat)[0].replace("_", "/")
+    df = pd.read_csv(dat, low_memory=False)
     df['date'] = this_date
     cols = list(df.columns)
     cols = [cols[-1]] + cols[:-1]
@@ -94,15 +109,26 @@ to_group = use_df.agg('sum')
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 ## VALUE
-tokentransferPath = os.path.join(currPath,"10_token_transfer\\results\\")
+tokentransferPath = os.path.join(currPath,"10_token_transfer/results/")
 
-listData = glob.glob(os.path.join(tokentransferPath, "\\**\\IRC_token_transfer_*.csv"), recursive=True)
-listData = [x for x in listData if "compiled" not in x] # removing weekly data
+# listData = glob.glob(os.path.join(tokentransferPath, "/**/IRC_token_transfer_*.csv"), recursive=True)
+# listData = [x for x in listData if "compiled" not in x] # removing weekly data
+
+
+folder_years = [i for i in os.listdir(tokentransferPath) if '.csv' not in i]
+
+all_files = []
+for fy in folder_years:
+    l_file = os.listdir(os.path.join(tokentransferPath, fy))
+    l_file = [os.path.join(tokentransferPath, fy, i) for i in l_file if '.csv' in i]
+    all_files.append(l_file)
+
+listData = sorted(flatten(all_files))
 
 all_df =[]
-for k in range(len(listData)):
-    this_date = re.findall(r'IRC_token_transfer_(.+?).csv', listData[k])[0].replace("_", "/")
-    df = pd.read_csv(listData[k])
+for dat in tqdm(listData):
+    this_date = re.findall(r'IRC_token_transfer_(.+?).csv', dat)[0].replace("_", "/")
+    df = pd.read_csv(dat, low_memory=False)
     df['date'] = this_date
     cols = list(df.columns)
     cols = [cols[-1]] + cols[:-1]
@@ -122,18 +148,24 @@ icx_price = token_transfer_df_this_term[token_transfer_df_this_term['IRC Token']
 
 
 #~~~~ TX FINAL COMPILATION ~~~~~#
-listData = glob.glob(os.path.join(dataPath, "\\**\\tx_final_*.csv"), recursive=True)
-listData = [x for x in listData if "compiled" not in x] # removing weekly data
+
+
+l_file = os.listdir(os.path.join(dataPath))
+listData = [os.path.join(dataPath, i) for i in l_file if 'tx_final_' in i and '.csv' in i]
+
+# listData = glob.glob(os.path.join(dataPath, "\\**\\tx_final_*.csv"), recursive=True)
+# listData = [x for x in listData if "compiled" not in x] # removing weekly data
 
 all_df =[]
-for k in range(len(listData)):
-    this_date = re.findall(r'tx_final_(.+?).csv', listData[k])[0].replace("-", "/")
-    df = pd.read_csv(listData[k], low_memory=False)
+for dat in tqdm(listData):
+    this_date = re.findall(r'tx_final_(.+?).csv', dat)[0].replace("_", "/")
+    df = pd.read_csv(dat, low_memory=False)
     df['date'] = this_date
     cols = list(df.columns)
     cols = [cols[-1]] + cols[:-1]
     df = df[cols]
     all_df.append(df)
+
 
 tx_final_df = pd.concat(all_df)
 tx_final_df.to_csv(os.path.join(dataPath, 'compiled_tx_final.csv'), index=False)
