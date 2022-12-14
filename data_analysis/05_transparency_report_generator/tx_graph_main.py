@@ -74,11 +74,11 @@ def extract_values(obj, key):
 
 # today's date
 date_is_range = 0 # if date is range (1) or is one  date (0)
-use_specified_date = 1 # yes(1) no(0)
+use_specified_date = 0 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2022_03_06"; day_2 = "2022_03_06"
+    day_1 = "2022_12_01"; day_2 = "2022_12_12"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
@@ -128,8 +128,8 @@ tx_flow = 'both' # 'in', 'out', 'both'
 tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet)', 'token_txlist (token that has been xferred), 'token_list'
 
 # does not work with range
-first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
-further_degree = 3 # this is for the next and beyond (so if it's 1, it means 2 in total)
+first_degree = 1 # this is for getting only 1 interaction (WOI <-> wallet_x)
+further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
@@ -850,7 +850,7 @@ try:
     import networkx as nx
     from networkx.drawing.nx_agraph import graphviz_layout
     import matplotlib.pyplot as plt
-    from matplotlib.pyplot import figure, text
+    from matplotlib.pyplot import text
     from matplotlib.offsetbox import AnchoredText
 
 
