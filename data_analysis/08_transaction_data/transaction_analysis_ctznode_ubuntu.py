@@ -171,12 +171,15 @@ for date_prev in date_of_interest:
     token_transfer_df = pd.read_csv(os.path.join(tokentransfer_date_Path, 'IRC_token_transfer_' + date_prev_underscore + '.csv'), low_memory=False)
     
     token_transfer_value = token_transfer_df['Value Transferred in USD'].sum()
-
-    icx_price = token_transfer_df[token_transfer_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
-    icx_transfer_value = tx_df['value'].sum() * icx_price
-
-    total_transfer_value = icx_transfer_value + token_transfer_value
-    total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
+    
+    try:
+        icx_price = token_transfer_df[token_transfer_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
+        icx_transfer_value = tx_df['value'].sum() * icx_price
+    
+        total_transfer_value = icx_transfer_value + token_transfer_value
+        total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
+    except:
+        total_transfer_value_text = 'Total Value Transferred: Not Available'
 
     def clean_tx_df(tx_df, from_this='from', to_this='to'):
         tx_df[from_this] = np.where(tx_df[from_this].isnull(), 'System', tx_df[from_this])

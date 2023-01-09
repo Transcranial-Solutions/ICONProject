@@ -292,21 +292,6 @@ def request_into_df(url):
     req_df = pd.DataFrame(req_url_json)
     return(req_df)
 
-# balanced
-# token_price_balanced = request_into_df(url='https://balanced.geometry.io/api/v1/stats/token-stats').reset_index()
-token_price_balanced = request_into_df(url='https://balanced.sudoblock.io/api/v1/stats/token-stats').reset_index()
-
-# unifi protocol
-token_price_unifi = request_into_df(url='https://assets.unifiprotocol.com/pools-icon.json')
-
-# token price simple
-token_price_balanced['Price in USD'] = token_price_balanced['tokens'].apply(lambda x: x.get('price'))
-token_price_balanced['Price in USD'] = loop_to_icx(token_price_balanced['Price in USD'].apply(int, base=16))
-token_price_balanced = token_price_balanced.drop(columns=['tokens', 'timestamp'])
-
-bnusd_in_usd = token_price_balanced[token_price_balanced['index'] == 'bnUSD']['Price in USD'].iloc[0]
-
-
 def get_token_price(token_price_balanced, bnusd_in_usd, token_name, token_contract_address):
     if not any(token_price_balanced['index'] == token_name):
         from iconsdk.builder.call_builder import CallBuilder
@@ -347,54 +332,75 @@ def get_token_price(token_price_balanced, bnusd_in_usd, token_name, token_contra
         pass
     return token_price_balanced
 
+# balanced
+# token_price_balanced = request_into_df(url='https://balanced.geometry.io/api/v1/stats/token-stats').reset_index()
+try:
+    token_price_balanced = request_into_df(url='https://balanced.sudoblock.io/api/v1/stats/token-stats').reset_index()
+    
+    # unifi protocol
+    token_price_unifi = request_into_df(url='https://assets.unifiprotocol.com/pools-icon.json')
+    
+    # token price simple
+    token_price_balanced['Price in USD'] = token_price_balanced['tokens'].apply(lambda x: x.get('price'))
+    token_price_balanced['Price in USD'] = loop_to_icx(token_price_balanced['Price in USD'].apply(int, base=16))
+    token_price_balanced = token_price_balanced.drop(columns=['tokens', 'timestamp'])
+    
+    bnusd_in_usd = token_price_balanced[token_price_balanced['index'] == 'bnUSD']['Price in USD'].iloc[0]
+    
+    ## add token price if does not exist
+    token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'FRAMD', "cx2aa9b28a657e3121b75d3d4fe65e569398645d56")
+    token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'FIN', "cx785d504f44b5d2c8dac04c5a1ecd75f18ee57d16")
+    token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'iAM', "cxe7c05b43b3832c04735e7f109409ebcb9c19e664")
+    #
+    # #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # # FIN price (if does not exist)
+    # if not any(token_price_balanced['index'] == 'FIN'):
+    #     from iconsdk.builder.call_builder import CallBuilder
+    #     from iconsdk.icon_service import IconService
+    #     from iconsdk.providers.http_provider import HTTPProvider
+    #
+    #     DEX_CONTRACT = "cxa0af3165c08318e988cb30993b3048335b94af6c"
+    #     nid = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+    #     EXA = 10 ** 18
+    #
+    #     finbnusdpricecall = CallBuilder().from_("hx0000000000000000000000000000000000000001") \
+    #         .to(DEX_CONTRACT) \
+    #         .method("getPrice") \
+    #         .params({"_id": "31"}) \
+    #         .build()
+    #     finbnusdpriceresult = nid.call(finbnusdpricecall)
+    #
+    #     finbnusdindec = int(finbnusdpriceresult, 16)
+    #     finbnusdfloatindec = float(finbnusdindec)
+    #     finbnusdconverted = finbnusdfloatindec / EXA
+    #
+    #     # convert fin_bnusd into fin_usd value
+    #     fin_in_usd = pd.DataFrame({'index': ['FIN'], 'Price in USD': [finbnusdconverted * bnusd_in_usd]})
+    #
+    #     # add FIN price to token price list
+    #     token_price_balanced = token_price_balanced.append(fin_in_usd).reset_index(drop=True)
+    # else:
+    #     pass
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    # ICX price
+    ICX_price = token_price_balanced[token_price_balanced['index'] == 'ICX']['Price in USD']
+    
+    token_price_unifi['Price in USD'] = token_price_unifi['price'].astype(float).apply(lambda x: x * ICX_price)
+    token_price_unifi = token_price_unifi[['name', 'Price in USD']].rename(columns={'name':'index'})
+    token_price_unifi = token_price_unifi[~token_price_unifi['index'].isin(token_price_balanced['index'])]
+    
+    token_price_balanced = token_price_balanced[token_price_balanced['index'] != 'ICX']
+    
+    token_price_all = token_price_balanced.append(token_price_unifi).reset_index(drop=True)
+except:
+    token_price_all = pd.DataFrame()
 
 
-## add token price if does not exist
-token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'FRAMD', "cx2aa9b28a657e3121b75d3d4fe65e569398645d56")
-token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'FIN', "cx785d504f44b5d2c8dac04c5a1ecd75f18ee57d16")
-token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'iAM', "cxe7c05b43b3832c04735e7f109409ebcb9c19e664")
-#
-# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# # FIN price (if does not exist)
-# if not any(token_price_balanced['index'] == 'FIN'):
-#     from iconsdk.builder.call_builder import CallBuilder
-#     from iconsdk.icon_service import IconService
-#     from iconsdk.providers.http_provider import HTTPProvider
-#
-#     DEX_CONTRACT = "cxa0af3165c08318e988cb30993b3048335b94af6c"
-#     nid = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
-#     EXA = 10 ** 18
-#
-#     finbnusdpricecall = CallBuilder().from_("hx0000000000000000000000000000000000000001") \
-#         .to(DEX_CONTRACT) \
-#         .method("getPrice") \
-#         .params({"_id": "31"}) \
-#         .build()
-#     finbnusdpriceresult = nid.call(finbnusdpricecall)
-#
-#     finbnusdindec = int(finbnusdpriceresult, 16)
-#     finbnusdfloatindec = float(finbnusdindec)
-#     finbnusdconverted = finbnusdfloatindec / EXA
-#
-#     # convert fin_bnusd into fin_usd value
-#     fin_in_usd = pd.DataFrame({'index': ['FIN'], 'Price in USD': [finbnusdconverted * bnusd_in_usd]})
-#
-#     # add FIN price to token price list
-#     token_price_balanced = token_price_balanced.append(fin_in_usd).reset_index(drop=True)
-# else:
-#     pass
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# ICX price
-ICX_price = token_price_balanced[token_price_balanced['index'] == 'ICX']['Price in USD']
 
-token_price_unifi['Price in USD'] = token_price_unifi['price'].astype(float).apply(lambda x: x * ICX_price)
-token_price_unifi = token_price_unifi[['name', 'Price in USD']].rename(columns={'name':'index'})
-token_price_unifi = token_price_unifi[~token_price_unifi['index'].isin(token_price_balanced['index'])]
 
-token_price_balanced = token_price_balanced[token_price_balanced['index'] != 'ICX']
 
-token_price_all = token_price_balanced.append(token_price_unifi).reset_index(drop=True)
 
 
 
@@ -420,16 +426,28 @@ def fuzzy_merge(df_1, df_2, key1, key2, threshold=90, limit=1):
     return df_1
 
 # fuzzy matched (high threshold)
-table_now = fuzzy_merge(table_now, token_price_all, 'IRC Token', 'index', threshold=60) #.drop(columns=['logo'])
-table_now = table_now.rename(columns={'matches': 'index'})
-table_now = pd.merge(table_now, token_price_all, on='index', how='left')
+
+try:
+    table_now = fuzzy_merge(table_now, token_price_all, 'IRC Token', 'index', threshold=60) #.drop(columns=['logo'])
+    table_now = table_now.rename(columns={'matches': 'index'})
+    table_now = pd.merge(table_now, token_price_all, on='index', how='left')
+except:
+    pass
+
 print(table_now)
 
-table_now['Value Transferred in USD'] = table_now['Amount'] * table_now['Price in USD']
-table_now = table_now.drop(columns='index')
+try:
+    table_now['Value Transferred in USD'] = table_now['Amount'] * table_now['Price in USD']
+    table_now = table_now.drop(columns='index')
+except:
+    pass
 
-ICX_price = pd.DataFrame({'IRC Token': 'ICX'}, ICX_price).reset_index()
-table_now = table_now.append(ICX_price).reset_index(drop=True)
+try:
+    ICX_price = pd.DataFrame({'IRC Token': 'ICX'}, ICX_price).reset_index()
+    table_now = table_now.append(ICX_price).reset_index(drop=True)
+except:
+    table_now['Price in USD'] = np.nan
+    table_now['Value Transferred in USD'] = np.nan
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Save ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

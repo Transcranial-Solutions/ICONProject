@@ -194,19 +194,24 @@ for these_dates in date_of_interest:
     
     token_transfer_value = token_transfer_df['Value Transferred in USD'].sum()
 
-    icx_price = token_transfer_df[token_transfer_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
-    icx_transfer_value = data['value'].sum() * icx_price
-
-    total_transfer_value = icx_transfer_value + token_transfer_value
-    total_transfer_value_list.append(total_transfer_value)
-
+    try:
+        icx_price = token_transfer_df[token_transfer_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
+        icx_transfer_value = data['value'].sum() * icx_price
+    
+        total_transfer_value = icx_transfer_value + token_transfer_value
+        total_transfer_value_list.append(total_transfer_value)
+    except:
+        pass
 
     #iglobal
     # basic_stat = pd.read_csv(os.path.join(basicstatPath, 'basic_icx_stat_df_' + these_dates + '.csv'), low_memory=False)
     # basic_stat_df.append(basic_stat)
 
-
-total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(sum(total_transfer_value_list))) + ' USD'
+try:
+    total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(sum(total_transfer_value_list))) + ' USD'
+except:
+    total_transfer_value_test = 'Total Value Transferred: Not Available'
+        
 
 
 tx_df = pd.concat(tx_df).reset_index(drop=True)
