@@ -640,6 +640,9 @@ for date_prev in date_of_interest:
             # FRAMD
             df['group'] = np.where(df['to_def'].str.contains('Yetis', case=False), 'FRAMD', df['group'])
             df['group'] = np.where(df['group'].str.contains('FRAMD', case=False), 'FRAMD', df['group'])
+            
+            # BTP
+            df['group'] = np.where(df['to_def'].str.lower().str.startswith('btp'), 'BTP', df['group'])
 
             return df
 
