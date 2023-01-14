@@ -588,6 +588,7 @@ for date_prev in date_of_interest:
             #balanced
             df['group'] = np.where(df['group'] == 'Balance', 'Balanced', df['group'])
             df['group'] = np.where(df['group'].str.contains('balanced_', case=False), 'Balanced', df['group'])
+            df['group'] = np.where(df['group'].str.contains('baln', case=False), 'Balanced', df['group'])
             df['group'] = np.where(df['group'].str.contains('circle_arb', case=False), 'Balanced', df['group'])
 
             #omm
