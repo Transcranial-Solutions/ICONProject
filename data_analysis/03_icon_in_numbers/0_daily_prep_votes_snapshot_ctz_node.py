@@ -170,6 +170,8 @@ if __name__ == '__main__':
 
   def votes_and_bond():
     my_list = p.bonded_preps
+    # main_preps = p.main_preps
+    # sub_preps = p.sub_preps
 
     my_dict = MyEncoder().encode(my_list)
     my_dict = json.loads(my_dict)
