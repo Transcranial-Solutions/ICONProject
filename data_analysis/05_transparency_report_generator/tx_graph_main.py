@@ -73,18 +73,18 @@ def extract_values(obj, key):
 
 
 # today's date
-date_is_range = 0 # if date is range (1) or is one  date (0)
-use_specified_date = 0 # yes(1) no(0)
+date_is_range = 1 # if date is range (1) or is one  date (0)
+use_specified_date = 1 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2022_12_01"; day_2 = "2022_12_12"
+    day_1 = "2023_01_23"; day_2 = "2023_01_24"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2022_06_26"
+   day_1 = "2023_01_21"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -101,7 +101,14 @@ elif 'https' not in api_endpoint:
     api_endpoint_mod = 'https://' + api_endpoint
 
 # wallet of interest
-this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
+this_address = "hx6d36daba20cf74d54ff6e863f7f6e0a2653ed8aa"
+# this_address = "hxd5271567e1121bdba855cbedd12163cb38e48e65"
+
+# this_address = "hx54f7853dc6481b670caf69c5a27c7c8fe5be8269"
+# this_address = 'hx0c9eea3bf6f6e543b2f1d5d6477c2093d782ca50' # exploit add 4?
+# this_address = 'hx0d4fbbbf09f8b83d6ec399a0b6eae672233fc1a2' # exploit add 2?
+# this_address = 'hxe5327aade005b19cb18bc993513c5cfcacd159e9' #exploit address?
+# this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
 # this_address = 'hx1729b35b690d51e9944b2e94075acff986ea0675' # Binance cold
 # this_address = 'hx54d6f19c3d16b2ef23c09c885ca1ba776aaa80e2' #ubik
 # this_address = 'hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2' #velic
@@ -128,8 +135,8 @@ tx_flow = 'both' # 'in', 'out', 'both'
 tx_type = 'normal' # 'normal', 'internal', 'contract', 'token (individual wallet)', 'token_txlist (token that has been xferred), 'token_list'
 
 # does not work with range
-first_degree = 1 # this is for getting only 1 interaction (WOI <-> wallet_x)
-further_degree = 0 # this is for the next and beyond (so if it's 1, it means 2 in total)
+first_degree = 0 # this is for getting only 1 interaction (WOI <-> wallet_x)
+further_degree = 1 # this is for the next and beyond (so if it's 1, it means 2 in total)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ICX Address Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
@@ -216,7 +223,9 @@ exch_wallets = ['hx1729b35b690d51e9944b2e94075acff986ea0675',
                     'hxe5327aade005b19cb18bc993513c5cfcacd159e9',
                     'hx23cb1d823ef96ac22ae30c986a78bdbf3da976df',
                     'hxd7a34c15c2345d9f0891545350181c7b162d9e08',
-                    'hxa390d24fdcba68515b492ffc553192802706a121']
+                    'hxa390d24fdcba68515b492ffc553192802706a121',
+                    'hx6b91c8dea3114de74ecfa85908b875778c2b599c',
+                    'hxbb984f278abd66ae2155edbd91f8c87ce98411c8']
 
 exch_names = ['binance_cold_01',
                   'binance_cold_02',
@@ -244,10 +253,12 @@ exch_names = ['binance_cold_01',
                   'bithumb_03',
                   'unkEx_c_01',
                   'unkEx_c_02',
-                  'unkEx_d_01',
+                   'XGO',
                   'bitvavo_cold_01',
                   'bitvavo_cold_02',
-                  'bitvavo_hot']
+                  'bitvavo_hot',
+                  'bybit',
+                  'kucoin']
 
 
 ## adding exchange details here
@@ -386,6 +397,9 @@ jknown_address['cxff66ea114d20f6518e89f1269b4a31d3620b9331'] = 'PGT Distro'
 jknown_address['cx953260a551584681e1f0492dce29e07d323ed5a6'] = 'ICONPOOL'
 jknown_address['cxcb455f26a2c01c686fa7f30e1e3661642dd53c0d'] = 'OMM Lending Pool'
 jknown_address['cx8683d50b9f53275081e13b64fba9d6a56b7c575d'] = 'GangstaBet'
+jknown_address['cx0eb215b6303142e37c0c9123abd1377feb423f0e'] = 'Orbit_from_ICON'
+jknown_address['cxb49d82c46be6b61cab62aaf9824b597c6cf8a25d'] = 'BTP'
+
 
 # making same table but with different column names
 known_address_details_to = pd.DataFrame(jknown_address.items(), columns=['dest_address', 'dest_def'])
@@ -1121,7 +1135,7 @@ try:
 
 
 
-    this_title = 'TAP Div Breakdown'
+    this_title = 'Breakdown'
     # this_title = 'iAM Div Breakdown'
 
     # just for iAM

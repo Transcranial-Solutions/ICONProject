@@ -73,18 +73,18 @@ def extract_values(obj, key):
 
 
 # today's date
-date_is_range = 0 # if date is range (1) or is one  date (0)
-use_specified_date = 0 # yes(1) no(0)
+date_is_range = 1 # if date is range (1) or is one  date (0)
+use_specified_date = 1 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2021_03_23"; day_2 = "2021_03_24"
+    day_1 = "2023_01_20"; day_2 = "2023_01_21"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2021_04_29"
+   day_1 = "2023_01_21"
    date_of_interest = [day_to_text(day_1)]
 
 # today
@@ -108,7 +108,7 @@ if date_is_range == 0 and use_specified_date == 0:
 # this_address = 'hx81d4f834b91569b43cde903ec241eb1fce64a171'
 this_address = 'cx14002628a4599380f391f708843044bc93dce27d' # iAM
 
-# this_address = 'hxa527f96d8b988a31083167f368105fc0f2ab1143' #
+this_address = 'hx0c9eea3bf6f6e543b2f1d5d6477c2093d782ca50' #
 
 # number of wallets to determined exchange wallet (per 100 page, per date)
 NW_EW = 15
