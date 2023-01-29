@@ -433,7 +433,7 @@ def group_exchanges(df):
     df = exchanges_grouping(df, 'unkEx_d', df['group'])
     df = exchanges_grouping(df, 'kraken', df['group'])
     df = exchanges_grouping(df, 'crypto.com', df['group'])
-
+    df = exchanges_grouping(df, 'huobi', df['group'])
     return df
 
 
