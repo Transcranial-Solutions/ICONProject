@@ -18,6 +18,8 @@ import matplotlib.pyplot as plt # for improving our visualizations
 import matplotlib.lines as mlines
 import seaborn as sns
 import os
+
+
 desired_width = 320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns', 10)

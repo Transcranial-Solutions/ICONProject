@@ -12,6 +12,8 @@ import os
 import matplotlib.pyplot as plt  # for improving our visualizations
 import matplotlib.lines as mlines
 import matplotlib.ticker as ticker
+import matplotlib.dates as mdates
+
 import seaborn as sns
 from datetime import date, datetime, timedelta
 from scipy.interpolate import interp1d
@@ -82,18 +84,22 @@ plt.plot(df_tx['date'], df_tx['Regular & Interal Txs (MA30)'])
 plt.plot(df_tx['date'], df_tx['Fees burned (MA7)'])
 plt.plot(df_tx['date'], df_tx['Fees burned (MA30)'])
 
-sns.set(style="dark")
-plt.style.use("dark_background")
-lines = plt.plot(df_tx['date'], df_tx['Fees burned (MA7)'], marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black', markersize=8)
+# sns.set(style="dark")
+# plt.style.use("dark_background")
+# lines = plt.plot(df_tx['date'], df_tx['Fees burned (MA7)'], marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black', markersize=8)
 
 
 
 sns.set(style="ticks", rc={"lines.linewidth": 2})
 plt.style.use(['dark_background'])
 f, ax = plt.subplots(figsize=(12, 8))
-sns.lineplot(x='date', y='Fees burned (MA7)', data=df_tx, palette=sns.color_palette('husl', n_colors=2))
-h,l = ax.get_legend_handles_labels()
-
+# sns.lineplot(x='date', y='Fees burned (MA7)', data=df_tx, palette=sns.color_palette('husl', n_colors=2))
+# h,l = ax.get_legend_handles_labels()
+ax.plot(df_tx['date'], df_tx['Fees burned (MA7)'])
+ax.axis.set_major_locator(mdates.MonthLocator(bymonth=range(1,12,3)))
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%b'))
+plt.setp(ax.get_xticklabels(), rotation=90)
+plt.show()
 
 plt.tight_layout()
 ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
