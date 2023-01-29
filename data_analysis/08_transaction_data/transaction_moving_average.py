@@ -86,3 +86,21 @@ sns.set(style="dark")
 plt.style.use("dark_background")
 lines = plt.plot(df_tx['date'], df_tx['Fees burned (MA7)'], marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black', markersize=8)
 
+
+
+sns.set(style="ticks", rc={"lines.linewidth": 2})
+plt.style.use(['dark_background'])
+f, ax = plt.subplots(figsize=(12, 8))
+sns.lineplot(x='date', y='Fees burned (MA7)', data=df_tx, palette=sns.color_palette('husl', n_colors=2))
+h,l = ax.get_legend_handles_labels()
+
+
+plt.tight_layout()
+ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center")
+# ax.legend(h[1:],l[1:],ncol=1,
+#           # title="Voting Activity Stagnation",
+#           fontsize=10,
+#           loc='upper left')
+n = 10  # Keeps every n-th label
+[l.set_visible(False) for (i,l) in enumerate(ax.xaxis.get_ticklabels()) if i % n != 0]
+plt.tight_layout()
