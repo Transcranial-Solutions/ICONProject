@@ -49,6 +49,13 @@ walletPath = os.path.join(currPath, "wallet")
 if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
+
+# reading address info
+walletaddressPath = os.path.join(currPath, "wallet_addresses")
+with open(os.path.join(walletaddressPath, 'exchange_addresses.json')) as f:
+          exchange_addresses = json.load(f)
+
+
 # get yesterday function
 def yesterday(string=False):
     yesterday = datetime.utcnow() - timedelta(1)
@@ -100,77 +107,7 @@ day_prev_prev_text = day_prev_prev.replace("_","/")
 
 
 # exchange wallets
-exchange_wallets = ['hx1729b35b690d51e9944b2e94075acff986ea0675',
-                    'hx99cc8eb746de5885f5e5992f084779fc0c2c135b',
-                    'hx9f0c84a113881f0617172df6fc61a8278eb540f5',
-                    'hxc4193cda4a75526bf50896ec242d6713bb6b02a3',
-                    'hxa527f96d8b988a31083167f368105fc0f2ab1143',
-                    'hx307c01535bfd1fb86b3b309925ae6970680eb30d',
-                    'hxff1c8ebad1a3ce1ac192abe49013e75db49057f8',
-                    'hx14ea4bca6f205fecf677ac158296b7f352609871',
-                    'hx3881f2ba4e3265a11cf61dd68a571083c7c7e6a5',
-                    'hxd9fb974459fe46eb9d5a7c438f17ae6e75c0f2d1',
-                    'hx68646780e14ee9097085f7280ab137c3633b4b5f',
-                    'hxbf90314546bbc3ed980454c9e2a9766160389302',
-                    'hx562dc1e2c7897432c298115bc7fbcc3b9d5df294',
-                    'hxb7f3d4bb2eb521f3c68f85bbc087d1e56a816fd6',
-                    'hx294c5d0699615fc8d92abfe464a2601612d11bf7',
-                    'hxddec6fb21f9618b537e930eaefd7eda5682d9dc8',
-                    'hx6332c8a8ce376a5fc7f976d1bc4805a5d8bf1310',
-                    'hxfdb57e23c32f9273639d6dda45068d85ee43fe08',
-                    'hx4a01996877ac535a63e0107c926fb60f1d33c532',
-                    'hx8d28bc4d785d331eb4e577135701eb388e9a469d',
-                    'hxf2b4e7eab4f14f49e5dce378c2a0389c379ac628',
-                    'hx6eb81220f547087b82e5a3de175a5dc0d854a3cd',
-                    'hx0cdf40498ef03e6a48329836c604aa4cea48c454',
-                    'hx6d14b2b77a9e73c5d5804d43c7e3c3416648ae3d',
-                    'hx85532472e789802a943bd34a8aeb86668bc23265',
-                    'hx94a7cd360a40cbf39e92ac91195c2ee3c81940a6',
-                    'hxe5327aade005b19cb18bc993513c5cfcacd159e9',
-                    'hx23cb1d823ef96ac22ae30c986a78bdbf3da976df',
-                    'hxd7a34c15c2345d9f0891545350181c7b162d9e08',
-                    'hxa390d24fdcba68515b492ffc553192802706a121']
-                    
-
-
-exchange_names = ['binance_cold_01',
-                'binance_cold_02',
-                'binance_cold_03',
-                'binance_hot',
-                'binance.us',
-                'velic_hot',
-                'velic_stave',
-                'latoken',
-                'coinex',
-                'huobi',
-                'kraken_hot',
-                'upbit_hot_old',
-                'upbit_cold',
-                'crypto.com_hot_01',
-                'crypto.com_hot_02',
-                'crypto.com_cold_01',
-                'upbit_hot_01',
-                'upbit_hot_02',
-                'upbit_hot_03',
-                'upbit_hot_04',
-                'upbit_hot_05',
-                'bithumb_01',
-                'bithumb_02',
-                'bithumb_03',
-                'unkEx_c_01',
-                'unkEx_c_02',
-                'unkEx_d_01',
-                'bitvavo_cold_01',
-                'bitvavo_cold_02',
-                'bitvavo_hot']
-
-exchange_details = {'address': exchange_wallets,
-                    'names': exchange_names}
-
-# dataframe
-exchange_details = pd.DataFrame(exchange_details)
-
-
+exchange_details = pd.DataFrame.from_dict(exchange_addresses, orient='index', columns=['names']).reset_index().rename(columns={'index':'address'})
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 ## cleaning
 
