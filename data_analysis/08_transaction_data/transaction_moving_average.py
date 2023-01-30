@@ -19,7 +19,7 @@ from datetime import date, datetime, timedelta
 
 
 dailyPath = '/home/tono/ICONProject/data_analysis/'
-projectPath = '/home/tono/ICONProject/data_analysis/08_transaction_data'
+projectPath = '/home/tono/ICONProject/data_analysis/08_transaction_data/'
 
 dataPath = os.path.join(projectPath, "data")
 if not os.path.exists(dataPath):
@@ -170,6 +170,7 @@ for date_prev in date_of_interest:
             'cyan',
             'Fees ($ICX) burned (last 12 months)'
             )
+    
     plot_ma('Regular & Interal Tx', 'Regular & Interal Tx (MA7)', 'Regular & Interal Tx (MA30)',
             average_tx_per_day, average_tx_per_week, average_tx_per_month, 'Tx',
             'Transactions',
