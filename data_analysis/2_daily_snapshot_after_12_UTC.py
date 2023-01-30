@@ -19,6 +19,7 @@ program_list = [os.path.join(token_transfer_path, "token_transfer_community_ubun
                 os.path.join(transaction_data_path,"transaction_analysis_ctznode_weekly_ubuntu.py"),
                 os.path.join(transaction_data_path,"transaction_analysis_ctznode_monthly_ubuntu.py"),
                 os.path.join(transaction_data_path,"tx_summary_compiler_ubuntu.py"),
+                os.path.join(transaction_data_path,"transaction_moving_average.py"),
                 ]
 
 for program in program_list:
