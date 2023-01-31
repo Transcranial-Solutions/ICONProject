@@ -69,6 +69,7 @@ SYSTEM_ADDRESS = "cx0000000000000000000000000000000000000000"
 today = datetime.utcnow() #- timedelta(days=1)
 day_today = today.strftime("%Y-%m-%d")
 day1 = today.strftime("%Y_%m_%d")
+this_year = day_today[0:4]
 
 class PRep(object):
   def __init__(self, rank: int, name: str, address: str, delegation: int, bond: int):
@@ -244,7 +245,8 @@ if __name__ == '__main__':
   
 
   # saving data
-  df.to_csv(os.path.join(outDataPath, 'prep_top_100_votes_and_bond_' + day1 + '.csv'), index=False)
+  savePath = os.path.join(outDataPath, this_year)
+  df.to_csv(os.path.join(savePath, 'prep_top_100_votes_and_bond_' + day1 + '.csv'), index=False)
 
   # loading data to merge with prep votes
   # prep_votes = pd.read_csv(os.path.join(outDataPath, 'prep_votes_' + day1 + '.csv'))
