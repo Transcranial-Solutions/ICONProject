@@ -393,7 +393,7 @@ for date_prev in date_of_interest:
         # convert timestamp to datetime
         def timestamp_to_date(df, timestamp, dateformat):
             return pd.to_datetime(df[timestamp] / 1000000, unit='s').dt.strftime(dateformat)
-
+        
         def df_merge_all(block_df, tx_df):
             # tx_all = pd.merge(block_df, tx_df, on=["txHash","timestamp"], how="left")
             tx_all = pd.merge(block_df, tx_df, on=["txHash"], how="left")
@@ -409,6 +409,7 @@ for date_prev in date_of_interest:
             tx_all['tx_time'] = timestamp_to_date(tx_all, 'timestamp', '%H:%M:%S')
 
             tx_all['value'] = loop_to_icx(tx_all['value'])
+            # tx_all['tx_time_all'] = pd.to_datetime(tx_all['timestamp'] / 1000000, unit='s')
             return tx_all
 
         def get_list(df, strings):
