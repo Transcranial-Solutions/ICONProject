@@ -194,6 +194,7 @@ def plot_bonded_status(df, my_title, ylab):
                              .replace(')','')\
                              .replace('$','')\
                              .replace('-','_')\
+                                 .replace('\n','_')\
                                  + '.png'))
 
 
