@@ -188,7 +188,13 @@ def plot_bonded_status(df, my_title, ylab):
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
     plt.tight_layout()
     
-    plt.savefig(os.path.join(savePath, my_title.replace(' ', '_').replace('(','').replace(')','')  + '.png'))
+    plt.savefig(os.path.join(savePath, my_title\
+                             .replace(' ', '_')\
+                             .replace('(','')\
+                             .replace(')','')\
+                             .replace('$','')\
+                             .replace('-','_')\
+                                 + '.png'))
 
 
 plot_bonded_status(df_plot_count, f'Number of P-Rep types by\nbond status ({day_today})', 'Number of P-Reps')
