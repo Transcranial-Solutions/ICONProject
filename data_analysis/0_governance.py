@@ -19,7 +19,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from typing import Union
-
+import requests
+import random
+from time import time, sleep
 
 # loop to icx converter
 def loop_to_icx(loop):
@@ -54,6 +56,23 @@ def parse_icx(val: str) -> Union[float, int]:
         return float("NAN")
     except ValueError:
         return float("NAN")
+
+def request_sleep_repeat(url, repeat=3, verify=True):
+    for i in range(0,repeat):
+        print(f"Trying {str(i)}...")
+        try:
+            # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
+            url_info = requests.get(url, headers={'User-Agent': 'Mozilla/5.0'}, verify=verify)
+            random_sleep_except = random.uniform(3,6)
+            print("Just pausing for " + str(random_sleep_except) + " seconds and try again \n")
+            sleep(random_sleep_except)
+            
+        except:
+            random_sleep_except = random.uniform(30,60)
+            print("I've encountered an error! I'll pause for " + str(random_sleep_except) + " seconds and try again \n")
+            sleep(random_sleep_except)
+    return url_info
+
     
 walletPath = '/home/tono/ICONProject/data_analysis/wallet'
   
@@ -194,9 +213,27 @@ def plot_bonded_status(df, my_title, ylab):
                              .replace(')','')\
                              .replace('$','')\
                              .replace('-','_')\
-                                 .replace('\n','_')\
+                             .replace('\n','_')\
                                  + '.png'))
 
 
 plot_bonded_status(df_plot_count, f'Number of P-Rep types by\nbond status ({day_today})', 'Number of P-Reps')
 plot_bonded_status(df_plot_votes, f'$ICX delegated to P-Rep types by\nbond status ({day_today})', '$ICX')
+
+
+
+
+## wallet counts
+wallet_data_url = request_sleep_repeat(url = f'https://api.iconwat.ch/daily/?from=1970-01-18&to={day_today}', repeat=1, verify=True)
+watllet_data_list = wallet_data_url.json()['data']
+
+wallet_date = [i['date'] for i in watllet_data_list]
+wallet_transacted_count = [i['walletsTransacted'] for i in watllet_data_list]
+wallet_count = [i['totalWallets'] for i in watllet_data_list]
+
+wallet_df = pd.DataFrame(list(zip(wallet_date, wallet_transacted_count, wallet_count)),
+             columns = ['Date', 'Transacted wallets', 'Total wallets'])
+
+
+
+
