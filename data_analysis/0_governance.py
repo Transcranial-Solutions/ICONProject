@@ -105,13 +105,24 @@ def get_iiss_info():
 
     return df
 
+def icx_text_format(icx_float: float) -> str:
+    return '{:,}'.format(round(icx_float)) + ' ICX'
+    
+    
+    
+
 iglobal = get_iiss_info()['Iglobal']
 daily_issuance = iglobal*12/365
-daily_issuance_text = '{:,}'.format(round(daily_issuance)) + ' ICX'
+daily_issuance_text = icx_text_format(daily_issuance)
 # daily_issuance_voter = 
 
+daily_icps = icx_text_format(daily_issuance*get_iiss_info()['Icps']/100)
+daily_iprep = icx_text_format(daily_issuance*get_iiss_info()['Iprep']/100)
+daily_ivoter = icx_text_format(daily_issuance*get_iiss_info()['Ivoter']/100)
+daily_irelay = icx_text_format(daily_issuance*get_iiss_info()['Irelay']/100)
+
 total_supply = round(loop_to_icx(icon_service.get_total_supply()))
-total_supply_text = '{:,}'.format(total_supply) + ' ICX'
+total_supply_text = icx_text_format(total_supply)
 yearly_inflation = '{:.2%}'.format(iglobal*12/total_supply)
 
 
