@@ -78,7 +78,7 @@ use_specified_date = 1 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2023_01_23"; day_2 = "2023_01_24"
+    day_1 = "2023_02_14"; day_2 = "2023_02_15"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
@@ -101,7 +101,7 @@ elif 'https' not in api_endpoint:
     api_endpoint_mod = 'https://' + api_endpoint
 
 # wallet of interest
-this_address = "hx6d36daba20cf74d54ff6e863f7f6e0a2653ed8aa"
+this_address = "hx562dc1e2c7897432c298115bc7fbcc3b9d5df294"
 # this_address = "hxd5271567e1121bdba855cbedd12163cb38e48e65"
 
 # this_address = "hx54f7853dc6481b670caf69c5a27c7c8fe5be8269"
