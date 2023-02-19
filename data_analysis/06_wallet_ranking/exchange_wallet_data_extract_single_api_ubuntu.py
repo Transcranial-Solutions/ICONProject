@@ -441,6 +441,9 @@ def group_exchanges(df):
 total_exchange_now = get_exchange_amount(all_df)
 total_exchange_now = group_exchanges(total_exchange_now)
 
+# remove if total amount is 0
+total_exchange_now = total_exchange_now[total_exchange_now['total'] != 0]
+
 ### .groupby('group')[['Available','Delegated','Staked (not delegated)', 'Bonded', 'total']]\ ###
 total_exchange_now_grouped = total_exchange_now\
     .groupby('group')[['Available','Delegated', 'Bonded', 'total']]\
@@ -540,6 +543,7 @@ plt.style.use(['dark_background'])
 
 # make table figure
 render_mpl_table(total_exchange_now.drop(columns='group'),
+                 font_size=10,
                 header_color='tab:pink',
                 header_columns=0,
                 col_width=4,
