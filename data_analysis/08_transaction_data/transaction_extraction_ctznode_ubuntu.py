@@ -276,11 +276,18 @@ for date_prev in date_of_interest:
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Other way ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         def get_block_df(blockInfo):
-            blockInfo = icon_service.get_block(blockInfo)
-            block_blockheight = deep_get(blockInfo, "height")
+            this_blockinfo = None
+            while this_blockinfo is None:
+                try:
+                    this_blockInfo = icon_service.get_block(blockInfo)
+                except:
+                    print('Connection refused (block extraction). Retrying...')
+                    sleep(10)
+                    
+            block_blockheight = deep_get(this_blockInfo, "height")
             # blockTS = deep_get(blockInfo, "time_stamp")
-            txHashes = extract_values_no_params(blockInfo, "txHash")
-            txTS = extract_values(blockInfo, "timestamp")
+            txHashes = extract_values_no_params(this_blockInfo, "txHash")
+            txTS = extract_values(this_blockInfo, "timestamp")
             
             block_count = pd.Series(block_blockheight).count()
             txHashes_count = pd.Series(txHashes).count()
@@ -347,7 +354,13 @@ for date_prev in date_of_interest:
         # collecting transaction info using multithreading
         # collecting transaction info using multithreading
         def get_tx_dfs(txHash):
-            tx = icon_service.get_transaction(txHash)
+            tx = None
+            while tx is None:
+                try:
+                    tx = icon_service.get_transaction(txHash)
+                except:
+                    print('Connection refused (tx extraction). Retrying...')
+                    sleep(10)
 
             # removing some data here
             entries_to_remove = ('version','data','signature','blockHeight','blockHash','nid','nonce')
