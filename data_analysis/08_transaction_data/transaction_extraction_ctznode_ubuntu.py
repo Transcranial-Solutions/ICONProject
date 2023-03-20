@@ -215,33 +215,42 @@ for date_prev in date_of_interest:
     # block = icon_service.get_block(1002) 
 
 
-    # localhost
-    try:
-        icon_service = IconService(HTTPProvider(local_ip, request_kwargs={"timeout": 60}))
-        block = icon_service.get_block(remote_height)
-        print('### Using the local node ###')
-    except:
-        icon_service = IconService(HTTPProvider(main_ip, request_kwargs={"timeout": 60}))
-        block = icon_service.get_block(remote_height)
-        workers = 1
-        print('### Using the main node ###')
+    icon_service = None
+    connection_refused_count = 0
+    while icon_service is None:
+        try:
 
+            # localhost
+            try:
+                icon_service = IconService(HTTPProvider(local_ip, request_kwargs={"timeout": 60}))
+                block = icon_service.get_block(remote_height)
+                print('### Using the local node ###')
+            except:
+                icon_service = IconService(HTTPProvider(main_ip, request_kwargs={"timeout": 60}))
+                block = icon_service.get_block(remote_height)
+                workers = 1
+                print('### Using the main node ###')
+        
+            # icon_service.get_block(42001335)
+        
+            ## Creating Wallet if does not exist (only done for the first time)
+            tester_wallet = os.path.join(walletPath, "test_keystore_1")
+        
+            if os.path.exists(tester_wallet):
+                wallet = KeyWallet.load(tester_wallet, "abcd1234*")
+            else:
+                wallet = KeyWallet.create()
+                wallet.get_address()
+                wallet.get_private_key()
+                wallet.store(tester_wallet, "abcd1234*")
+        
+            tester_address = wallet.get_address()
 
-    # icon_service.get_block(42001335)
-
-    ## Creating Wallet if does not exist (only done for the first time)
-    tester_wallet = os.path.join(walletPath, "test_keystore_1")
-
-    if os.path.exists(tester_wallet):
-        wallet = KeyWallet.load(tester_wallet, "abcd1234*")
-    else:
-        wallet = KeyWallet.create()
-        wallet.get_address()
-        wallet.get_private_key()
-        wallet.store(tester_wallet, "abcd1234*")
-
-    tester_address = wallet.get_address()
-
+        except:
+            connection_refused_count += 1
+            print(f'Connection refused {connection_refused_count} time(s) (get icon service). Retrying...')
+            sleep(10)
+        
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ block Info ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     # windows_path = "/mnt/e/GitHub/ICONProject/data_analysis/08_transaction_data/data/"
     # if not os.path.exists(windows_path):
@@ -274,58 +283,66 @@ for date_prev in date_of_interest:
         block_of_interest = combined_df['blockHeight']
         # block_of_interest = block_of_interest.iloc[0:100]
 
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Other way ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         def get_block_df(blockInfo):
+            # print(blockInfo)
             this_blockinfo = None
+            connection_refused_count = 0
             while this_blockinfo is None:
                 try:
-                    this_blockInfo = icon_service.get_block(blockInfo)
+                    this_blockinfo = icon_service.get_block(blockInfo)
                 except:
-                    print('Connection refused (block extraction). Retrying...')
+                    connection_refused_count += 1
+                    print(f'Connection refused {connection_refused_count} time(s) (block extraction). Retrying...')
                     sleep(10)
-                    
-            block_blockheight = deep_get(this_blockInfo, "height")
+            block_blockheight = deep_get(this_blockinfo, "height")
             # blockTS = deep_get(blockInfo, "time_stamp")
-            txHashes = extract_values_no_params(this_blockInfo, "txHash")
-            txTS = extract_values(this_blockInfo, "timestamp")
-            
+            txHashes = extract_values_no_params(this_blockinfo, "txHash")
+            txTS = extract_values(this_blockinfo, "timestamp")
+        
             block_count = pd.Series(block_blockheight).count()
             txHashes_count = pd.Series(txHashes).count()
             txTS_count = pd.Series(txTS).count()
-
+        
             if block_count < txTS_count:
                 if block_count == 1 and txTS_count ==  2:
                     txTS = [x for x in txTS if isinstance(x, int)][0]
                 else:
                     txTS = [x for x in txTS if isinstance(x, int)]
-            
+        
             if block_count != txHashes_count:
                 l=[]
                 l.extend([block_blockheight] * txHashes_count)
                 block_blockheight = l
-            
+        
             combined_block = {'blockHeight': block_blockheight,
                 # 'block_timestamp': blockTS,
                 'txHash': txHashes,
                 'timestamp': txTS}
-
+        
             block_df = pd.DataFrame(data=combined_block)
             return block_df
-
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-        # collecting contact info using multithreading
-
+        
+        
         def run_block():
             start = time()
+            connection_refused_count = 0
             with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-                myblock = list(tqdm(executor.map(get_block_df, block_of_interest), total=len(block_of_interest)))
-
+                myblock = []
+                for result in tqdm(executor.map(get_block_df, block_of_interest), total=len(block_of_interest)):
+                    if result is None:
+                        connection_refused_count += 1
+                        print(f'Connection refused {connection_refused_count} time(s) (block extraction). Retrying...')
+                        myblock.append(get_block_df(block_of_interest))
+                    else:
+                        myblock.append(result)
+                        
             block_df = pd.concat(myblock).reset_index(drop=True)
             print(f'Time taken: {time() - start}')
-
+        
             return block_df
-
+        
         block_df = run_block()
+
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         # saving block data balance
@@ -352,16 +369,17 @@ for date_prev in date_of_interest:
         # txHashes = txHashes.iloc[0:200]
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         # collecting transaction info using multithreading
-        # collecting transaction info using multithreading
         def get_tx_dfs(txHash):
             tx = None
+            connection_refused_count = 0
             while tx is None:
                 try:
                     tx = icon_service.get_transaction(txHash)
                 except:
-                    print('Connection refused (tx extraction). Retrying...')
+                    connection_refused_count += 1
+                    print(f'Connection refused {connection_refused_count} time(s) (tx extraction A). Retrying...')
                     sleep(10)
-
+            
             # removing some data here
             entries_to_remove = ('version','data','signature','blockHeight','blockHash','nid','nonce')
             # entries_to_remove = ('version','data','signature','blockHash','nid','nonce')
@@ -370,9 +388,15 @@ for date_prev in date_of_interest:
                 tx.pop(k, None)
             combined_tx = pd.json_normalize(tx)
 
-
-
-            tx_results = icon_service.get_transaction_result(txHash)
+            tx_results = None
+            connection_refused_tx_count = 0
+            while tx_results is None:
+                try:
+                    tx_results = icon_service.get_transaction_result(txHash)
+                except:
+                    connection_refused_count += 1
+                    print(f'Connection refused {connection_refused_tx_count} time(s) (tx extraction B). Retrying...')
+                    sleep(10)
 
             # removing some data here
             entries_to_remove = ('logsBloom','blockHeight','blockHash','to', 'scoreAddress')
@@ -385,16 +409,35 @@ for date_prev in date_of_interest:
 
             return tx_dfs
 
+
         def run_tx():
-            start = time()
+                    start = time()
+                    connection_refused_count = 0
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+                        mytx = []
+                        for result in tqdm(executor.map(get_tx_dfs, txHashes), total=len(txHashes)):
+                            if result is None:
+                                connection_refused_count += 1
+                                print(f'Connection refused {connection_refused_count} time(s) (block extraction). Retrying...')
+                                mytx.append(get_tx_dfs(txHashes))
+                            else:
+                                mytx.append(result)
+                                
+                    tx_df = pd.concat(mytx).reset_index(drop=True)
+                    print(f'Time taken: {time() - start}')
+                
+                    return tx_df
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-                mytx = list(tqdm(executor.map(get_tx_dfs, txHashes), total=len(txHashes)))
+        # def run_tx():
+        #     start = time()
 
-            tx_df = pd.concat(mytx).reset_index(drop=True)
-            print(f'Time taken: {time() - start}')
+        #     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+        #         mytx = list(tqdm(executor.map(get_tx_dfs, txHashes), total=len(txHashes)))
 
-            return tx_df
+        #     tx_df = pd.concat(mytx).reset_index(drop=True)
+        #     print(f'Time taken: {time() - start}')
+
+        #     return tx_df
 
         tx_df = run_tx()
 
