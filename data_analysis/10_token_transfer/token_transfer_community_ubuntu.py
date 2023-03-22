@@ -293,7 +293,7 @@ def request_into_df(url):
     return(req_df)
 
 def get_token_price(token_price_balanced, bnusd_in_usd, token_name, token_contract_address):
-    if not any(token_price_balanced['index'] == token_name):
+    if not any(token_price_balanced['symbol'] == token_name):
         from iconsdk.builder.call_builder import CallBuilder
         from iconsdk.icon_service import IconService
         from iconsdk.providers.http_provider import HTTPProvider
@@ -324,7 +324,7 @@ def get_token_price(token_price_balanced, bnusd_in_usd, token_name, token_contra
         token_bnusdconverted = token_bnusdfloatindec / EXA
 
         # convert fin_bnusd into fin_usd value
-        token_in_usd = pd.DataFrame({'index': [token_name], 'Price in USD': [token_bnusdconverted * bnusd_in_usd]})
+        token_in_usd = pd.DataFrame({'symbol': [token_name], 'Price in USD': [token_bnusdconverted * bnusd_in_usd]})
 
         # add token price to the existing list
         token_price_balanced = token_price_balanced.append(token_in_usd).reset_index(drop=True)
@@ -335,17 +335,25 @@ def get_token_price(token_price_balanced, bnusd_in_usd, token_name, token_contra
 # balanced
 # token_price_balanced = request_into_df(url='https://balanced.geometry.io/api/v1/stats/token-stats').reset_index()
 try:
-    token_price_balanced = request_into_df(url='https://balanced.sudoblock.io/api/v1/stats/token-stats').reset_index()
-    
+    # token_price_balanced = request_into_df(url='https://balanced.sudoblock.io/api/v1/stats/token-stats').reset_index()
+    token_price_balanced = request_into_df(url='https://balanced.icon.community/api/v1/tokens')
+
     # unifi protocol
     token_price_unifi = request_into_df(url='https://assets.unifiprotocol.com/pools-icon.json')
     
     # token price simple
-    token_price_balanced['Price in USD'] = token_price_balanced['tokens'].apply(lambda x: x.get('price'))
-    token_price_balanced['Price in USD'] = loop_to_icx(token_price_balanced['Price in USD'].apply(int, base=16))
-    token_price_balanced = token_price_balanced.drop(columns=['tokens', 'timestamp'])
+    # token_price_balanced['Price in USD'] = token_price_balanced['tokens'].apply(lambda x: x.get('price'))
+    # token_price_balanced['Price in USD'] = loop_to_icx(token_price_balanced['Price in USD'].apply(int, base=16))
+    # token_price_balanced = token_price_balanced.drop(columns=['tokens', 'timestamp'])
     
-    bnusd_in_usd = token_price_balanced[token_price_balanced['index'] == 'bnUSD']['Price in USD'].iloc[0]
+    # bnusd_in_usd = token_price_balanced[token_price_balanced['index'] == 'bnUSD']['Price in USD'].iloc[0]
+    
+    
+    token_price_balanced['Price in USD'] = token_price_balanced['price']
+    bnusd_in_usd = token_price_balanced[token_price_balanced['symbol'] == 'bnUSD']['Price in USD'].iloc[0]
+
+    
+    
     
     ## add token price if does not exist
     token_price_balanced = get_token_price(token_price_balanced, bnusd_in_usd, 'FRAMD', "cx2aa9b28a657e3121b75d3d4fe65e569398645d56")
@@ -384,13 +392,13 @@ try:
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     # ICX price
-    ICX_price = token_price_balanced[token_price_balanced['index'] == 'ICX']['Price in USD']
+    ICX_price = token_price_balanced[token_price_balanced['symbol'] == 'ICX']['Price in USD']
     
     token_price_unifi['Price in USD'] = token_price_unifi['price'].astype(float).apply(lambda x: x * ICX_price)
-    token_price_unifi = token_price_unifi[['name', 'Price in USD']].rename(columns={'name':'index'})
-    token_price_unifi = token_price_unifi[~token_price_unifi['index'].isin(token_price_balanced['index'])]
+    token_price_unifi = token_price_unifi[['name', 'Price in USD']].rename(columns={'name':'symbol'})
+    token_price_unifi = token_price_unifi[~token_price_unifi['symbol'].isin(token_price_balanced['symbol'])]
     
-    token_price_balanced = token_price_balanced[token_price_balanced['index'] != 'ICX']
+    token_price_balanced = token_price_balanced[token_price_balanced['symbol'] != 'ICX']
     
     token_price_all = token_price_balanced.append(token_price_unifi).reset_index(drop=True)
 except:
@@ -408,6 +416,14 @@ except:
 
 
 table_now = token_xfer_df.copy()
+
+
+# table_now = pd.merge(table_now, token_price_all, 
+#                 how='left', 
+#                 left_on = 'token_contract_address',
+#                 right_on = 'address')
+
+
 table_now = table_now[['symbol','amount']].groupby(['symbol']).amount.agg(['sum', 'count']).reset_index()
 table_now = table_now.sort_values(by='count', ascending=False).reset_index(drop=True)
 table_now = table_now.rename(columns={'symbol': 'IRC Token', 'sum': 'Amount', 'count': 'No. of Transactions'})
@@ -416,9 +432,13 @@ from fuzzywuzzy import process
 def fuzzy_merge(df_1, df_2, key1, key2, threshold=90, limit=1):
     s = df_2[key2].tolist()
     temp_m = df_1[[key1]].reset_index(drop=True)
-    temp_m[key1] = np.where(temp_m[key1].str.startswith('fin') & (temp_m[key1].str.endswith('ICX') | temp_m[key1].str.endswith('OMM')),
+    
+    temp_m[key1] = np.where(temp_m[key1].str.startswith('fin') & (temp_m[key1].str.lower().str.endswith('ICX') \
+                                                                  | temp_m[key1].str.lower().str.endswith('OMM')),
                                   temp_m[key1].str.split('fin').str[-1],
                                   temp_m[key1])
+    
+    temp_m[key1] = np.where(temp_m[key1].str.lower().str.endswith('icx'), 'sICX', temp_m[key1])
     m = temp_m[key1].apply(lambda x: process.extract(x, s, limit=limit))
     df_1['matches'] = m
     m2 = df_1['matches'].apply(lambda x: ', '.join([i[0] for i in x if i[1] >= threshold]))
@@ -428,9 +448,9 @@ def fuzzy_merge(df_1, df_2, key1, key2, threshold=90, limit=1):
 # fuzzy matched (high threshold)
 
 try:
-    table_now = fuzzy_merge(table_now, token_price_all, 'IRC Token', 'index', threshold=60) #.drop(columns=['logo'])
-    table_now = table_now.rename(columns={'matches': 'index'})
-    table_now = pd.merge(table_now, token_price_all, on='index', how='left')
+    table_now = fuzzy_merge(table_now, token_price_all, 'IRC Token', 'symbol', threshold=60) #.drop(columns=['logo'])
+    table_now = table_now.rename(columns={'matches': 'symbol'})
+    table_now = pd.merge(table_now, token_price_all, on='symbol', how='left')
 except:
     pass
 
@@ -438,7 +458,7 @@ print(table_now)
 
 try:
     table_now['Value Transferred in USD'] = table_now['Amount'] * table_now['Price in USD']
-    table_now = table_now.drop(columns='index')
+    table_now = table_now.drop(columns='symbol')
 except:
     pass
 
@@ -449,7 +469,8 @@ except:
     table_now['Price in USD'] = np.nan
     table_now['Value Transferred in USD'] = np.nan
 
-
+keep_these_cols = ['IRC Token', 'holders','liquidity','Amount', 'No. of Transactions', 'Price in USD', 'Value Transferred in USD']
+table_now = table_now[keep_these_cols]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Save ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # saving this term's token transfer
 table_now.to_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + '.csv'), index=False)
@@ -502,6 +523,8 @@ def nan_to_zero(df, invar):
 
 def nan_to_zero_columns(df):
     df = nan_to_zero(df, 'Amount')
+    df = nan_to_zero(df, 'holders')
+    df = nan_to_zero(df, 'liquidity')
     df = nan_to_zero(df, 'No. of Transactions')
     df = nan_to_zero(df, 'Price in USD')
     df = nan_to_zero(df, 'Value Transferred in USD')
@@ -510,7 +533,11 @@ def nan_to_zero_columns(df):
 # reindexing last term's based on this term
 def reindex_df(df_now, df_prev, my_index):
     df_prev = pd.merge(df_now, df_prev, how='left', on=my_index)
-    df_prev = df_prev.rename(columns={'Amount_y': 'Amount', 'No. of Transactions_y': 'No. of Transactions', 'Price in USD_y': 'Price in USD',
+    df_prev = df_prev.rename(columns={'Amount_y': 'Amount',
+                                      'holders_y': 'holders',
+                                      'liquidity_y': 'liquidity',
+                                      'No. of Transactions_y': 'No. of Transactions', 
+                                      'Price in USD_y': 'Price in USD',
                                       'Value Transferred in USD_y': 'Value Transferred in USD'}). \
         drop(columns=['Amount_x', 'No. of Transactions_x', 'Price in USD_x', 'Value Transferred in USD_x'])
     return df_prev
@@ -541,10 +568,15 @@ table_prev = nan_to_zero_columns(table_prev)
 table_now = nan_to_zero_columns(table_now)
 
 table_now = add_val_differences(table_now, table_prev, 'Amount')
+table_now = add_val_differences(table_now, table_prev, 'holders')
+table_now = add_val_differences(table_now, table_prev, 'liquidity')
+
 table_now = add_val_differences(table_now, table_prev, 'No. of Transactions')
 table_now = add_val_differences(table_now, table_prev, 'Price in USD')
 table_now = add_val_differences(table_now, table_prev, 'Value Transferred in USD')
 table_now['Amount'].iloc[-1] = '-'
+table_now['holders'].iloc[-1] = '-'
+table_now['liquidity'].iloc[-1] = '-'
 table_now['Price in USD'].iloc[-1] = '-'
 
 
