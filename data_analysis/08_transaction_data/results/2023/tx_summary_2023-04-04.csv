@@ -1,5 +1,5 @@
 to,Fees burned,Regular Tx,to_def,Internal Tx,Internal Event (excluding Tx),group
-0,0.0,43087,System,12,43088,System
+0,0.0,43086,System,12,43087,System
 cx0000000000000000000000000000000000000000,5.317419999999899,2956,governance,1152,0,governance
 cx88fd7df7ddff82f7cc735c871dc519838cb235bb,373.32752501249996,1605,bnUSD,7287,27,bnUSD
 cx9e3cadcc1a4be3323ea23371b84575abb32703ae,1.6247634375,791,MyID_1,0,791,MyID
@@ -118,7 +118,7 @@ hx35d61c0311fd2543157137c9d59fd8f11f9d27b2,0.01,8,unknown_hx,0,0,unknown_hx
 cx2d86ce51600803e187ce769129d1f6442bcefb5b,0.0770947124999999,8,CraftStaked,16,0,Craft
 hx968950d2ff7f4deb89eef35f1f647dc1510ba04e,0.01,8,unknown_hx,0,0,unknown_hx
 hxe6880eeabe7763e97e20ef32cb724999fdbecbbd,0.01,8,unknown_hx,0,0,unknown_hx
-cx369a5f4ce4f4648dfc96ba0c8229be0693b4eca2,0.312283075,7,Metanyx,41,0,Metanyx
+cx369a5f4ce4f4648dfc96ba0c8229be0693b4eca2,0.31228307499999997,7,Metanyx,41,0,Metanyx
 hx7497c286aa521b09b2b54d78cde3fa4573c0e157,0.00875,7,unknown_hx,0,0,unknown_hx
 cxa6e4587bad1d2bb4e9098ea9c19b8781b70c2ad5,0.029172875,7,OptimusStrategyAutoStakeOmm,0,0,Optimus
 hx9739e86773b011d29bb82b86d0cc158e8cdf3311,0.00875,7,unknown_hx,0,0,unknown_hx
