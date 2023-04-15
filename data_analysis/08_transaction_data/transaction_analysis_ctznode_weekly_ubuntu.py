@@ -341,6 +341,7 @@ def grouping_wrapper(df, in_col):
         #gangstabet
         df['group'] = np.where(df['group'].str.contains('gangstabet', case=False), 'GangstaBet', df['group'])
         df['group'] = np.where(df['group'].str.contains('crown', case=False), 'GangstaBet', df['group'])
+        df['group'] = np.where(df['group'].str.startswith('gang', case=False), 'GangstaBet', df['group'])
         df['group'] = np.where(df['to'] == 'cx8683d50b9f53275081e13b64fba9d6a56b7c575d', 'GangstaBet', df['group'])
         
         # futureicx
