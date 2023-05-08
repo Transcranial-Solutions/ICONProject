@@ -119,7 +119,21 @@ len_wallet_address = len(wallet_address)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # using solidwallet
-icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+# remote = "https://ctz.solidwallet.io/api/v3"
+remote = "http://34.133.160.215:9000/api/v3" # rhizome
+
+
+# resolve
+# this_ip = dns.resolver.resolve('mercator.transcranial-solutions.dev')[0].to_text() # steve node down
+this_ip = '159.196.221.33' # tono node
+main_ip = "http://" + this_ip + ":9000/api/v3"
+
+local_ip = "http://127.0.0.1:9000/api/v3"
+
+
+# icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+
+icon_service = IconService(HTTPProvider(local_ip))
 
 ## Creating Wallet (only done for the first time)
 # wallet = KeyWallet.create()
@@ -368,16 +382,24 @@ all_df.to_csv(os.path.join(windows_path, 'exchange_wallet_balance_' + day_today 
 
 # reading previous term data
 windows_path_prev = os.path.join(resultPath, day_prev)
-
 df_prev_fn = os.path.join(windows_path_prev, "exchange_wallet_balance_" + day_prev + '.csv')
+
+windows_path_prev_prev = os.path.join(resultPath, day_prev_prev)
+df_prev_prev_fn = os.path.join(windows_path_prev, "exchange_wallet_balance_" + day_prev_prev + '.csv')
+
+
 if os.path.isfile(df_prev_fn):
     all_df_prev = pd.read_csv(df_prev_fn)
-else:
-    windows_path_prev_prev = os.path.join(resultPath, day_prev_prev)
-    all_df_prev_prev = pd.read_csv(os.path.join(windows_path_prev_prev, "exchange_wallet_balance_" + day_prev_prev + '.csv'))
+elif os.path.isfile(df_prev_prev_fn):
+    all_df_prev_prev = pd.read_csv(df_prev_prev_fn)
     all_df_prev = pd.concat([all_df, all_df_prev_prev]).groupby(['address','names']).mean().reset_index()
     all_df_prev.to_csv(os.path.join(windows_path_prev, 'exchange_wallet_balance_' + day_prev + '.csv'), index=False)
-
+else:
+    all_df_prev = all_df.copy()
+    all_df_prev[all_df_prev.select_dtypes(np.number).columns] = 0
+    
+    
+    
 
 # getting only exchange wallets
 
