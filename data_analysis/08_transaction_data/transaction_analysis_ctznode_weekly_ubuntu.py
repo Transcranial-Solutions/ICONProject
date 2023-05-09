@@ -479,15 +479,24 @@ date_of_interest = pd.date_range(start=start_date, end=end_date, freq='D').strft
 
 print(date_of_interest)
 
+import glob
+tx_files = glob.glob(os.path.join(dataPath, 'tx_final_*'))
+tx_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+latest_tx_file = tx_files[0:7]
+
+date_of_interest = [i.split('/')[-1].split('_')[-1].split('.')[0] for i in latest_tx_file]
+start_date = date_of_interest[-1]
+end_date = date_of_interest[0]
 
 tx_df = []
 basic_stat_df = []
 total_transfer_value_list = []
 for these_dates in date_of_interest:
-
+    
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ load  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
     # data loading
-    data = pd.read_csv(os.path.join(dataPath, 'tx_final_' + these_dates + '.csv'), low_memory=False)
+    current_file = os.path.join(dataPath, 'tx_final_' + these_dates + '.csv')
+    data = pd.read_csv(current_file, low_memory=False)
     tx_df.append(data)
 
     # for token transfer value

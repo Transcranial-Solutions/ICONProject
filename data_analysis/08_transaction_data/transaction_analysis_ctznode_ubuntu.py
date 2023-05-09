@@ -37,6 +37,7 @@ import matplotlib.ticker as ticker
 import seaborn as sns
 import random
 import requests
+import glob
 
 
 
@@ -168,6 +169,17 @@ for date_prev in date_of_interest:
     # data loading
     tx_df = pd.read_csv(os.path.join(dataPath, 'tx_final_' + date_prev + '.csv'), low_memory=False)
     this_year = date_prev[0:4]
+    # except:
+    #     tx_files = glob.glob(os.path.join(dataPath, 'tx_final_*'))
+    #     tx_files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+    #     latest_tx_file = tx_files[0]
+        
+    #     tx_df = pd.read_csv(latest_tx_file, low_memory=False)
+    #     date_prev = latest_tx_file.split('/')[-1].split('_')[-1].split('.')[0]
+    #     this_year = date_prev[0:4]
+        
+    #     print(f"Yesterday's data not found. Using {date_prev} instead.")
+
 
     resultPath_year = os.path.join(resultPath, this_year)
     if not os.path.exists(resultPath_year):
