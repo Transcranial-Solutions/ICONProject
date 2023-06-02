@@ -184,7 +184,7 @@ print(date_of_interest)
 
 
 # remote = "https://ctz.solidwallet.io/api/v3"
-remote = "http://34.133.160.215:9000/api/v3" # rhizome
+remote = "http://18.118.232.28:9000/api/v3" # rhizome
 
 data = {'jsonrpc':'2.0', 'method': 'icx_getLastBlock','id': 1223}
 def get_height(endpoint: str) -> int:
