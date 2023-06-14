@@ -29,7 +29,7 @@ jsonPath = "I:\\IconNode\\data\\1\\"
 
 
 ## Seed Addresses ##
-url = "http://34.133.160.215:9000"
+url = "http://18.118.232.28:9000"
 cid = requests.get(f"{url}/admin/chain").json()[0]["cid"]
 seed_dict = requests.get(f"{url}/admin/chain/{cid}").json()
 p2p_ifo = seed_dict["module"]["network"]["p2p"]
