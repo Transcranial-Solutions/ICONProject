@@ -509,9 +509,9 @@ for date_prev in date_of_interest:
             df['group'] = np.where(df['to'] == 'cx7b4472ca8408eca00a8b483c7151b11ae735988b', 'Blobble', df['group'])
             df['group'] = np.where(df['to'] == 'hxec052dfc0db0ae26086ca78e36a054a8424d3707', 'Blobble', df['group'])
             df['group'] = np.where(df['to'] == 'hx891d1d00f371272c0d2f735d58acd435ffef9e62', 'Blobble', df['group'])
-
+            df['group'] = np.where(df['to'] == 'cxf14dea1cff7ceb29a46e6d04533a08f84441e41d', 'Blobble', df['group'])
             # BST
-            df['group'] = np.where(df['to'] == 'cxf14dea1cff7ceb29a46e6d04533a08f84441e41d', 'BST', df['group'])
+            # df['group'] = np.where(df['to'] == 'cxf14dea1cff7ceb29a46e6d04533a08f84441e41d', 'BST', df['group'])
 
             return df
 
