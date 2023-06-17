@@ -78,7 +78,7 @@ use_specified_date = 1 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2023_06_09"; day_2 = "2023_06_10"
+    day_1 = "2023_06_15"; day_2 = "2023_06_16"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
@@ -101,14 +101,14 @@ elif 'https' not in api_endpoint:
     api_endpoint_mod = 'https://' + api_endpoint
 
 # wallet of interest
-this_address = "hxc80b59718ee86d01dc5c60de0c38df2a93cf4ae1"
+this_address = "hxb568381d35d3e7a6383200e8a0d30310af20b929"
 # this_address = "hxd5271567e1121bdba855cbedd12163cb38e48e65"
 
 # this_address = "hx54f7853dc6481b670caf69c5a27c7c8fe5be8269"
 # this_address = 'hx0c9eea3bf6f6e543b2f1d5d6477c2093d782ca50' # exploit add 4?
 # this_address = 'hx0d4fbbbf09f8b83d6ec399a0b6eae672233fc1a2' # exploit add 2?
 # this_address = 'hxe5327aade005b19cb18bc993513c5cfcacd159e9' #exploit address?
-# this_address = 'hxc4193cda4a75526bf50896ec242d6713bb6b02a3' # Binance Hot
+# this_address = 'hxb568381d35d3e7a6383200e8a0d30310af20b929' # Binance Hot
 # this_address = 'hx1729b35b690d51e9944b2e94075acff986ea0675' # Binance cold
 # this_address = 'hx54d6f19c3d16b2ef23c09c885ca1ba776aaa80e2' #ubik
 # this_address = 'hxd0d9b0fee857de26fd1e8b15209ca15b14b851b2' #velic
