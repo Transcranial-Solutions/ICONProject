@@ -120,7 +120,7 @@ len_wallet_address = len(wallet_address)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # using solidwallet
 # remote = "https://ctz.solidwallet.io/api/v3"
-remote = "http://34.133.160.215:9000/api/v3" # rhizome
+remote = "http://18.118.232.28:9000/api/v3" # lydia labs
 
 
 # resolve
@@ -463,8 +463,8 @@ def group_exchanges(df):
 total_exchange_now = get_exchange_amount(all_df)
 total_exchange_now = group_exchanges(total_exchange_now)
 
-# remove if total amount is 0
-total_exchange_now = total_exchange_now[total_exchange_now['total'] != 0]
+# keep only those that have more than 100 icx
+total_exchange_now = total_exchange_now[total_exchange_now['total'] > 100]
 
 ### .groupby('group')[['Available','Delegated','Staked (not delegated)', 'Bonded', 'total']]\ ###
 total_exchange_now_grouped = total_exchange_now\
