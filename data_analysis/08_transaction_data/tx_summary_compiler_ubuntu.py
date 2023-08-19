@@ -65,7 +65,7 @@ folder_years = [i for i in os.listdir(resultPath) if i.isdigit()]
 all_files = []
 for fy in folder_years:
     l_file = os.listdir(os.path.join(resultPath, fy))
-    l_file = [os.path.join(resultPath, fy, i) for i in l_file if '.csv' in i]
+    l_file = [os.path.join(resultPath, fy, i) for i in l_file if '.csv' in i and 'trend' not in i]
     all_files.append(l_file)
 
 listData = sorted(flatten(all_files))
