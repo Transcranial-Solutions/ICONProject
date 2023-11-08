@@ -120,7 +120,7 @@ len_wallet_address = len(wallet_address)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # using solidwallet
 # remote = "https://ctz.solidwallet.io/api/v3"
-remote = "http://18.118.232.28:9000/api/v3" # lydia labs
+remote = "http://52.79.77.39:9000/api/v3" # parameta
 
 
 # resolve

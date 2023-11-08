@@ -52,3 +52,5 @@ crontab_setting
 *.log
 3_daily_git_push (copy).sh
 twitter/daily_tweet_bot.py
+twitter/daily_tweet_bot_v1.py
+twitter/daily_tweet_bot_v2.py

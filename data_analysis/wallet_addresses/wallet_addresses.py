@@ -45,6 +45,8 @@ exchange_addresses = {
     'hx6b91c8dea3114de74ecfa85908b875778c2b599c': 'bybit',
     'hxbb984f278abd66ae2155edbd91f8c87ce98411c8': 'kucoin',
     'hxc8377a960d4eb484a3b8a733012995583dda0813': 'easy_crypto',
+    "hxb568381d35d3e7a6383200e8a0d30310af20b929": "Swyftx",
+
     }
 
 json_exchange_addresses = json.dumps(exchange_addresses, indent=4)
@@ -97,7 +99,9 @@ other_addresses = {
     'hx69221e58dfa8e3688fa8e2ad368d78bfa0fad104':'binance\nsweeper_22',
     
     'hx1a5f0ce1d0d49054379a554f644f39a66a979b04':'circle_arb_1_related',
-    'hx5b802623eb53c6a90df9f29e5808596f3c2bf63e':'circle_arb_2_related'
+    'hx5b802623eb53c6a90df9f29e5808596f3c2bf63e':'circle_arb_2_related',
+    "hxc80b59718ee86d01dc5c60de0c38df2a93cf4ae1": "sandwich_guy_1",
+    "hx515dff2d6210e74b0ad595aa02fe6d2ef042b0a6": "sandwich_guy_2"
     }
 
 json_other_addresses = json.dumps(other_addresses, indent=4)

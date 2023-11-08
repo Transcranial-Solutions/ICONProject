@@ -48,6 +48,9 @@ pd.set_option('display.max_columns', 10)
 dailyPath = '/home/tono/ICONProject/data_analysis/'
 projectPath = '/home/tono/ICONProject/data_analysis/08_transaction_data'
 
+save_data = True
+log_scale = False
+
 dataPath = os.path.join(projectPath, "data")
 if not os.path.exists(dataPath):
     os.mkdir(dataPath)
@@ -527,7 +530,8 @@ for date_prev in date_of_interest:
 
 
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SAVE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-    to_final_grouping.to_csv(os.path.join(resultPath_year, 'tx_summary_' + date_prev + '.csv'), index=False)
+    if save_data:
+        to_final_grouping.to_csv(os.path.join(resultPath_year, 'tx_summary_' + date_prev + '.csv'), index=False)
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SAVE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 
@@ -595,8 +599,13 @@ for date_prev in date_of_interest:
 
     xmin, xmax = ax1.get_xlim()
     ymin, ymax = ax1.get_ylim()
-
-    ax1.text(xmax*0.97, ymax*0.82, all_tx,
+    
+    if log_scale:
+        ymax_scale_factor=0.22
+    else:
+        ymax_scale_factor=0.82
+        
+    ax1.text(xmax*0.97, ymax*ymax_scale_factor, all_tx,
             horizontalalignment='right',
             verticalalignment='center',
             linespacing = 1.5,
@@ -618,8 +627,11 @@ for date_prev in date_of_interest:
     ax2.spines['right'].set_color('cyan')
     ax2.yaxis.label.set_color('cyan')
     ax2.tick_params(axis='y', colors="cyan")
-            
-    plt.savefig(os.path.join(resultPath_year, 'tx_summary_' + date_prev + '.png'))
+    if log_scale:
+        ax1.set_yscale('log')
+    
+    if save_data:
+       plt.savefig(os.path.join(resultPath_year, 'tx_summary_' + date_prev + '.png'))
 
     
     # donuts
@@ -711,8 +723,9 @@ for date_prev in date_of_interest:
         plt.axis('equal')
         # plt.show()
         plt.tight_layout()
-
-        plt.savefig(os.path.join(resultPath_year, title.replace(' ', '_') + '_' + date_prev + '.png'))
+        
+        if save_data:
+            plt.savefig(os.path.join(resultPath_year, title.replace(' ', '_') + '_' + date_prev + '.png'))
 
     plot_donut_df(df_col=0, title='Fees Burned', add_string=" ICX")
     plot_donut_df(df_col=3, title='Regular Tx', add_string="")

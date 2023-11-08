@@ -114,8 +114,7 @@ for date_prev in date_of_interest:
     
     
     df_tx = df_tx.reset_index(drop=True)
-    
-    
+    df_tx.to_csv(os.path.join(resultPath_year, f'tx_trend_{date_prev}.csv'))
     
     def plot_ma(invar1, invar2, invar3,
                 average_per_day, average_per_week, average_per_month,
