@@ -282,9 +282,8 @@ for date_prev in date_of_interest:
                 sleep(random_sleep_except)
         return known_address_url
     
-    # known_address_url = request_sleep_repeat(url = 'https://iconwat.ch/data/thes', repeat=3, verify=False)
     known_address_url = request_sleep_repeat(url = 'http://iconwat.ch/data/thes', repeat=3, verify=False)
-    # jknown_address = json.load(urlopen(known_address_url))
+    
     jknown_address = known_address_url.json()
 
 
