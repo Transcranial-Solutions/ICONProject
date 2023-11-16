@@ -553,11 +553,13 @@ tx_df = clean_tx_df(tx_df, from_this='from', to_this='to')
 # # run
 # =============================================================================
 
-# known_address_url = request_sleep_repeat(url = 'https://iconwat.ch/data/thes', repeat=3, verify=False)
-known_address_url = request_sleep_repeat(url = 'http://iconwat.ch/data/thes', repeat=3, verify=False)
-# jknown_address = json.load(urlopen(known_address_url))
-jknown_address = known_address_url.json()
-
+try:
+    known_address_url = request_sleep_repeat(url = 'http://iconwat.ch/data/thes', repeat=3, verify=False)
+    jknown_address = known_address_url.json()
+except:
+    print('It is possible that iconwat.ch is no longer available.')
+    jknown_address={}
+    
 ## updating address info
 {add_dict_if_noexist(k, jknown_address, v) for k,v in exchange_addresses.items()}
 {add_dict_if_noexist(k, jknown_address, v) for k,v in other_addresses.items()}

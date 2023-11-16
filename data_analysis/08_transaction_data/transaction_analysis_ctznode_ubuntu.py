@@ -282,9 +282,12 @@ for date_prev in date_of_interest:
                 sleep(random_sleep_except)
         return known_address_url
     
-    known_address_url = request_sleep_repeat(url = 'http://iconwat.ch/data/thes', repeat=3, verify=False)
-    
-    jknown_address = known_address_url.json()
+    try:
+        known_address_url = request_sleep_repeat(url = 'http://iconwat.ch/data/thes', repeat=3, verify=False)
+        jknown_address = known_address_url.json()
+    except:
+        print('It is possible that iconwat.ch is no longer available.')
+        jknown_address={}
 
 
     def add_dict_if_noexist(key, d, value):

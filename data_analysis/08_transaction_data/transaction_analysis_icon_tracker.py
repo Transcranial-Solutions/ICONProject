@@ -123,8 +123,11 @@ def extract_values(obj, key):
   return results
 
 # this is from Blockmove's iconwatch -- get the destination address (known ones, like binance etc)
-known_address_url = Request('https://iconwat.ch/data/thes', headers={'User-Agent': 'Mozilla/5.0'})
-jknown_address = json.load(urlopen(known_address_url))
+try:
+    known_address_url = Request('https://iconwat.ch/data/thes', headers={'User-Agent': 'Mozilla/5.0'})
+    jknown_address = json.load(urlopen(known_address_url))
+except:
+    jknown_address={}
 
 def add_dict_if_noexist(key, d, value):
     if key not in d:
