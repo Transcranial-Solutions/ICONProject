@@ -22,6 +22,7 @@
     "cx2ccc0c98ab5c2709cfc2c1512345baa99ea4106a": "Relay_2",
     "cx735704cf28098ea43cae2a8325c35a3e7f2a5d1c": "Relay_3",
     "cxca5faa5a71d986a2e84dd7e6f5ff791d29901ebe": "Relay_4",
+    "cxee7a00755a757e3c519a0616456030e33dc9d47f": "Relay_5",
     "cx9e3cadcc1a4be3323ea23371b84575abb32703ae": "MyID_1",
     "cx694e8c9f1a05c8c3719f30d46b97697960e4289e": "MyID_2",
     "cxba62bb61baf8dd8b6a04633fe33806547785a00c": "MyID_3",
@@ -43,6 +44,7 @@
     "cx32743b6f4588f5c1b025c5bb732ac62349365417": "Craft",
     "cx8683d50b9f53275081e13b64fba9d6a56b7c575d": "gangstabet_trade",
     "cx6139a27c15f1653471ffba0b4b88dc15de7e3267": "gangstabet_token",
+    "cxb6be11a27f21ad82c7475aa215e3635fafd7f186": "gangstabet_game",
     "cx66d4d90f5f113eba575bf793570135f9b10cece1": "balanced_loans",
     "cx43e2eec79eb76293c298f2b17aec06097be606e0": "balanced_staking",
     "cx203d9cd2a669be67177e997b8948ce2c35caffae": "balanced_dividends",
@@ -79,5 +81,7 @@
     "cxc2f3ea1c84cac895b3ab05681705d472002bfb1f": "Mojos",
     "cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f": "Bridge",
     "cx0eb215b6303142e37c0c9123abd1377feb423f0e": "Bridge",
-    "cxe5c2c460364acc5f8c1d5ca925930043d8d9c9dd": "GangstaBet Crown"
+    "cxe5c2c460364acc5f8c1d5ca925930043d8d9c9dd": "GangstaBet Crown",
+    "cxf2ca3b655a782f39227934d37ff3b77f9b1ebcf9": "Blobble",
+    "cxe65f3286902be43e00a5013cb1dc300ec8e51fa4": "makeArb"
 }

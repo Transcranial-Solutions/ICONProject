@@ -364,6 +364,7 @@ def grouping_wrapper(df, in_col):
         df['group'] = np.where(df['to_def'].str.lower().str.startswith('btp'), 'BTP', df['group'])
         
         # Blobble
+        df['group'] = np.where(df['group'].str.contains('blobble', case=False), 'Blobble', df['group'])
         df['group'] = np.where(df['to'] == 'cx32ec70628489e36852e3ef248e8379f28ea47aa5', 'Blobble', df['group'])
         df['group'] = np.where(df['to'] == 'cxf2ca3b655a782f39227934d37ff3b77f9b1ebcf9', 'Blobble', df['group'])
         df['group'] = np.where(df['to'] == 'cx7b4472ca8408eca00a8b483c7151b11ae735988b', 'Blobble', df['group'])
