@@ -54,3 +54,6 @@ crontab_setting
 twitter/daily_tweet_bot.py
 twitter/daily_tweet_bot_v1.py
 twitter/daily_tweet_bot_v2.py
+*.iml
+*.xml
+*.ini
