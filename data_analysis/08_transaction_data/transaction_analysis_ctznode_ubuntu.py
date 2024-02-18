@@ -225,9 +225,11 @@ for date_prev in date_of_interest:
             .build()
         result = icon_service.call(call)['variable']
 
-        df = {'Icps': hex_to_int(result['Icps']), 'Iglobal': parse_icx(result['Iglobal']),
+        df = {'Icps': hex_to_int(result['Icps']), 
+              'Iglobal': parse_icx(result['Iglobal']),
               'Iprep': hex_to_int(result['Iprep']),
-              'Irelay': hex_to_int(result['Irelay']), 'Ivoter': hex_to_int(result['Ivoter'])}
+              'Irelay': hex_to_int(result['Irelay']), 
+              'Ivoter': hex_to_int(result['Ivoter'])}
 
         return df
 
