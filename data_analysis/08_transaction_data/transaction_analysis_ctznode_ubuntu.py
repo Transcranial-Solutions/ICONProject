@@ -229,7 +229,7 @@ for date_prev in date_of_interest:
               'Iglobal': parse_icx(result['Iglobal']),
               'Iprep': hex_to_int(result['Iprep']),
               'Irelay': hex_to_int(result['Irelay']), 
-              'Ivoter': hex_to_int(result['Ivoter'])}
+              'Iwage': hex_to_int(result['Iwage'])}
 
         return df
 
