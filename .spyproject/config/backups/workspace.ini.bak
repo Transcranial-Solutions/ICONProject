@@ -1,0 +1,12 @@
+[workspace]
+restore_data_on_startup = True
+save_data_on_exit = True
+save_history = True
+save_non_project_files = False
+project_type = 'empty-project-type'
+recent_files = ['data_analysis/wallet_addresses/wallet_addresses.py', 'data_analysis/1_daily_snapshot_before_12_UTC.py', 'data_analysis/2_daily_snapshot_after_12_UTC.py', 'data_analysis/08_transaction_data/check_daily_unique_wallet_hx']
+
+[main]
+version = 0.2.0
+recent_files = []
+
