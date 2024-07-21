@@ -582,6 +582,23 @@ for date_prev in date_of_interest:
             df_combined['c2p_event'] = df_combined['event_from'].str.startswith('cx') & df_combined['event_to'].str.startswith('hx')
             df_combined['c2c_event'] = df_combined['event_from'].str.startswith('cx') & df_combined['event_to'].str.startswith('cx')
             
+            
+            
+            first_occurrence = df.groupby(['from', 'to', 'txHash']).cumcount() == 0
+
+            # Set all *_main columns to False
+            df_combined['p2p_main'] = False
+            df_combined['p2c_main'] = False
+            df_combined['c2p_main'] = False
+            df_combined['c2c_main'] = False
+            
+            # Set *_main columns to True only for the first occurrence in each group
+            df_combined.loc[first_occurrence, 'p2p_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('hx') & df_combined.loc[first_occurrence, 'to'].str.startswith('hx')
+            df_combined.loc[first_occurrence, 'p2c_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('hx') & df_combined.loc[first_occurrence, 'to'].str.startswith('cx')
+            df_combined.loc[first_occurrence, 'c2p_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('cx') & df_combined.loc[first_occurrence, 'to'].str.startswith('hx')
+            df_combined.loc[first_occurrence, 'c2c_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('cx') & df_combined.loc[first_occurrence, 'to'].str.startswith('cx')
+
+            
 
             
             
