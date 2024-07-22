@@ -44,7 +44,7 @@ summary_counts = {}
 # summary_counts = OrderedDict()
 for tx_path in tqdm(tx_detail_paths):
     df = pd.read_csv(tx_path, low_memory=False)
-    tx_date = df['tx_date'][0]
+    tx_date = df['tx_date'].mode()[0]
     summary_counts[tx_date] = {}
     
     # tx count
@@ -96,4 +96,9 @@ summary_counts_native = convert_to_native(summary_counts)
 print(json.dumps(summary_counts_native, indent=4))
 
 df = pd.DataFrame(summary_counts).T
+
+df = df[~df.index.astype(str).str.startswith('2024-05')]
+
 df.to_csv(resultsPath.joinpath('tx_detail_summary.csv'))
+
+
