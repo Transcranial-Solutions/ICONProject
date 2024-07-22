@@ -57,3 +57,4 @@ twitter/daily_tweet_bot_v2.py
 *.iml
 *.xml
 *.ini
+*.bak

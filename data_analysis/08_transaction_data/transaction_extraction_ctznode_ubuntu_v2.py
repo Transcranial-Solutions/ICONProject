@@ -72,8 +72,6 @@ if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
 
-
-
 def insert_str(string="YYYY-WW", index=4, timeinterval=' week') -> str:
     """
     Inserting strings between strings
@@ -176,8 +174,8 @@ date_today = today.strftime("%Y-%m-%d")
 use_specific_prev_date = 2 #0
 date_prev = "2022-07-12"
 
-day_1 = "2024-06-20" #07
-day_2 = "2024-07-06"
+day_1 = "2024-04-20" #07
+day_2 = "2024-05-19"
 
 if use_specific_prev_date == 1:
     date_of_interest = [date_prev]

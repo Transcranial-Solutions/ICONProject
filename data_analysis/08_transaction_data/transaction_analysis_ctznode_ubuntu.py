@@ -426,9 +426,16 @@ for date_prev in date_of_interest:
         .merge(to_def, how='left', on='to')
 
     def grouping_wrapper(df, in_col):
+        # def wallet_grouping(df, in_col, in_name, else_name):
+        #     df['group'] = np.where(df[in_col].str.contains(in_name, case=False, regex=True), in_name, else_name)
+        #     df['group'] = np.where(df['to'] == 'System', 'System', df['group'])
+        #     return df        
         def wallet_grouping(df, in_col, in_name, else_name):
-            df['group'] = np.where(df[in_col].str.contains(in_name, case=False, regex=True), in_name, else_name)
-            df['group'] = np.where(df['to'] == 'System', 'System', df['group'])
+            group_col = f'{in_col}_group'
+            df[group_col] = else_name
+            mask = df[in_col].notna() & df[in_col].str.contains(in_name, case=False, regex=True)
+            df.loc[mask, group_col] = in_name
+            df[group_col] = np.where(df['to'] == 'System', 'System', df[group_col])
             return df
 
         these_incols = ['bithumb', 'upbit','velic','bitvavo','unkEx_c','unkEx_d','kraken',
