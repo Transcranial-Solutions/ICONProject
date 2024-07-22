@@ -173,8 +173,11 @@ date_today = today.strftime("%Y-%m-%d")
 
 
 # to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 0
+use_specific_prev_date = 2 #0
 date_prev = "2022-07-12"
+
+day_1 = "2024-06-20" #07
+day_2 = "2024-07-06"
 
 if use_specific_prev_date == 1:
     date_of_interest = [date_prev]
@@ -182,7 +185,7 @@ elif use_specific_prev_date == 0:
     date_of_interest = [yesterday(date_today)]
 elif use_specific_prev_date == 2:
     # for loop between dates
-    day_1 = "2022-07-13"; day_2 = "2022-07-16"
+    # day_1 = "2024-07-14"; day_2 = "2024-07-20"
     date_of_interest = pd.date_range(start=day_1, end=day_2, freq='D').strftime("%Y-%m-%d").to_list()
 else:
     date_of_interest=[]
@@ -193,7 +196,8 @@ print(date_of_interest)
 
 # remote = "https://ctz.solidwallet.io/api/v3"
 # remote = "http://52.79.77.39:9000/api/v3" # 
-remote = "http://52.196.159.184:9000/api/v3"
+# remote = "http://52.196.159.184:9000/api/v3"
+remote = "http://127.0.0.1:9000/api/v3"
 
 data = {'jsonrpc':'2.0', 'method': 'icx_getLastBlock','id': 1223}
 def get_height(endpoint: str) -> int:
@@ -349,6 +353,8 @@ for date_prev in date_of_interest:
             print(f'Time taken: {time() - start}')
         
             return block_df
+        
+        
         
         block_df = run_block()
 
@@ -520,115 +526,111 @@ for date_prev in date_of_interest:
             
             # p2p / p2c / c2p / c2c?
 
-            # def has_pair_starting_with_hx_cx(lst):
-            #     if not isinstance(lst, list):
-            #         return False
-                
-            #     hx_count = 0
-            #     cx_count = 0
-                
-            #     for item in lst:
-            #         if isinstance(item, str) and not pd.isnull(item):
-            #             if item.startswith('hx'):
-            #                 hx_count += 1
-            #             elif item.startswith('cx'):
-            #                 cx_count += 1
-                            
-            #     return (hx_count >= 1) or (cx_count >= 2) or (hx_count >= 1 and cx_count >= 1)
-
-
-            
-            # def any_starts_with_hx(lst):
-            #     return any(isinstance(item, str) and item.startswith('hx') for item in lst if not pd.isnull(item))
-            
-            # def extract_hx_element(lst):
-            #     if isinstance(lst, list):
-            #         for item in lst:
-            #             if isinstance(item, str) and item.startswith('hx'):
-            #                 return item
-            #     return None
-            
             def split_list_to_columns(lst, prefix='event'):
                 max_len = max(lst.apply(len).max(), 1)  # Find the maximum list length
                 return pd.DataFrame(lst.tolist(), index=lst.index).rename(
                     columns={i: f'{prefix}_{i+1}' for i in range(max_len)}
                 )
             
-            
-            # def label_columns(value):
-            #     if isinstance(value, str):
-            #         if value.startswith('hx'):
-            #             return 'hx'
-            #         elif value.startswith('cx'):
-            #             return 'cx'
-            #         else:
-            #             return 'other'
-            #     return np.nan
-            
-            
-
-            
             df_expanded = split_list_to_columns(df['eventLogs.data'].dropna())[['event_1','event_2']]
             df_expanded.rename(columns={'event_1':'event_from', 'event_2': 'event_to'}, inplace=True)
             df_combined = df.join(df_expanded, rsuffix='_original')
             
-            df_combined['p2p_main'] = df_combined['from'].str.startswith('hx') & df_combined['to'].str.startswith('hx')
-            df_combined['p2c_main'] = df_combined['from'].str.startswith('hx') & df_combined['to'].str.startswith('cx')
-            df_combined['c2p_main'] = df_combined['from'].str.startswith('cx') & df_combined['to'].str.startswith('hx')
-            df_combined['c2c_main'] = df_combined['from'].str.startswith('cx') & df_combined['to'].str.startswith('cx')
+            keep_cols = ['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 'txHash', 'from', 'to', 
+                         'tx_date', 'tx_fees', 'tx_time', 'value', 'eventLogs.scoreAddress', 'eventLogs.indexed', 'event_from', 'event_to']
+            
+            df_combined = df_combined[keep_cols]
+            
+            df_combined_main = df_combined[['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 
+                                            'txHash', 'from', 'to', 'tx_date', 'tx_fees', 'tx_time', 'value']].drop_duplicates()
+            
+            df_combined_main['tx_type'] = 'main'
+            
+            df_combined_event = df_combined[['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 
+                                             'txHash', 'tx_date', 'tx_fees', 'tx_time', 'value', 
+                                             'eventLogs.scoreAddress', 'eventLogs.indexed', 'event_from', 'event_to']].rename(columns={'event_from': 'from', 'event_to': 'to'})
+            
+            df_combined_event['tx_type'] = 'event'
 
-            df_combined['p2p_event'] = df_combined['event_from'].str.startswith('hx') & df_combined['event_to'].str.startswith('hx')
-            df_combined['p2c_event'] = df_combined['event_from'].str.startswith('hx') & df_combined['event_to'].str.startswith('cx')
-            df_combined['c2p_event'] = df_combined['event_from'].str.startswith('cx') & df_combined['event_to'].str.startswith('hx')
-            df_combined['c2c_event'] = df_combined['event_from'].str.startswith('cx') & df_combined['event_to'].str.startswith('cx')
+            columns_to_check = ['from', 'to']
+            df_combined_main = df_combined_main.dropna(subset=columns_to_check)
+            
+            columns_to_check = ['from', 'to']
+            df_combined_event = df_combined_event.dropna(subset=columns_to_check)
+            
+            df_combined = pd.concat([df_combined_main, df_combined_event]).sort_values('timestamp').reset_index(drop=True) 
             
             
-            
-            first_occurrence = df.groupby(['from', 'to', 'txHash']).cumcount() == 0
-
-            # Set all *_main columns to False
-            df_combined['p2p_main'] = False
-            df_combined['p2c_main'] = False
-            df_combined['c2p_main'] = False
-            df_combined['c2c_main'] = False
-            
-            # Set *_main columns to True only for the first occurrence in each group
-            df_combined.loc[first_occurrence, 'p2p_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('hx') & df_combined.loc[first_occurrence, 'to'].str.startswith('hx')
-            df_combined.loc[first_occurrence, 'p2c_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('hx') & df_combined.loc[first_occurrence, 'to'].str.startswith('cx')
-            df_combined.loc[first_occurrence, 'c2p_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('cx') & df_combined.loc[first_occurrence, 'to'].str.startswith('hx')
-            df_combined.loc[first_occurrence, 'c2c_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('cx') & df_combined.loc[first_occurrence, 'to'].str.startswith('cx')
+            df_combined['p2p'] = df_combined['from'].str.startswith('hx') & df_combined['to'].str.startswith('hx')
+            df_combined['p2c'] = df_combined['from'].str.startswith('hx') & df_combined['to'].str.startswith('cx')
+            df_combined['c2p'] = df_combined['from'].str.startswith('cx') & df_combined['to'].str.startswith('hx')
+            df_combined['c2c'] = df_combined['from'].str.startswith('cx') & df_combined['to'].str.startswith('cx')
 
             
+            df_combined.loc[:,'regTxCount'] = np.where(df_combined['tx_type'] == 'main', 1, 0)
+            df_combined.loc[:,'intTxCount'] = np.where((df_combined['tx_type'] == 'event') & df_combined[['p2p','p2c','c2p','c2c']].any(axis=1), 1, 0)
+            df_combined.loc[:,'intEvtCount'] = np.where(df_combined['eventLogs.scoreAddress'].notnull() & (df_combined['txIndex'] != 0) & (df_combined['intTxCount'] != 1), 1, 0)
+            df_combined.loc[:,'systemTickCount'] = np.where(df_combined['txIndex'] == 0, 1, 0)
+            
+
+            # first_occurrence = df_combined.groupby(['from', 'to', 'txHash']).cumcount() == 0
+
+            # # Set all *_main columns to False
+            # df_combined['p2p_main'] = False
+            # df_combined['p2c_main'] = False
+            # df_combined['c2p_main'] = False
+            # df_combined['c2c_main'] = False
+            
+            # # Set *_main columns to True only for the first occurrence in each group
+            # df_combined.loc[first_occurrence, 'p2p_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('hx') & df_combined.loc[first_occurrence, 'to'].str.startswith('hx')
+            # df_combined.loc[first_occurrence, 'p2c_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('hx') & df_combined.loc[first_occurrence, 'to'].str.startswith('cx')
+            # df_combined.loc[first_occurrence, 'c2p_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('cx') & df_combined.loc[first_occurrence, 'to'].str.startswith('hx')
+            # df_combined.loc[first_occurrence, 'c2c_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('cx') & df_combined.loc[first_occurrence, 'to'].str.startswith('cx')
+
+            # df_combined['p2p_event'] = df_combined['event_from'].str.startswith('hx') & df_combined['event_to'].str.startswith('hx')
+            # df_combined['p2c_event'] = df_combined['event_from'].str.startswith('hx') & df_combined['event_to'].str.startswith('cx')
+            # df_combined['c2p_event'] = df_combined['event_from'].str.startswith('cx') & df_combined['event_to'].str.startswith('hx')
+            # df_combined['c2c_event'] = df_combined['event_from'].str.startswith('cx') & df_combined['event_to'].str.startswith('cx')
 
             
+            # df_combined.loc[:,'regTxCount'] = np.where(df_combined[['p2p_main','p2c_main','c2p_main','c2c_main']].any(axis=1), 1, 0)
+            # df_combined.loc[:,'intTxCount'] = np.where(df_combined[['p2p_event','p2c_event','c2p_event','c2c_event']].any(axis=1), 1, 0)
+            # df_combined.loc[:,'intEvtCount'] = np.where(df_combined['eventLogs.data'].notnull() & (df_combined['txIndex'] != 0) & (df_combined['intTxCount'] != 1), 1, 0)
+            # df_combined.loc[:,'systemTickCount'] = np.where(df_combined['txIndex'] == 0, 1, 0)
             
-            # test = df['eventLogs.data'].apply(has_pair_starting_with_hx_cx)
+            df_combined['eventlogs'] = df_combined['eventLogs.indexed'].str.split('(', expand=True)[0]
+            df_combined.drop(columns=['eventLogs.indexed'], inplace=True)
+            df_combined.rename(columns={'eventLogs.scoreAddress':'eventlogs_cx'}, inplace=True)
             
-            # df.loc[:, 'intTxCount'] = np.where(df['eventLogs.data'].apply(lambda x: any_starts_with_hx(x) if isinstance(x, list) else False), 1, 0)
+
+            # keep_cols = ['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 'txHash', 'from', 'to', 
+            #              'tx_date', 'tx_fees', 'tx_time', 'value', 'eventlogs_cx', 'eventlogs', 'event_from', 'event_to', 
+            #              'p2p_main', 'p2c_main', 'c2p_main', 'c2c_main', 'p2p_event', 'p2c_event', 'c2p_event', 'c2c_event', 'regTxCount', 'intEvtCount', 'intTxCount', 'systemTickCount']
             
-            # df.loc[:, 'intTx_hx'] = df['eventLogs.data'].apply(extract_hx_element)
+            # df_combined = df_combined[keep_cols].reset_index(drop=True)
+
 
             # counting internal transactions / total events
-            # df.loc[:, 'intTxCount'] = np.where(df['eventLogs.indexed'].str.contains('Address', na=False), 1, 0)
-            # df.loc[:,'intEvtCount'] = np.where(df['eventLogs.data'].notnull(), 1, 0)
-
-            int_tx_event = df.groupby('txHash').agg('sum')[['intTxCount', 'intEvtCount']].reset_index()
-            # print(int_tx_event)
+            # df.loc[:, 'intTxCount'] = np.where(df['eventLogs.indexed'].str.contains('Address', na=False), 1, 0)          
+            
+            # df_combined['regTxCount'].sum() + df_combined['intTxCount'].sum() + df_combined['intEvtCount'].sum() + df_combined['systemTickCount'].sum()
+            
+            int_tx_event = df_combined.groupby('txHash').agg('sum')[['regTxCount', 'intTxCount', 'intEvtCount', 'systemTickCount']].reset_index()
 
             tx_all = pd.merge(tx_all, int_tx_event, on='txHash', how='left')
 
-            return tx_all
+            return tx_all, df_combined
 
         def tx_data_cleaning_3(df):
             cols = list(df.columns.values)  # Make a list of all of the columns in the df
             remove_list(cols, strings="step")
             df = df[cols]
-            # df = df.drop(columns=['eventLogs'])
+            df = df.drop(columns=['eventLogs'])
             return df
 
         def final_output():
             tx_all = tx_data_cleaning_1(tx_all=tx_df.copy())
-            tx_all, df_int_tx = tx_data_cleaning_2(tx_all=tx_all)
+            tx_all, df_combined = tx_data_cleaning_2(tx_all=tx_all)
             # tx_all = df_merge_all(block_df=block_df, tx_df=tx_all)
             tx_all = df_merge_all(block_df=tx_all, tx_df=block_df.drop(columns='timestamp'))
 
@@ -638,15 +640,16 @@ for date_prev in date_of_interest:
             # in case there are some nans, we'll just fill with 0
             final_tx_df = final_tx_df.fillna(0) 
 
-            return final_tx_df
+            return final_tx_df, df_combined
 
-        final_tx_df = final_output()
+        final_tx_df, df_combined = final_output()
 
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         # saving
         # windows_path = "/mnt/e/GitHub/ICONProject/data_analysis/08_transaction_data/data/"
         # final_tx_df.to_csv(os.path.join(dataPath, 'tx_final_' + date_prev + '.csv'), index=False)
+        df_combined.to_csv(os.path.join(dataPath, 'tx_detail_' + date_prev + '.csv'), index=False)
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
         # bytearray.fromhex(dat[2:]).decode()
@@ -655,7 +658,7 @@ for date_prev in date_of_interest:
         # binascii.hexlify(string.encode())
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
+        print()
         print(date_prev + ' is done!')
 
     except:
