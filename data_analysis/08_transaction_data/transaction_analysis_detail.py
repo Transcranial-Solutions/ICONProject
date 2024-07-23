@@ -359,3 +359,14 @@ if __name__ == "__main__":
     main()
 
 
+# grouped_df_from = df.groupby('from_label_group').sum()
+# grouped_df_from['total_tx_count'] = grouped_df_from['regTxCount'] + grouped_df['intTxCount']
+# sorted_df_from = grouped_df_from.sort_values(by='total_tx_count', ascending=False)
+# print(sorted_df_from)
+
+# grouped_df_to = df.groupby('to_label_group').sum()
+# grouped_df_to['total_tx_count'] = grouped_df_to['regTxCount'] + grouped_df['intTxCount']
+# sorted_df_to = grouped_df_to.sort_values(by='total_tx_count', ascending=False)
+# print(sorted_df_to)
+
+
