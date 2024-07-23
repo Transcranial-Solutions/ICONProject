@@ -24,7 +24,7 @@ tx_detail_paths = sorted([i for i in dataPath.glob('tx_detail*.csv')])
 
 
 
-ATTACH_WALLET_INFO = False
+ATTACH_WALLET_INFO = True
 
 # Constants
 POSSIBLE_NANS = ['', ' ', np.nan]
@@ -258,22 +258,12 @@ def convert_to_native(obj):
 
 
 
-if ATTACH_WALLET_INFO:
-
-    jknown_address = {}
-    # Update address info
-    for address_dict in [exchange_addresses, other_addresses]:
-        for k, v in address_dict.items():
-            add_dict_if_noexist(k, jknown_address, v)
-    
-    jknown_address = get_contract_info()
-    
-    merged_addresses = {**jknown_address, **all_known_addresses}
 
 
 
 
-def process_transaction_file(tx_path):
+
+def process_transaction_file(tx_path, merged_addresses):
     df = pd.read_csv(tx_path, low_memory=False)
     if df.empty:
         return None
@@ -335,14 +325,24 @@ def process_transaction_file(tx_path):
 
 
 def main():
+    
+    if ATTACH_WALLET_INFO:
+        jknown_address = {}
+        for address_dict in [exchange_addresses, other_addresses]:
+            for k, v in address_dict.items():
+                add_dict_if_noexist(k, jknown_address, v)
+        
+        jknown_address = get_contract_info()
+        merged_addresses = {**jknown_address, **all_known_addresses}
+        
     summary_counts = {}
     # df_combined = []
     for tx_path in tqdm(tx_detail_paths):
-        result = process_transaction_file(tx_path)
+        result = process_transaction_file(tx_path, merged_addresses)
         if result:
             tx_date, summary, df = result
             summary_counts[tx_date] = summary
-            # df_combined.append(df)
+            df.to_csv(f'tx_detail_with_group_info_{tx_date}.csv')
     
     # df_all = pd.concat(df_combined)
 
@@ -359,14 +359,15 @@ if __name__ == "__main__":
     main()
 
 
-# grouped_df_from = df.groupby('from_label_group').sum()
-# grouped_df_from['total_tx_count'] = grouped_df_from['regTxCount'] + grouped_df['intTxCount']
-# sorted_df_from = grouped_df_from.sort_values(by='total_tx_count', ascending=False)
-# print(sorted_df_from)
 
-# grouped_df_to = df.groupby('to_label_group').sum()
-# grouped_df_to['total_tx_count'] = grouped_df_to['regTxCount'] + grouped_df['intTxCount']
-# sorted_df_to = grouped_df_to.sort_values(by='total_tx_count', ascending=False)
-# print(sorted_df_to)
+# def get_tx_group_with_fees(df, in_group): 
+#     tx_count = df[in_group].value_counts().rename('tx_count')
+#     fees_of_tx_count = df[df['tx_type'] == 'main'].groupby([in_group])['tx_fees'].sum()
+#     tx_with_fees = pd.concat([fees_of_tx_count, tx_count], axis=1).sort_values(by = ['tx_fees', 'tx_count'], ascending=False)
+#     return tx_with_fees
+
+# get_tx_group_with_fees(df, in_group='to_label_group')
+
+
 
 

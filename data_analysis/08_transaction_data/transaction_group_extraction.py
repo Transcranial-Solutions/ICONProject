@@ -5,7 +5,8 @@ import numpy as np
 import json
 
 project_path = Path.cwd()
-project_path = Path('E:/GitHub/ICONProject/data_analysis/08_transaction_data')
+# project_path = Path('E:/GitHub/ICONProject/data_analysis/08_transaction_data')
+project_path = Path('/home/tono/ICONProject/data_analysis/08_transaction_data')
 results_path = project_path.joinpath('results')
 
 summary_file = 'compiled_tx_summary.csv'
@@ -16,7 +17,7 @@ df = df[df['to'].notna()]
 df = df[~df['to'].str.startswith('hx')]
 
 
-df = df.groupby('to')['group'].value_counts().reset_index().drop(columns=['count'])
+df = df.groupby('to')['group'].value_counts().reset_index(name='count').drop(columns=['count'])
 df = df[df['group'] != 'System']
 df = df.reset_index(drop=True)
 
