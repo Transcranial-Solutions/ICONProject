@@ -431,11 +431,10 @@ for date_prev in date_of_interest:
         #     df['group'] = np.where(df['to'] == 'System', 'System', df['group'])
         #     return df        
         def wallet_grouping(df, in_col, in_name, else_name):
-            group_col = f'{in_col}_group'
-            df[group_col] = else_name
+            df['group'] = else_name
             mask = df[in_col].notna() & df[in_col].str.contains(in_name, case=False, regex=True)
-            df.loc[mask, group_col] = in_name
-            df[group_col] = np.where(df['to'] == 'System', 'System', df[group_col])
+            df.loc[mask, 'group'] = in_name
+            df['group'] = np.where(df['to'] == 'System', 'System', df['group'])
             return df
 
         these_incols = ['bithumb', 'upbit','velic','bitvavo','unkEx_c','unkEx_d','kraken',
@@ -592,9 +591,9 @@ for date_prev in date_of_interest:
     xmin, xmax = ax1.get_xlim()
     ymin, ymax = ax1.get_ylim()
 
-    if ymax >= 1000:
+    if ymax >= 3_000:
         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x / 1e3) + ' K'))
-    if ymax >= 1000000:
+    if ymax >= 1_000_000:
         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
 
     ax2.set_ylabel('Fees burned (ICX)', labelpad=10)

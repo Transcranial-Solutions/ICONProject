@@ -12,6 +12,7 @@ import numpy as np
 from tqdm import tqdm
 import json
 import requests
+from datetime import datetime, timedelta
 
 # Define paths
 dailyPath = '/home/tono/ICONProject/data_analysis/'
@@ -21,26 +22,52 @@ dataPath = Path(projectPath).joinpath('data')
 resultsPath = Path(projectPath).joinpath('results')
 
 tx_detail_paths = sorted([i for i in dataPath.glob('tx_detail*.csv')])
-
+tx_detail_paths = [i for i in tx_detail_paths if '_with_group' not in i.as_posix()]
 
 
 ATTACH_WALLET_INFO = True
+ONLY_SAVE_SPECIFIED_DATE = True ## if False, it will do all the data we have
 
 # Constants
 POSSIBLE_NANS = ['', ' ', np.nan]
 
+# to use specific date (1), use yesterday (0), use range(2)
+use_specific_prev_date = 0 #0
+date_prev = "2024-07-20"
 
-if ATTACH_WALLET_INFO:
-    # reading address info
-    walletaddressPath = Path(dailyPath, "wallet_addresses")
-    with open(Path(walletaddressPath, 'contract_addresses.json')) as f:
-              contract_addresses = json.load(f)
-    with open(Path(walletaddressPath, 'exchange_addresses.json')) as f:
-              exchange_addresses = json.load(f)
-    with open(Path(walletaddressPath, 'other_addresses.json')) as f:
-              other_addresses = json.load(f)
-    
-    all_known_addresses = {**contract_addresses, **exchange_addresses, **other_addresses}
+day_1 = "2024-04-20" #07
+day_2 = "2024-07-22"
+
+def yesterday(doi = "2021-08-20"):
+    yesterday = datetime.fromisoformat(doi) - timedelta(1)
+    return yesterday.strftime('%Y-%m-%d')
+
+def tomorrow(doi = "2021-08-20"):
+    tomorrow = datetime.fromisoformat(doi) + timedelta(1)
+    return tomorrow.strftime('%Y-%m-%d')
+
+
+# today's date
+today = datetime.utcnow()
+date_today = today.strftime("%Y-%m-%d")
+
+
+if use_specific_prev_date == 1:
+    date_of_interest = [date_prev]
+elif use_specific_prev_date == 0:
+    date_of_interest = [yesterday(date_today)]
+elif use_specific_prev_date == 2:
+    # for loop between dates
+    # day_1 = "2024-07-14"; day_2 = "2024-07-20"
+    date_of_interest = pd.date_range(start=day_1, end=day_2, freq='D').strftime("%Y-%m-%d").to_list()
+else:
+    date_of_interest=[]
+    print('No date selected.')
+
+print(date_of_interest)
+
+
+matching_paths = [path for path in tx_detail_paths if any(date in path.name for date in date_of_interest)]
 
 
 
@@ -215,11 +242,34 @@ def token_tx_using_community_tracker(total_pages=100):
     last_page = total_pages * skip - skip
     page_count = range(0, last_page, skip)
 
-    tx_all = [get_tx_via_icon_community_tracker(k) for k in tqdm(page_count)]
+    tx_all = [get_tx_via_icon_community_tracker(k) for k in tqdm(page_count, desc="Extracting tracker info")]
     df_contract = pd.concat(tx_all, ignore_index=True)
     return df_contract
 
-def get_contract_info():
+
+def get_all_known_addresses(dailyPath):
+    # reading address info
+    walletaddressPath = Path(dailyPath, "wallet_addresses")
+    with open(Path(walletaddressPath, 'contract_addresses.json')) as f:
+              contract_addresses = json.load(f)
+    with open(Path(walletaddressPath, 'exchange_addresses.json')) as f:
+              exchange_addresses = json.load(f)
+    with open(Path(walletaddressPath, 'other_addresses.json')) as f:
+              other_addresses = json.load(f)
+    
+    all_known_addresses = {**contract_addresses, **exchange_addresses, **other_addresses}
+    
+    jknown_address = {}
+    for address_dict in [exchange_addresses, other_addresses]:
+        for k, v in address_dict.items():
+            add_dict_if_noexist(k, jknown_address, v)
+    
+    jknown_address = get_contract_info(contract_addresses)
+    merged_addresses = {**jknown_address, **all_known_addresses}
+    return merged_addresses
+
+def get_contract_info(contract_addresses):
+    
     jknown_address = {}
     df_contract = token_tx_using_community_tracker()
 
@@ -241,8 +291,6 @@ def get_contract_info():
 
     return jknown_address
 
-
-
 def convert_to_native(obj):
     if isinstance(obj, np.int64): 
         return int(obj)
@@ -257,38 +305,10 @@ def convert_to_native(obj):
     return obj
 
 
-
-
-
-
-
-
-def process_transaction_file(tx_path, merged_addresses):
+def process_transaction_file(tx_path):
     df = pd.read_csv(tx_path, low_memory=False)
     if df.empty:
         return None
-    
-    if ATTACH_WALLET_INFO:
-
-        ## known addresses and groupings
-        df['eventlogs_cx_label'] = df['eventlogs_cx'].map(merged_addresses)
-        df['to_label'] = df['to'].map(merged_addresses)
-        df['from_label'] = df['from'].map(merged_addresses)
-        
-        df['eventlogs_cx_label'] = np.where(df['txIndex'] == 0, 'System', df['eventlogs_cx_label'])
-        df['to_label'] = np.where(df['txIndex'] == 0, 'System', df['to_label'])
-        df['from_label'] = np.where(df['txIndex'] == 0, 'System', df['from_label'])
-        
-        df['to_label'] = np.where(df['to'].str.startswith('hx', na=False) & df['to_label'].isna(), 'unknown_hx', df['to_label'])
-        df['to_label'] = np.where(df['to'].str.startswith('cx', na=False) & df['to_label'].isna(), 'unknown_cx', df['to_label'])
-        
-        df['from_label'] = np.where(df['from'].str.startswith('hx', na=False) & df['from_label'].isna(), 'unknown_hx', df['from_label'])
-        df['from_label'] = np.where(df['from'].str.startswith('cx', na=False) & df['from_label'].isna(), 'unknown_cx', df['from_label'])
-    
-        df = grouping_wrapper(df, 'eventlogs_cx_label')
-        df = grouping_wrapper(df, 'to_label')
-        df = grouping_wrapper(df, 'from_label')
-        
 
     tx_date = df['tx_date'].mode()[0]
     summary = {}
@@ -321,53 +341,67 @@ def process_transaction_file(tx_path, merged_addresses):
     # tx fees (fees burned)
     summary['tx_fees'] = df.loc[df['tx_type'] == 'main', 'tx_fees'].sum()
 
-    return tx_date, summary, df
+    return tx_date, summary
+
+
+def attach_wallet_info_to_tx_data(tx_path, merged_addresses):
+    df = pd.read_csv(tx_path, low_memory=False)
+    if df.empty:
+        return None
+
+    ## known addresses and groupings
+    df['eventlogs_cx_label'] = df['eventlogs_cx'].map(merged_addresses)
+    df['to_label'] = df['to'].map(merged_addresses)
+    df['from_label'] = df['from'].map(merged_addresses)
+    
+    df['eventlogs_cx_label'] = np.where(df['txIndex'] == 0, 'System', df['eventlogs_cx_label'])
+    df['to_label'] = np.where(df['txIndex'] == 0, 'System', df['to_label'])
+    df['from_label'] = np.where(df['txIndex'] == 0, 'System', df['from_label'])
+    
+    df['to_label'] = np.where(df['to'].str.startswith('hx', na=False) & df['to_label'].isna(), 'unknown_hx', df['to_label'])
+    df['to_label'] = np.where(df['to'].str.startswith('cx', na=False) & df['to_label'].isna(), 'unknown_cx', df['to_label'])
+    
+    df['from_label'] = np.where(df['from'].str.startswith('hx', na=False) & df['from_label'].isna(), 'unknown_hx', df['from_label'])
+    df['from_label'] = np.where(df['from'].str.startswith('cx', na=False) & df['from_label'].isna(), 'unknown_cx', df['from_label'])
+
+    df = grouping_wrapper(df, 'eventlogs_cx_label')
+    df = grouping_wrapper(df, 'to_label')
+    df = grouping_wrapper(df, 'from_label')
+        
+    return df
 
 
 def main():
-    
-    if ATTACH_WALLET_INFO:
-        jknown_address = {}
-        for address_dict in [exchange_addresses, other_addresses]:
-            for k, v in address_dict.items():
-                add_dict_if_noexist(k, jknown_address, v)
-        
-        jknown_address = get_contract_info()
-        merged_addresses = {**jknown_address, **all_known_addresses}
-        
+
     summary_counts = {}
-    # df_combined = []
-    for tx_path in tqdm(tx_detail_paths):
-        result = process_transaction_file(tx_path, merged_addresses)
-        if result:
-            tx_date, summary, df = result
+    for tx_path in tqdm(tx_detail_paths, desc="Summarising tx details"):
+        tqdm.write(f"Working on: {tx_path.stem}")
+        result_of_tx = process_transaction_file(tx_path)
+
+        if result_of_tx:
+            tx_date, summary = result_of_tx
             summary_counts[tx_date] = summary
-            df.to_csv(f'tx_detail_with_group_info_{tx_date}.csv')
     
-    # df_all = pd.concat(df_combined)
+    # summary_counts_native = convert_to_native(summary_counts)
+    # print(json.dumps(summary_counts_native, indent=4))
 
-    summary_counts_native = convert_to_native(summary_counts)
-
-    print(json.dumps(summary_counts_native, indent=4))
-
-    df_final = pd.DataFrame(summary_counts).T
-    df_final = df_final[~df_final.index.astype(str).str.startswith('2024-05')]
-    df_final.to_csv(resultsPath.joinpath('tx_detail_summary.csv'))
-    # df_all.to_csv(resultsPath.joinpath('tx_detail_combined.csv'))
+    df_tx_detail_summary = pd.DataFrame(summary_counts).T
+    df_tx_detail_summary.to_csv(resultsPath.joinpath('tx_detail_summary.csv'))
+    
+    # this is for detailed tx analysis
+    if ATTACH_WALLET_INFO:
+        merged_addresses = get_all_known_addresses(dailyPath)
+        overlapping_paths = [path for path in matching_paths if path in tx_detail_paths]
+        loop_paths = overlapping_paths if ONLY_SAVE_SPECIFIED_DATE else tx_detail_paths
+        
+        for tx_path in tqdm(loop_paths, desc="tx details wigh group info"):
+            tqdm.write(f"Working on: {tx_path.stem}")
+            tx_date = tx_path.stem.split('_')[-1]
+            df = attach_wallet_info_to_tx_data(tx_path, merged_addresses)
+            df.to_csv(dataPath.joinpath(f'tx_detail_with_group_info_{tx_date}.csv'))
+        
 
 if __name__ == "__main__":
     main()
-
-
-
-# def get_tx_group_with_fees(df, in_group): 
-#     tx_count = df[in_group].value_counts().rename('tx_count')
-#     fees_of_tx_count = df[df['tx_type'] == 'main'].groupby([in_group])['tx_fees'].sum()
-#     tx_with_fees = pd.concat([fees_of_tx_count, tx_count], axis=1).sort_values(by = ['tx_fees', 'tx_count'], ascending=False)
-#     return tx_with_fees
-
-# get_tx_group_with_fees(df, in_group='to_label_group')
-
-
 
 

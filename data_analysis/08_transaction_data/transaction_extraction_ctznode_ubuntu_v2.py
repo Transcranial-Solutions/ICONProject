@@ -72,6 +72,59 @@ if not os.path.exists(walletPath):
     os.mkdir(walletPath)
 
 
+def yesterday(doi = "2021-08-20"):
+    yesterday = datetime.fromisoformat(doi) - timedelta(1)
+    return yesterday.strftime('%Y-%m-%d')
+
+def tomorrow(doi = "2021-08-20"):
+    tomorrow = datetime.fromisoformat(doi) + timedelta(1)
+    return tomorrow.strftime('%Y-%m-%d')
+
+
+
+# today's date
+today = datetime.utcnow()
+date_today = today.strftime("%Y-%m-%d")
+
+
+# to use specific date (1), use yesterday (0), use range(2)
+use_specific_prev_date = 2 #0
+date_prev = "2022-07-12"
+
+day_1 = "2024-01-01" #07
+day_2 = "2024-02-19"
+
+if use_specific_prev_date == 1:
+    date_of_interest = [date_prev]
+elif use_specific_prev_date == 0:
+    date_of_interest = [yesterday(date_today)]
+elif use_specific_prev_date == 2:
+    # for loop between dates
+    # day_1 = "2024-07-14"; day_2 = "2024-07-20"
+    date_of_interest = pd.date_range(start=day_1, end=day_2, freq='D').strftime("%Y-%m-%d").to_list()
+else:
+    date_of_interest=[]
+    print('No date selected.')
+
+print(date_of_interest)
+
+
+# remote = "https://ctz.solidwallet.io/api/v3"
+# remote = "http://52.79.77.39:9000/api/v3" # 
+# remote = "http://52.196.159.184:9000/api/v3"
+remote = "http://127.0.0.1:9000/api/v3"
+
+data = {'jsonrpc':'2.0', 'method': 'icx_getLastBlock','id': 1223}
+
+
+def get_height(endpoint: str) -> int:
+        payload = json.dumps(data)
+        payload = payload.encode()
+        req = requests.post(endpoint, data=payload)
+        response_data = req.json()
+        return response_data["result"]["height"]
+
+
 def insert_str(string="YYYY-WW", index=4, timeinterval=' week') -> str:
     """
     Inserting strings between strings
@@ -151,62 +204,11 @@ def deep_get_imps(data, key: str):
 def deep_get(dictionary, keys):
     return reduce(deep_get_imps, keys.split("."), dictionary)
 
-def yesterday(doi = "2021-08-20"):
-    yesterday = datetime.fromisoformat(doi) - timedelta(1)
-    return yesterday.strftime('%Y-%m-%d')
-
-def tomorrow(doi = "2021-08-20"):
-    tomorrow = datetime.fromisoformat(doi) + timedelta(1)
-    return tomorrow.strftime('%Y-%m-%d')
-
 def extract_date(df, date):
     df['date'] = pd.to_datetime(df['block_createDate']).dt.strftime("%Y-%m-%d")
     return df[df['date'] == date]
 
-
-
-# today's date
-today = datetime.utcnow()
-date_today = today.strftime("%Y-%m-%d")
-
-
-# to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 2 #0
-date_prev = "2022-07-12"
-
-day_1 = "2024-04-20" #07
-day_2 = "2024-05-19"
-
-if use_specific_prev_date == 1:
-    date_of_interest = [date_prev]
-elif use_specific_prev_date == 0:
-    date_of_interest = [yesterday(date_today)]
-elif use_specific_prev_date == 2:
-    # for loop between dates
-    # day_1 = "2024-07-14"; day_2 = "2024-07-20"
-    date_of_interest = pd.date_range(start=day_1, end=day_2, freq='D').strftime("%Y-%m-%d").to_list()
-else:
-    date_of_interest=[]
-    print('No date selected.')
-
-print(date_of_interest)
-
-
-# remote = "https://ctz.solidwallet.io/api/v3"
-# remote = "http://52.79.77.39:9000/api/v3" # 
-# remote = "http://52.196.159.184:9000/api/v3"
-remote = "http://127.0.0.1:9000/api/v3"
-
-data = {'jsonrpc':'2.0', 'method': 'icx_getLastBlock','id': 1223}
-def get_height(endpoint: str) -> int:
-        payload = json.dumps(data)
-        payload = payload.encode()
-        req = requests.post(endpoint, data=payload)
-        response_data = req.json()
-        return response_data["result"]["height"]
 remote_height = get_height(remote)
-
-
 
 # resolve
 # this_ip = dns.resolver.resolve('mercator.transcranial-solutions.dev')[0].to_text() # steve node down
@@ -657,10 +659,10 @@ for date_prev in date_of_interest:
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         print()
-        print(date_prev + ' is done!')
+        print(date_prev + ' is done!\n')
 
     except:
-        print('No data found for ' + date_prev + '!!!')
+        print('\nNo data found for ' + date_prev + '!!!\n')
 
 
 def run_all():
