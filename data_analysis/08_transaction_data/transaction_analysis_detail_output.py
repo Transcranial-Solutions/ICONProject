@@ -166,6 +166,7 @@ def get_tx_group_with_fees(df, in_group):
 daily_issuance = get_iiss_info(walletPath)['Iglobal']*12/365
 
 for tx_path in tqdm(matching_paths):
+    tx_path_date = tx_path.stem.split('_')[-1]
     df = pd.read_csv(tx_path, low_memory=False)
     df.drop("Unnamed: 0", axis=1, inplace=True)
 
@@ -177,40 +178,42 @@ for tx_path in tqdm(matching_paths):
 
 
 
-total_activity_count = df['regTxCount'].sum() + df['intTxCount'].sum() + df['systemTickCount'].sum() + df['intEvtCount'].sum()
-
-tx_count_with_fees = get_tx_group_with_fees(df, in_group='to_label_group')
-total_tx_count = tx_count_with_fees['to'].sum()
-total_fees = tx_count_with_fees['fees'].sum().round(2)
 
 
 # tx_count_with_fees_by_mode = get_tx_group_with_fees(df, in_group=['to_label_group', 'tx_mode'])
 # tx_count_with_fees_by_mode_from = get_tx_group_with_fees(df, in_group=['from_label_group', 'tx_mode'])
 
 
+tx_count_with_fees_to = get_tx_group_with_fees(df, 'to_label_group')
+tx_count_with_fees_from = get_tx_group_with_fees(df, 'from_label_group')
 
 
 
-
-total_tx = f"Transactions (Fee-incurring): {int(total_tx_count):,}\nTotal Activity: {int(total_activity_count):,}"
-
-
-
-visualise_tx_group_with_fees(fee_burning_tx, date_prev, total_tx, system_tx)
-
-
-def visualise_tx_group_with_fees(tx_count_with_fees, date_prev, all_tx, system_tx, log_scale=False):
+def visualise_tx_group_with_fees(df, tx_path_date, in_group='to_label_group', log_scale=False):
     sns.set(style="dark")
     plt.style.use("dark_background")
+
+    tx_count_with_fees = get_tx_group_with_fees(df, in_group)
+    
+    contract_address_label = 'Destination' if in_group == 'to_label_group' else 'Source'
+    
+    total_activity_count = df['regTxCount'].sum() + df['intTxCount'].sum() + df['systemTickCount'].sum() + df['intEvtCount'].sum()
+    total_activity_count_txt = f"Regular Tx: {df['regTxCount'].sum():,}; Internal Tx: {df['intTxCount'].sum():,}\nInternal Events: {df['intEvtCount'].sum():,}; System Ticks: {df['systemTickCount'].sum():,}"
+
+    total_tx_count = tx_count_with_fees['count'].sum()
+    total_fees = tx_count_with_fees['fees'].sum().round(2)
+    total_tx_count_txt = f"Transactions (Fee-incurring): {int(total_tx_count):,}\nTotal Activity: {int(total_activity_count):,}"
+
 
     fig, ax1 = plt.subplots(figsize=(14, 8))
 
     # Bar plot for transaction counts
-    tx_count_with_fees_sorted = tx_count_with_fees.sort_values(by='fees', ascending=False)
+    tx_count_with_fees_sorted = tx_count_with_fees.sort_values(by=['fees','count'], ascending=False)
     tx_count_with_fees_sorted.plot(kind='bar', x='group', y='count', stacked=True, ax=ax1, color='palegoldenrod', legend=False)
 
-    plt.title(f'Daily Transactions ({date_prev})', fontsize=14, weight='bold', pad=10, loc='left')
-    ax1.set_xlabel('Destination Contracts/Addresses')
+
+    plt.title(f'Daily Transactions ({tx_path_date})', fontsize=14, weight='bold', pad=10, loc='left')
+    ax1.set_xlabel(f'{contract_address_label} Contracts/Addresses')
     ax1.set_ylabel('Transactions', labelpad=10)
     ax1.set_xticklabels(tx_count_with_fees_sorted['group'], rotation=90, ha="center")
 
@@ -232,7 +235,7 @@ def visualise_tx_group_with_fees(tx_count_with_fees, date_prev, all_tx, system_t
         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
 
     color = 'white'
-    m_line = mlines.Line2D([], [], color=color, label=f'({fees_burned_label})', linewidth=1, marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black')
+    m_line = mlines.Line2D([], [], color=color, label=f'{fees_burned_label}', linewidth=1, marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black')
     leg = plt.legend(handles=[m_line], loc='upper right', fontsize='medium', bbox_to_anchor=(0.98, 0.999), frameon=False)
     for text in leg.get_texts():
         plt.setp(text, color='cyan')
@@ -243,7 +246,7 @@ def visualise_tx_group_with_fees(tx_count_with_fees, date_prev, all_tx, system_t
     ymin, ymax = ax1.get_ylim()
     
     ymax_scale_factor = 0.22 if log_scale else 0.82
-    ax1.text(xmax*0.97, ymax*ymax_scale_factor, all_tx,
+    ax1.text(xmax*0.97, ymax*ymax_scale_factor, total_tx_count_txt,
              horizontalalignment='right',
              verticalalignment='center',
              linespacing=1.5,
@@ -253,7 +256,7 @@ def visualise_tx_group_with_fees(tx_count_with_fees, date_prev, all_tx, system_t
     handles, labels = ax1.get_legend_handles_labels()
     ax1.legend(handles, labels, loc='upper right', bbox_to_anchor=(1, 1.08), frameon=False, fancybox=True, shadow=True, ncol=3)
 
-    ax1.text(xmax*1.07, ymax*-0.12, system_tx,
+    ax1.text(xmax*1.07, ymax*-0.12, total_activity_count_txt,
              horizontalalignment='right',
              verticalalignment='center',
              rotation=90,
@@ -270,4 +273,6 @@ def visualise_tx_group_with_fees(tx_count_with_fees, date_prev, all_tx, system_t
     plt.show()
 
 
+visualise_tx_group_with_fees(df, tx_path_date, in_group='to_label_group')
+visualise_tx_group_with_fees(df, tx_path_date, in_group='from_label_group')
 
