@@ -32,8 +32,8 @@ ONLY_SAVE_SPECIFIED_DATE = True ## if False, it will do all the data we have
 POSSIBLE_NANS = ['', ' ', np.nan]
 
 # to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 0 #0
-date_prev = "2024-07-23"
+use_specific_prev_date = 1 #0
+date_prev = "2024-07-24"
 
 day_1 = "2024-01-01" #07
 day_2 = "2024-07-23"

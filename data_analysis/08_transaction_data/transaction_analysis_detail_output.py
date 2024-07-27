@@ -33,6 +33,8 @@ projectPath = '/home/tono/ICONProject/data_analysis/08_transaction_data'
 dataPath = Path(projectPath).joinpath('data')
 resultsPath = Path(projectPath).joinpath('results')
 walletPath = Path(projectPath).joinpath("wallet")
+tokentransferPath = Path(dailyPath).joinpath("10_token_transfer/results/")
+
 walletPath.mkdir(parents=True, exist_ok=True)
 
 tx_detail_paths = sorted([i for i in dataPath.glob('tx_detail_with_group*.csv')])
@@ -164,6 +166,21 @@ def get_tx_group_with_fees(df, in_group):
     return tx_with_fees
 
 
+def get_agg_df_for_count_fees_and_value(df):
+    # Filter the subset of data based on the boolean columns
+    df_subset = df[df['p2p'] | df['p2c'] | df['c2p'] | df['c2c']].reset_index(drop=True)
+    df_subset['TxCount'] = df_subset['regTxCount'] + df_subset['intTxCount']
+    
+    df_subset.loc[df_subset['tx_type'] != 'main', 'tx_fees'] = 0
+    df_subset.loc[df_subset['tx_type'] != 'main', 'value'] = 0
+    
+    # Aggregate transaction counts and fees by from_label_group and to_label_group
+    df_agg = df_subset.groupby(['from_label_group', 'to_label_group']).agg({
+        'TxCount': 'sum',
+        'tx_fees': 'sum',
+        'value': 'sum'
+    }).reset_index()
+    return df_agg
 
 
 daily_issuance = get_iiss_info(walletPath)['Iglobal']*12/365
@@ -172,6 +189,16 @@ for tx_path in tqdm(matching_paths):
     tx_path_date = tx_path.stem.split('_')[-1]
     df = pd.read_csv(tx_path, low_memory=False)
     df.drop("Unnamed: 0", axis=1, inplace=True)
+    
+    df_agg = get_agg_df_for_count_fees_and_value(df)
+    
+    tx_path_date_underscore = tx_path_date.replace("-", "_")
+    tokentransfer_date_Path = tokentransferPath.joinpath(tx_path_date_underscore, f'IRC_token_transfer_{tx_path_date_underscore}.csv')
+    token_transfer_df = pd.read_csv(tokentransfer_date_Path, low_memory=False)
+    
+    try:
+        icx_price = token_transfer_df[token_transfer_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
+        icx_transfer_value = df_agg['value'].sum() * icx_price
 
 
 
@@ -291,19 +318,19 @@ tx_count_with_fees_from = get_tx_group_with_fees(df, 'from_label_group')
 
 
 
-# Filter the subset of data based on the boolean columns
-df_subset = df[df['p2p'] | df['p2c'] | df['c2p'] | df['c2c']].reset_index(drop=True)
-df_subset['TxCount'] = df_subset['regTxCount'] + df_subset['intTxCount']
+# # Filter the subset of data based on the boolean columns
+# df_subset = df[df['p2p'] | df['p2c'] | df['c2p'] | df['c2c']].reset_index(drop=True)
+# df_subset['TxCount'] = df_subset['regTxCount'] + df_subset['intTxCount']
 
-df_subset.loc[df_subset['tx_type'] != 'main', 'tx_fees'] = 0
-df_subset.loc[df_subset['tx_type'] != 'main', 'value'] = 0
+# df_subset.loc[df_subset['tx_type'] != 'main', 'tx_fees'] = 0
+# df_subset.loc[df_subset['tx_type'] != 'main', 'value'] = 0
 
-# Aggregate transaction counts and fees by from_label_group and to_label_group
-df_agg = df_subset.groupby(['from_label_group', 'to_label_group']).agg({
-    'TxCount': 'sum',
-    'tx_fees': 'sum',
-    'value': 'sum'
-}).reset_index()
+# # Aggregate transaction counts and fees by from_label_group and to_label_group
+# df_agg = df_subset.groupby(['from_label_group', 'to_label_group']).agg({
+#     'TxCount': 'sum',
+#     'tx_fees': 'sum',
+#     'value': 'sum'
+# }).reset_index()
 
 # Create a directed graph
 G = nx.DiGraph()
