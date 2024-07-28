@@ -48,7 +48,7 @@ import codecs
 import dns.resolver
 import json
 import requests
-
+from decimal import Decimal
 
 desired_width=320
 pd.set_option('display.width', desired_width)
@@ -457,9 +457,37 @@ for date_prev in date_of_interest:
         tx_df = run_tx()
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+        # def loop_to_icx(loop):
+        #     return loop / 1000000000000000000
+        
         def loop_to_icx(loop):
-            icx = loop / 1000000000000000000
-            return(icx)
+            return Decimal(loop) / Decimal('1000000000000000000')
+        
+        def is_hex(val):
+            """
+            Check if a given string is a valid hexadecimal number.
+            """
+            if isinstance(val, str) and re.fullmatch(r'0x[0-9a-fA-F]+', val):
+                return True
+            return False
+        
+        def parse_icx(val):
+            if pd.isna(val) or not is_hex(val):
+                return np.nan
+            try:
+                return loop_to_icx(int(val, 0))
+            except (ZeroDivisionError, ValueError):
+                return np.nan
+        
+        def hex_to_int(val):
+            if pd.isna(val) or not is_hex(val):
+                return np.nan
+            try:
+                return int(val, 0)
+            except ValueError:
+                print(f"Failed to convert {val} to int")
+                return np.nan
+            
 
         # convert timestamp to datetime
         def timestamp_to_date(df, timestamp, dateformat):
@@ -532,12 +560,44 @@ for date_prev in date_of_interest:
                     columns={i: f'{prefix}_{i+1}' for i in range(max_len)}
                 )
             
-            df_expanded = split_list_to_columns(df['eventLogs.data'].dropna())[['event_1','event_2']]
-            df_expanded.rename(columns={'event_1':'event_from', 'event_2': 'event_to'}, inplace=True)
+            df_expanded = split_list_to_columns(df['eventLogs.data'].dropna())[['event_1','event_2', 'event_3', 'event_4']]
+            df_expanded.rename(columns={'event_1':'event_from', 'event_2': 'event_to', 'event_3': 'event_value', 'event_4': 'value_type'}, inplace=True)
+            df_expanded['event_value'] = df_expanded['event_value'].apply(hex_to_int)    
+            df_expanded['value_type'] = df_expanded['value_type'].apply(hex_to_int)    
+
             df_combined = df.join(df_expanded, rsuffix='_original')
             
+            # making nan 0 here
+            df_combined.loc[df_combined['event_value'].isna(), 'event_value'] = 0
+            
+            df_combined['eventlogs'] = df_combined['eventLogs.indexed'].str.split('(', expand=True)[0]
+            
+            
+
+            # modified_values = {}
+            # condition_1 = (df_combined["eventlogs"] == "ICXTransfer") & df_combined["event_value"].notna()
+            # condition_2 = (df_combined["eventlogs"] == "Transfer") & df_combined["event_value"].notna()
+            # condition_3 = (df_combined["eventlogs"] == "ICXIssued") & df_combined["event_value"].notna()
+            # condition_4 = df_combined["event_value"].apply(lambda x: len(str(x)) > 8) & df_combined["event_value"].notna()
+
+            # condition = condition_1 | condition_2 | condition_3 | condition_4
+            
+
+            # for index, row in df_combined[condition].iterrows():
+            #     new_value = Decimal(row["event_value"]) / Decimal(1000000000000000000)
+            #     modified_values[index] = float(new_value)
+            
+            # for index, value in modified_values.items():
+            #     df_combined.at[index, "event_value"] = value
+            
+            condition = df_combined["event_value"].apply(lambda x: len(str(x)) > 8) & df_combined["event_value"].notna()
+            df_combined.loc[condition, "event_value"] = df_combined.loc[condition, "event_value"].apply(lambda x: float(Decimal(x) / Decimal(1000000000000000000)))
+
+            # check = df_combined[df_combined['txHash'] == '0xff619b407e03f7ef400728126c926730fac0adf9263f2f2126e48faccada2fa0']
+
+            
             keep_cols = ['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 'txHash', 'from', 'to', 
-                         'tx_date', 'tx_fees', 'tx_time', 'value', 'eventLogs.scoreAddress', 'eventLogs.indexed', 'event_from', 'event_to']
+                         'tx_date', 'tx_fees', 'tx_time', 'value', 'eventLogs.scoreAddress', 'eventLogs.indexed', 'event_from', 'event_to', 'event_value']
             
             df_combined = df_combined[keep_cols]
             
@@ -548,7 +608,8 @@ for date_prev in date_of_interest:
             
             df_combined_event = df_combined[['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 
                                              'txHash', 'tx_date', 'tx_fees', 'tx_time', 'value', 
-                                             'eventLogs.scoreAddress', 'eventLogs.indexed', 'event_from', 'event_to']].rename(columns={'event_from': 'from', 'event_to': 'to'})
+                                             'eventLogs.scoreAddress', 'eventLogs.indexed', 'event_from', 'event_to', 'event_value']]\
+                .rename(columns={'event_from': 'from', 'event_to': 'to', 'event_value': 'value'})
             
             df_combined_event['tx_type'] = 'event'
 

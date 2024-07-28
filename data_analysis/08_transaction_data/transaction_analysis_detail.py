@@ -27,16 +27,17 @@ tx_detail_paths = [i for i in tx_detail_paths if '_with_group' not in i.as_posix
 
 ATTACH_WALLET_INFO = True
 ONLY_SAVE_SPECIFIED_DATE = True ## if False, it will do all the data we have
+SAVE_SUMMARY = True
 
 # Constants
 POSSIBLE_NANS = ['', ' ', np.nan]
 
 # to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 1 #0
-date_prev = "2024-07-24"
+use_specific_prev_date = 0 #0
+date_prev = "2024-07-25"
 
-day_1 = "2024-01-01" #07
-day_2 = "2024-07-23"
+day_1 = "2023-07-01" #07
+day_2 = "2023-12-31"
 
 def yesterday(doi = "2021-08-20"):
     yesterday = datetime.fromisoformat(doi) - timedelta(1)
@@ -200,7 +201,10 @@ def manual_grouping(df, in_col):
 
     # BTP
     df[group_col] = np.where(df[in_col].str.lower().str.startswith('btp', na=False), 'BTP', df[group_col])
-
+    
+    # code metal
+    df[group_col] = np.where(df[group_col].str.contains('code|metal', case=False, na=False), 'CodeMetal', df[group_col])
+    
     # Blobble
     blobble_addresses = [
         'cx32ec70628489e36852e3ef248e8379f28ea47aa5',
@@ -372,21 +376,21 @@ def attach_wallet_info_to_tx_data(tx_path, merged_addresses):
 
 
 def main():
-
-    summary_counts = {}
-    for tx_path in tqdm(tx_detail_paths, desc="Summarising tx details"):
-        tqdm.write(f"Working on: {tx_path.stem}")
-        result_of_tx = process_transaction_file(tx_path)
-
-        if result_of_tx:
-            tx_date, summary = result_of_tx
-            summary_counts[tx_date] = summary
+    if SAVE_SUMMARY:
+        summary_counts = {}
+        for tx_path in tqdm(tx_detail_paths, desc="Summarising tx details"):
+            tqdm.write(f"Working on: {tx_path.stem}")
+            result_of_tx = process_transaction_file(tx_path)
     
-    # summary_counts_native = convert_to_native(summary_counts)
-    # print(json.dumps(summary_counts_native, indent=4))
-
-    df_tx_detail_summary = pd.DataFrame(summary_counts).T
-    df_tx_detail_summary.to_csv(resultsPath.joinpath('tx_detail_summary.csv'))
+            if result_of_tx:
+                tx_date, summary = result_of_tx
+                summary_counts[tx_date] = summary
+        
+        # summary_counts_native = convert_to_native(summary_counts)
+        # print(json.dumps(summary_counts_native, indent=4))
+    
+        df_tx_detail_summary = pd.DataFrame(summary_counts).T
+        df_tx_detail_summary.to_csv(resultsPath.joinpath('tx_detail_summary.csv'))
     
     # this is for detailed tx analysis
     if ATTACH_WALLET_INFO:

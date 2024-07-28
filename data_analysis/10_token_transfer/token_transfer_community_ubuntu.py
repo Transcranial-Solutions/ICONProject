@@ -469,8 +469,10 @@ except:
     table_now['Price in USD'] = np.nan
     table_now['Value Transferred in USD'] = np.nan
 
+save_these_cols = ['IRC Token', 'holders','liquidity','Amount', 'No. of Transactions', 'Price in USD', 'Value Transferred in USD', 'address', 'path']
 keep_these_cols = ['IRC Token', 'holders','liquidity','Amount', 'No. of Transactions', 'Price in USD', 'Value Transferred in USD']
-table_now = table_now[keep_these_cols]
+
+table_now = table_now[save_these_cols]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Save ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # saving this term's token transfer
 table_now.to_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + '.csv'), index=False)
@@ -491,8 +493,8 @@ table_now.to_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Load previous data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # reading previous term data
-table_prev = pd.read_csv(os.path.join(windows_path_prev, 'IRC_token_transfer_' + day_prev + '.csv'))
-table_now = pd.read_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + '.csv'))
+table_prev = pd.read_csv(os.path.join(windows_path_prev, 'IRC_token_transfer_' + day_prev + '.csv'))[keep_these_cols]
+table_now = pd.read_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + '.csv'))[keep_these_cols]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Load previous data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 ## removing ICX from the data (leaving ICX in the saved data for other purposes)
