@@ -49,6 +49,7 @@ import dns.resolver
 import json
 import requests
 from decimal import Decimal
+from pathlib import Path
 
 desired_width=320
 pd.set_option('display.width', desired_width)
@@ -56,9 +57,10 @@ pd.set_option('display.max_columns',10)
 
 workers = 1
 
-
+dailyPath = '/home/tono/ICONProject/data_analysis/'
 projectPath = '/home/tono/ICONProject/data_analysis/08_transaction_data'
-    
+tokentransferPath = Path(dailyPath).joinpath("10_token_transfer/results/")
+
 dataPath = os.path.join(projectPath, "data")
 if not os.path.exists(dataPath):
     os.mkdir(dataPath)
@@ -456,12 +458,31 @@ for date_prev in date_of_interest:
 
         tx_df = run_tx()
 
-        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-        # def loop_to_icx(loop):
-        #     return loop / 1000000000000000000
+
+        # =============================================================================
+        # Token info
+        # =============================================================================
+        date_prev_underscore = date_prev.replace("-", "_")
+        token_xfer_df = pd.read_csv(tokentransferPath.joinpath(f'{date_prev_underscore}/token_transfer_detail_{date_prev_underscore}.csv'), low_memory=False)
+        token_xfer_df.rename(columns={'token_contract_address':'eventlogs_cx',
+                                      'from_address': 'from',
+                                      'dest_address': 'to',
+                                      'transaction_hash': 'txHash',
+                                      }, inplace=True)
+        token_xfer_df_length = len(token_xfer_df[token_xfer_df['datetime'] == date_prev])
         
+        # token_xfer_df = token_xfer_df[token_xfer_df['datetime'] == date_prev]
+        token_xfer_df = token_xfer_df[['eventlogs_cx','from','to','txHash','log_index','amount','symbol']]
+
+        #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         def loop_to_icx(loop):
-            return Decimal(loop) / Decimal('1000000000000000000')
+            return loop / 1000000000000000000
+        
+        # def loop_to_icx(loop):
+        #     return Decimal(loop) / Decimal('1000000000000000000')
+        
+        def int_to_value(val):
+            return Decimal(val) / Decimal('1000000')
         
         def is_hex(val):
             """
@@ -500,8 +521,8 @@ for date_prev in date_of_interest:
 
         def tx_data_cleaning_1(tx_all):
             tx_all = tx_all.rename(columns={'cumulativeStepUsed':'stepUsedCumulative'})
-            tx_all['stepPrice'] = pd.to_numeric(tx_all['stepPrice'], errors='coerce').astype('Int64').map(loop_to_icx).fillna(0)
-            tx_all['stepUsed'] = pd.to_numeric(tx_all['stepUsed'], errors='coerce').astype('Int64').fillna(0)
+            tx_all['stepPrice'] = pd.to_numeric(tx_all['stepPrice'], errors='coerce').astype(int).map(loop_to_icx).fillna(0)
+            tx_all['stepUsed'] = pd.to_numeric(tx_all['stepUsed'], errors='coerce').astype(int).fillna(0)
             tx_all['tx_fees'] = tx_all['stepUsed'] * tx_all['stepPrice']
 
             tx_all['tx_date'] = timestamp_to_date(tx_all, 'timestamp', '%Y-%m-%d')
@@ -538,7 +559,6 @@ for date_prev in date_of_interest:
             # cleaning up
             df = df.drop(columns=['eventLogs.indexed', 'eventLogs.data'])
             df = df.rename(columns={"eventLogs_indexed":"eventLogs.indexed","eventLogs_data":"eventLogs.data"})
-
             df = df.drop(columns=["eventLogs","data"], axis=1, errors='ignore')
 
             # shifting data. and eventLogs. to the end
@@ -560,38 +580,59 @@ for date_prev in date_of_interest:
                     columns={i: f'{prefix}_{i+1}' for i in range(max_len)}
                 )
             
-            df_expanded = split_list_to_columns(df['eventLogs.data'].dropna())[['event_1','event_2', 'event_3', 'event_4']]
-            df_expanded.rename(columns={'event_1':'event_from', 'event_2': 'event_to', 'event_3': 'event_value', 'event_4': 'value_type'}, inplace=True)
-            df_expanded['event_value'] = df_expanded['event_value'].apply(hex_to_int)    
-            df_expanded['value_type'] = df_expanded['value_type'].apply(hex_to_int)    
-
+            # df_expanded = split_list_to_columns(df['eventLogs.data'].dropna())[['event_1','event_2']]
+            # df_expanded.rename(columns={'event_1':'event_from', 'event_2': 'event_to'}, inplace=True)
+            # df_combined = df.join(df_expanded, rsuffix='_original')
+            
+            df_combined = pd.DataFrame()
+            df_combined_main = pd.DataFrame()
+            df_combined_event = pd.DataFrame()
+            
+            df_expanded = split_list_to_columns(df['eventLogs.data'].dropna())[['event_1','event_2', 'event_3']]
+            df_expanded.rename(columns={'event_1':'event_from', 'event_2': 'event_to', 'event_3': 'event_value'}, inplace=True)
+            df_expanded['event_value'] = df_expanded['event_value'].apply(hex_to_int)
             df_combined = df.join(df_expanded, rsuffix='_original')
+
+
+            
+            
+            
+            # check1 = df_combined[df_combined['txHash'] == '0xdfe6f66fde2d2edf0710292b3b1e645dd3403662e0f9609b409119560b79a103']
+            # check2 = token_xfer_df[token_xfer_df['transaction_hash'] == '0xdfe6f66fde2d2edf0710292b3b1e645dd3403662e0f9609b409119560b79a103']
+# =============================================================================
+#             
+# =============================================================================
             
             # making nan 0 here
-            df_combined.loc[df_combined['event_value'].isna(), 'event_value'] = 0
+            df_combined.loc[df_combined['event_value'].isna(), 'event_value'] = np.nan#0# np.nan#0# np.nan#0
             
             df_combined['eventlogs'] = df_combined['eventLogs.indexed'].str.split('(', expand=True)[0]
             
+            # [i for i in df_combined.columns if 'step' not in i]
+            # check = df_combined[df_combined['txHash'] == '0x2e2fa04f67209e380790089f0ae3b54cc62fad393513d4fe19db5fc0ddc59397']
+            # check = df_combined[df_combined['eventLogs.scoreAddress'] == 'cx1a29259a59f463a67bb2ef84398b30ca56b5830a']
+            # check1 = df_combined[df_combined['eventLogs.scoreAddress'] == 'cx22319ac7f412f53eabe3c9827acf5e27e9c6a95f']
             
 
             # modified_values = {}
-            # condition_1 = (df_combined["eventlogs"] == "ICXTransfer") & df_combined["event_value"].notna()
+            condition_1 = (df_combined["eventlogs"] == "ICXTransfer") & df_combined["event_value"].notna()
             # condition_2 = (df_combined["eventlogs"] == "Transfer") & df_combined["event_value"].notna()
-            # condition_3 = (df_combined["eventlogs"] == "ICXIssued") & df_combined["event_value"].notna()
-            # condition_4 = df_combined["event_value"].apply(lambda x: len(str(x)) > 8) & df_combined["event_value"].notna()
+            condition_3 = (df_combined["eventlogs"] == "ICXIssued") & df_combined["event_value"].notna()
 
             # condition = condition_1 | condition_2 | condition_3 | condition_4
-            
+            condition = condition_1 | condition_3
 
-            # for index, row in df_combined[condition].iterrows():
-            #     new_value = Decimal(row["event_value"]) / Decimal(1000000000000000000)
-            #     modified_values[index] = float(new_value)
+            modified_values = {}
+            for index, row in df_combined[condition].iterrows():
+                new_value = Decimal(row["event_value"]) / Decimal(1000000000000000000)
+                modified_values[index] = float(new_value)
             
-            # for index, value in modified_values.items():
-            #     df_combined.at[index, "event_value"] = value
+            for index, value in modified_values.items():
+                df_combined.at[index, "event_value"] = value
             
-            condition = df_combined["event_value"].apply(lambda x: len(str(x)) > 8) & df_combined["event_value"].notna()
-            df_combined.loc[condition, "event_value"] = df_combined.loc[condition, "event_value"].apply(lambda x: float(Decimal(x) / Decimal(1000000000000000000)))
+            
+            
+            
 
             # check = df_combined[df_combined['txHash'] == '0xff619b407e03f7ef400728126c926730fac0adf9263f2f2126e48faccada2fa0']
 
@@ -607,7 +648,7 @@ for date_prev in date_of_interest:
             df_combined_main['tx_type'] = 'main'
             
             df_combined_event = df_combined[['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 
-                                             'txHash', 'tx_date', 'tx_fees', 'tx_time', 'value', 
+                                             'txHash', 'tx_date', 'tx_fees', 'tx_time', 
                                              'eventLogs.scoreAddress', 'eventLogs.indexed', 'event_from', 'event_to', 'event_value']]\
                 .rename(columns={'event_from': 'from', 'event_to': 'to', 'event_value': 'value'})
             
@@ -616,12 +657,12 @@ for date_prev in date_of_interest:
             columns_to_check = ['from', 'to']
             df_combined_main = df_combined_main.dropna(subset=columns_to_check)
             
-            columns_to_check = ['from', 'to']
-            df_combined_event = df_combined_event.dropna(subset=columns_to_check)
+            ## TODO: Check if this is right. I should not remove anything !!
+            # columns_to_check = ['from', 'to']
+            # df_combined_event = df_combined_event.dropna(subset=columns_to_check)
             
-            df_combined = pd.concat([df_combined_main, df_combined_event]).sort_values('timestamp').reset_index(drop=True) 
-            
-            
+            df_combined = pd.concat([df_combined_main, df_combined_event])
+
             df_combined['p2p'] = df_combined['from'].str.startswith('hx') & df_combined['to'].str.startswith('hx')
             df_combined['p2c'] = df_combined['from'].str.startswith('hx') & df_combined['to'].str.startswith('cx')
             df_combined['c2p'] = df_combined['from'].str.startswith('cx') & df_combined['to'].str.startswith('hx')
@@ -634,35 +675,48 @@ for date_prev in date_of_interest:
             df_combined.loc[:,'systemTickCount'] = np.where(df_combined['txIndex'] == 0, 1, 0)
             
 
-            # first_occurrence = df_combined.groupby(['from', 'to', 'txHash']).cumcount() == 0
 
-            # # Set all *_main columns to False
-            # df_combined['p2p_main'] = False
-            # df_combined['p2c_main'] = False
-            # df_combined['c2p_main'] = False
-            # df_combined['c2c_main'] = False
-            
-            # # Set *_main columns to True only for the first occurrence in each group
-            # df_combined.loc[first_occurrence, 'p2p_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('hx') & df_combined.loc[first_occurrence, 'to'].str.startswith('hx')
-            # df_combined.loc[first_occurrence, 'p2c_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('hx') & df_combined.loc[first_occurrence, 'to'].str.startswith('cx')
-            # df_combined.loc[first_occurrence, 'c2p_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('cx') & df_combined.loc[first_occurrence, 'to'].str.startswith('hx')
-            # df_combined.loc[first_occurrence, 'c2c_main'] = df_combined.loc[first_occurrence, 'from'].str.startswith('cx') & df_combined.loc[first_occurrence, 'to'].str.startswith('cx')
-
-            # df_combined['p2p_event'] = df_combined['event_from'].str.startswith('hx') & df_combined['event_to'].str.startswith('hx')
-            # df_combined['p2c_event'] = df_combined['event_from'].str.startswith('hx') & df_combined['event_to'].str.startswith('cx')
-            # df_combined['c2p_event'] = df_combined['event_from'].str.startswith('cx') & df_combined['event_to'].str.startswith('hx')
-            # df_combined['c2c_event'] = df_combined['event_from'].str.startswith('cx') & df_combined['event_to'].str.startswith('cx')
-
-            
-            # df_combined.loc[:,'regTxCount'] = np.where(df_combined[['p2p_main','p2c_main','c2p_main','c2c_main']].any(axis=1), 1, 0)
-            # df_combined.loc[:,'intTxCount'] = np.where(df_combined[['p2p_event','p2c_event','c2p_event','c2c_event']].any(axis=1), 1, 0)
-            # df_combined.loc[:,'intEvtCount'] = np.where(df_combined['eventLogs.data'].notnull() & (df_combined['txIndex'] != 0) & (df_combined['intTxCount'] != 1), 1, 0)
-            # df_combined.loc[:,'systemTickCount'] = np.where(df_combined['txIndex'] == 0, 1, 0)
-            
             df_combined['eventlogs'] = df_combined['eventLogs.indexed'].str.split('(', expand=True)[0]
             df_combined.drop(columns=['eventLogs.indexed'], inplace=True)
             df_combined.rename(columns={'eventLogs.scoreAddress':'eventlogs_cx'}, inplace=True)
             
+        
+            # condition = (df_combined['regTxCount'] != 1) & (df_combined['systemTickCount'] != 1)# & (df_combined['value'].notna())
+            condition = (df_combined['intTxCount'] == 1) | (df_combined['intEvtCount'] == 1)# & (df_combined['value'].notna())
+            df_combined.loc[condition, 'log_index'] = df_combined[condition].groupby('txHash').cumcount()
+            df_combined = pd.merge(df_combined, token_xfer_df, on=['eventlogs_cx', 'from', 'to', 'txHash', 'log_index'], how='left')
+            
+            
+            
+            
+
+            
+
+            
+            # df_combined.loc[(df_combined['tx_type'] == 'event'), 'log_index']
+            
+            print(token_xfer_df_length)
+            
+            test= pd.merge(df_combined, token_xfer_df, on=['eventlogs_cx', 'from', 'to', 'txHash', 'log_index'], how='left')
+                       
+            merged_df = pd.merge(token_xfer_df, df_combined, on=['eventlogs_cx', 'from', 'to', 'txHash', 'log_index'], how='left', indicator=True)
+            
+            # Filter to find rows that did not merge from token_xfer_df
+            not_merged_df = merged_df[merged_df['_merge'] == 'left_only']
+            
+            # Optionally drop the '_merge' column if not needed
+            not_merged_df = not_merged_df.drop(columns=['_merge'])
+            
+            
+            
+            
+            check1 = test[test['txHash'] == '0x75b7700c2f7b96315d4abd5cb5f029a494631317cba89118ea6f94cffcceb7e5']
+            check2 = token_xfer_df[token_xfer_df['txHash'] == '0x75b7700c2f7b96315d4abd5cb5f029a494631317cba89118ea6f94cffcceb7e5']
+
+            check3 = df[df['txHash'] == '0x75b7700c2f7b96315d4abd5cb5f029a494631317cba89118ea6f94cffcceb7e5']
+            
+            check4 = df_combined[df_combined['txHash'] == '0x75b7700c2f7b96315d4abd5cb5f029a494631317cba89118ea6f94cffcceb7e5']
+
 
             # keep_cols = ['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 'txHash', 'from', 'to', 
             #              'tx_date', 'tx_fees', 'tx_time', 'value', 'eventlogs_cx', 'eventlogs', 'event_from', 'event_to', 

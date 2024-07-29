@@ -285,6 +285,9 @@ token_xfer_df['symbol'] = np.where(token_xfer_df['symbol'] == '',
                                        '$unknown', 
                                        token_xfer_df['symbol'])
 
+
+token_xfer_df.to_csv(os.path.join(windows_path, 'token_transfer_detail_' + day_today + '.csv'), index=False)
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Token price data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def request_into_df(url):
     req_url = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
