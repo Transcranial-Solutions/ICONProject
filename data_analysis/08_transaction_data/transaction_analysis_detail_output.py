@@ -183,13 +183,13 @@ def get_agg_df_for_count_fees_and_value(df):
     df_subset['TxCount'] = df_subset['regTxCount'] + df_subset['intTxCount']
     
     df_subset.loc[df_subset['tx_type'] != 'main', 'tx_fees'] = 0
-    df_subset.loc[df_subset['tx_type'] != 'main', 'value'] = 0
+    # df_subset.loc[df_subset['tx_type'] != 'main', 'value'] = 0
     
     # Aggregate transaction counts and fees by from_label_group and to_label_group
     df_agg = df_subset.groupby(['from_label_group', 'to_label_group']).agg({
         'TxCount': 'sum',
         'tx_fees': 'sum',
-        'value': 'sum'
+        'Value in USD': 'sum'
     }).reset_index()
     return df_agg
 
@@ -407,52 +407,47 @@ for tx_path in tqdm(matching_paths):
                              df[['to','to_label_group']].rename(columns={'to':'address', 'to_label_group':'group'})]).drop_duplicates()
     df_addresses = df_addresses[df_addresses['group'].notna()].reset_index(drop=True)
     
-    df_agg = get_agg_df_for_count_fees_and_value(df)
     
     tx_path_date_underscore = tx_path_date.replace("-", "_")
     tokentransfer_date_Path = tokentransferPath.joinpath(tx_path_date_underscore, f'IRC_token_transfer_{tx_path_date_underscore}.csv')
     token_transfer_summary_df = pd.read_csv(tokentransfer_date_Path, low_memory=False)
     token_transfer_summary_df = pd.merge(token_transfer_summary_df, df_addresses, on='address', how='left')
-    
-    
-    token_transfer_value = token_transfer_summary_df['Value Transferred in USD'].sum()
-    token_transfer_value_by_group = token_transfer_df.groupby('group')['Value Transferred in USD'].sum()
-    
-    
+
     df = pd.merge(df, token_transfer_summary_df.rename(columns={'IRC Token':'symbol'})[['symbol', 'Price in USD', 'group']], on='symbol', how='left')
     df['group'] = np.where((df['symbol'] == 'ICX') & df['group'].isna(), 'ICX', df['group'])
     df['Value in USD'] = df['value'] * df['Price in USD']
     
+    df_agg = get_agg_df_for_count_fees_and_value(df)
+    
+    token_transfer_value = df['Value in USD'].sum()
+    token_transfer_value_by_group = df.groupby('group')['Value in USD'].sum()
+    total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
+
+    # try:
+    #     icx_price = token_transfer_summary_df[token_transfer_summary_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
+    #     icx_transfer_value = df_agg['value'].sum() * icx_price
+    #     total_transfer_value = icx_transfer_value + token_transfer_value
+    #     total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
+    #     token_transfer_value_by_group['ICX'] = icx_transfer_value
+    # except:
+    #     total_transfer_value_text = 'Total Value Transferred: Not Available'
+
+    
+    # df_temp = df[df['tx_type'] == 'main']
+    # df_temp['p2p'].sum() + df_temp['p2c'].sum() + df_temp['c2p'].sum() + df_temp['c2c'].sum()
+    # df_temp['regTxCount'].sum() + df_temp['intTxCount'].sum()
+    
+    # tx_count_with_fees_by_mode = get_tx_group_with_fees(df, in_group=['to_label_group', 'tx_mode'])
+    # tx_count_with_fees_by_mode_from = get_tx_group_with_fees(df, in_group=['from_label_group', 'tx_mode'])
     
     
-    try:
-        icx_price = token_transfer_summary_df[token_transfer_summary_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
-        icx_transfer_value = df_agg['value'].sum() * icx_price
-        total_transfer_value = icx_transfer_value + token_transfer_value
-        total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
-        token_transfer_value_by_group['ICX'] = icx_transfer_value
-    except:
-        total_transfer_value_text = 'Total Value Transferred: Not Available'
+    # tx_count_with_fees_to = get_tx_group_with_fees(df, 'to_label_group')
+    # tx_count_with_fees_from = get_tx_group_with_fees(df, 'from_label_group')
+    
+    
 
-
-# df_temp = df[df['tx_type'] == 'main']
-# df_temp['p2p'].sum() + df_temp['p2c'].sum() + df_temp['c2p'].sum() + df_temp['c2c'].sum()
-# df_temp['regTxCount'].sum() + df_temp['intTxCount'].sum()
-
-# tx_count_with_fees_by_mode = get_tx_group_with_fees(df, in_group=['to_label_group', 'tx_mode'])
-# tx_count_with_fees_by_mode_from = get_tx_group_with_fees(df, in_group=['from_label_group', 'tx_mode'])
-
-
-# tx_count_with_fees_to = get_tx_group_with_fees(df, 'to_label_group')
-# tx_count_with_fees_from = get_tx_group_with_fees(df, 'from_label_group')
-
-
-
-
-
-
-visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['from_label_group', 'tx_mode'])
-visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['to_label_group', 'tx_mode'])
+    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['from_label_group', 'tx_mode'])
+    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['to_label_group', 'tx_mode'])
 
 
 
@@ -470,18 +465,14 @@ G = nx.DiGraph()
 for index, row in df_agg.iterrows():
     G.add_edge(row['from_label_group'], row['to_label_group'], weight=row['TxCount'], fees=row['tx_fees'])
 
+main_node_group = 'to_label_group'
+
 # Compute node sizes based on total fees
-node_fees = df_agg.groupby('to_label_group')['tx_fees'].sum().to_dict()
+node_fees = df_agg.groupby(main_node_group)['tx_fees'].sum().to_dict()
 max_fee = max(node_fees.values())
 
-# Normalizing node sizes and applying a cap
-# max_size_fees = 100  # Maximum node size
-# node_sizes_fees = [min((node_fees.get(node, 1) / max_fee) * max_size_fees, max_size_fees) for node in G.nodes()]
+node_values_in_usd = df_agg.groupby(main_node_group)['Value in USD'].sum()
 
-
-# node_values = df_agg.groupby('to_label_group')['value'].sum().to_dict()
-node_values = df_agg.groupby('to_label_group')['value'].sum()
-node_values_in_usd = node_values*icx_price
 node_values_in_usd = token_transfer_value_by_group.add(node_values_in_usd, fill_value=0).to_dict()
 max_value = max(node_values_in_usd.values())
 

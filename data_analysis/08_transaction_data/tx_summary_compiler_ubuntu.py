@@ -117,13 +117,28 @@ tokentransferPath = os.path.join(currPath,"10_token_transfer/results/")
 
 folder_years = [i for i in os.listdir(tokentransferPath) if '.csv' not in i]
 
-all_files = []
-for fy in folder_years:
-    l_file = os.listdir(os.path.join(tokentransferPath, fy))
-    l_file = [os.path.join(tokentransferPath, fy, i) for i in l_file if '.csv' in i]
-    all_files.append(l_file)
+# all_files = []
+# for fy in folder_years:
+#     l_file = os.listdir(os.path.join(tokentransferPath, fy))
+#     l_file = [os.path.join(tokentransferPath, fy, i) for i in l_file if '.csv' in i]
+#     all_files.append(l_file)
 
-listData = sorted(flatten(all_files))
+# listData = sorted(flatten(all_files))
+
+
+
+def get_specific_csv_files(base_path, prefix="IRC_token_transfer"):
+    all_files = []
+    
+    for root, dirs, files in os.walk(base_path):
+        for file in files:
+            if file.endswith(".csv") and file.startswith(prefix):
+                all_files.append(os.path.join(root, file))
+                
+    return all_files
+
+listData = sorted(get_specific_csv_files(tokentransferPath))
+
 
 all_df =[]
 for dat in tqdm(listData):
