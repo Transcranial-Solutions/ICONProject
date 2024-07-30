@@ -390,7 +390,7 @@ def main():
         # print(json.dumps(summary_counts_native, indent=4))
     
         df_tx_detail_summary = pd.DataFrame(summary_counts).T
-        df_tx_detail_summary.to_csv(resultsPath.joinpath('tx_detail_summary.csv'))
+        df_tx_detail_summary.to_csv(resultsPath.joinpath('tx_detail_summary.csv'), index=False)
     
     # this is for detailed tx analysis
     if ATTACH_WALLET_INFO:
@@ -398,11 +398,11 @@ def main():
         overlapping_paths = [path for path in matching_paths if path in tx_detail_paths]
         loop_paths = overlapping_paths if ONLY_SAVE_SPECIFIED_DATE else tx_detail_paths
         
-        for tx_path in tqdm(loop_paths, desc="tx details wigh group info"):
+        for tx_path in tqdm(loop_paths, desc="tx details with group info"):
             tqdm.write(f"Working on: {tx_path.stem}")
             tx_date = tx_path.stem.split('_')[-1]
             df = attach_wallet_info_to_tx_data(tx_path, merged_addresses)
-            df.to_csv(dataPath.joinpath(f'tx_detail_with_group_info_{tx_date}.csv'))
+            df.to_csv(dataPath.joinpath(f'tx_detail_with_group_info_{tx_date}.csv'), index=False)
         
 
 if __name__ == "__main__":

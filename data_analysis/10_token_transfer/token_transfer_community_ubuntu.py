@@ -419,7 +419,7 @@ except:
 
 
 table_now = token_xfer_df.copy()
-
+table_now = table_now[table_now['datetime'] == title_date]
 
 # table_now = pd.merge(table_now, token_price_all, 
 #                 how='left', 

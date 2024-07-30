@@ -193,56 +193,6 @@ def get_agg_df_for_count_fees_and_value(df):
     }).reset_index()
     return df_agg
 
-daily_issuance = get_iiss_info(walletPath)['Iglobal']*12/365
-
-for tx_path in tqdm(matching_paths):
-    tx_path_date = tx_path.stem.split('_')[-1]
-    df = pd.read_csv(tx_path, low_memory=False)
-    df.drop("Unnamed: 0", axis=1, inplace=True)
-    
-    df_addresses = pd.concat([df[['from','from_label_group']].rename(columns={'from':'address', 'from_label_group':'group'}),
-                             df[['to','to_label_group']].rename(columns={'to':'address', 'to_label_group':'group'})]).drop_duplicates()
-    df_addresses = df_addresses[df_addresses['group'].notna()].reset_index(drop=True)
-    
-    df_agg = get_agg_df_for_count_fees_and_value(df)
-    
-    tx_path_date_underscore = tx_path_date.replace("-", "_")
-    tokentransfer_date_Path = tokentransferPath.joinpath(tx_path_date_underscore, f'IRC_token_transfer_{tx_path_date_underscore}.csv')
-    token_transfer_df = pd.read_csv(tokentransfer_date_Path, low_memory=False)
-    
-    # token_transfer_df['path'] = token_transfer_df['path'].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
-    # token_transfer_df['cleaned_path'] = token_transfer_df['path'].apply(lambda x: [item for item in x if item != 'ICX'] if isinstance(x, list) else np.nan)    
-    # token_transfer_df['to'] = token_transfer_df['cleaned_path'].apply(lambda x: x[0] if isinstance(x, list) and len(x) > 0 else None)
-    # token_transfer_df['to'] = token_transfer_df['cleaned_path'].apply(lambda x: x[-1] if isinstance(x, list) and len(x) > 0 else None)
-    # token_transfer_df = pd.merge(token_transfer_df.drop(columns='address'), df_addresses, left_on='from', right_on='address', how='left').rename(columns={'group':'from_label_group'})
-
-    token_transfer_df = pd.merge(token_transfer_df, df_addresses, on='address', how='left')
-    
-    token_transfer_value = token_transfer_df['Value Transferred in USD'].sum()
-    token_transfer_value_by_group = token_transfer_df.groupby('group')['Value Transferred in USD'].sum()
-    
-    try:
-        icx_price = token_transfer_df[token_transfer_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
-        icx_transfer_value = df_agg['value'].sum() * icx_price
-        total_transfer_value = icx_transfer_value + token_transfer_value
-        total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
-        token_transfer_value_by_group['ICX'] = icx_transfer_value
-    except:
-        total_transfer_value_text = 'Total Value Transferred: Not Available'
-
-
-# df_temp = df[df['tx_type'] == 'main']
-# df_temp['p2p'].sum() + df_temp['p2c'].sum() + df_temp['c2p'].sum() + df_temp['c2c'].sum()
-# df_temp['regTxCount'].sum() + df_temp['intTxCount'].sum()
-
-# tx_count_with_fees_by_mode = get_tx_group_with_fees(df, in_group=['to_label_group', 'tx_mode'])
-# tx_count_with_fees_by_mode_from = get_tx_group_with_fees(df, in_group=['from_label_group', 'tx_mode'])
-
-
-# tx_count_with_fees_to = get_tx_group_with_fees(df, 'to_label_group')
-# tx_count_with_fees_from = get_tx_group_with_fees(df, 'from_label_group')
-
-
 
 def visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='to_label_group', log_scale=False):
     sns.set(style="dark")
@@ -440,6 +390,63 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
         ax1.set_yscale('log')
 
     plt.show()
+
+
+
+
+daily_issuance = get_iiss_info(walletPath)['Iglobal']*12/365
+
+for tx_path in tqdm(matching_paths):
+    tx_path_date = tx_path.stem.split('_')[-1]
+    df = pd.read_csv(tx_path, low_memory=False)
+    if "Unnamed: 0" in df.columns:
+        df.drop("Unnamed: 0", axis=1, inplace=True)
+
+    
+    df_addresses = pd.concat([df[['from','from_label_group']].rename(columns={'from':'address', 'from_label_group':'group'}),
+                             df[['to','to_label_group']].rename(columns={'to':'address', 'to_label_group':'group'})]).drop_duplicates()
+    df_addresses = df_addresses[df_addresses['group'].notna()].reset_index(drop=True)
+    
+    df_agg = get_agg_df_for_count_fees_and_value(df)
+    
+    tx_path_date_underscore = tx_path_date.replace("-", "_")
+    tokentransfer_date_Path = tokentransferPath.joinpath(tx_path_date_underscore, f'IRC_token_transfer_{tx_path_date_underscore}.csv')
+    token_transfer_summary_df = pd.read_csv(tokentransfer_date_Path, low_memory=False)
+    token_transfer_summary_df = pd.merge(token_transfer_summary_df, df_addresses, on='address', how='left')
+    
+    
+    token_transfer_value = token_transfer_summary_df['Value Transferred in USD'].sum()
+    token_transfer_value_by_group = token_transfer_df.groupby('group')['Value Transferred in USD'].sum()
+    
+    
+    df = pd.merge(df, token_transfer_summary_df.rename(columns={'IRC Token':'symbol'})[['symbol', 'Price in USD', 'group']], on='symbol', how='left')
+    df['group'] = np.where((df['symbol'] == 'ICX') & df['group'].isna(), 'ICX', df['group'])
+    df['Value in USD'] = df['value'] * df['Price in USD']
+    
+    
+    
+    try:
+        icx_price = token_transfer_summary_df[token_transfer_summary_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
+        icx_transfer_value = df_agg['value'].sum() * icx_price
+        total_transfer_value = icx_transfer_value + token_transfer_value
+        total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
+        token_transfer_value_by_group['ICX'] = icx_transfer_value
+    except:
+        total_transfer_value_text = 'Total Value Transferred: Not Available'
+
+
+# df_temp = df[df['tx_type'] == 'main']
+# df_temp['p2p'].sum() + df_temp['p2c'].sum() + df_temp['c2p'].sum() + df_temp['c2c'].sum()
+# df_temp['regTxCount'].sum() + df_temp['intTxCount'].sum()
+
+# tx_count_with_fees_by_mode = get_tx_group_with_fees(df, in_group=['to_label_group', 'tx_mode'])
+# tx_count_with_fees_by_mode_from = get_tx_group_with_fees(df, in_group=['from_label_group', 'tx_mode'])
+
+
+# tx_count_with_fees_to = get_tx_group_with_fees(df, 'to_label_group')
+# tx_count_with_fees_from = get_tx_group_with_fees(df, 'from_label_group')
+
+
 
 
 
