@@ -42,8 +42,8 @@ tx_detail_paths = sorted([i for i in dataPath.glob('tx_detail_with_group*.csv')]
 
 
 # to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 0 #0
-date_prev = "2024-07-20"
+use_specific_prev_date = 1 #0
+date_prev = "2024-07-28"
 
 day_1 = "2023-07-01" #07
 day_2 = "2023-12-31"
@@ -415,6 +415,8 @@ for tx_path in tqdm(matching_paths):
 
     df = pd.merge(df, token_transfer_summary_df.rename(columns={'IRC Token':'symbol'})[['symbol', 'Price in USD', 'group']], on='symbol', how='left')
     df['group'] = np.where((df['symbol'] == 'ICX') & df['group'].isna(), 'ICX', df['group'])
+    df['value'] = df['value'].astype('float64').fillna(0)
+    df['Price in USD'] = df['Price in USD'].astype('float64').fillna(0)
     df['Value in USD'] = df['value'] * df['Price in USD']
     
     df_agg = get_agg_df_for_count_fees_and_value(df)

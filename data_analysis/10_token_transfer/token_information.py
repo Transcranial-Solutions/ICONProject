@@ -44,6 +44,7 @@ def get_token_decimals(address_list, nid):
     """
     address_collector = {}
     for address in tqdm(address_list):
+        address_collector[address] = {}
         try:
             cx_address_decimals = CallBuilder().from_("hx0000000000000000000000000000000000000001") \
                                                 .to(address) \
@@ -51,10 +52,20 @@ def get_token_decimals(address_list, nid):
                                                 .build()
             token_decimals = nid.call(cx_address_decimals)
             token_decimals_int = int(token_decimals, 16)
+            
+            
+            cx_address_symbols = CallBuilder().from_("hx0000000000000000000000000000000000000001") \
+                                                .to(address) \
+                                                .method("symbol") \
+                                                .build()
+            token_symbols = nid.call(cx_address_symbols)            
+        
         except:
             token_decimals_int = 18
+            token_symbols = '$unknown'
         
-        address_collector[address] = token_decimals_int
+        address_collector[address]['token_decimals'] = token_decimals_int
+        address_collector[address]['token_symbols'] = token_symbols
     return address_collector
 
 def save_to_json(data, filename):

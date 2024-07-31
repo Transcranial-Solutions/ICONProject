@@ -27,14 +27,14 @@ tx_detail_paths = [i for i in tx_detail_paths if '_with_group' not in i.as_posix
 
 ATTACH_WALLET_INFO = True
 ONLY_SAVE_SPECIFIED_DATE = True ## if False, it will do all the data we have
-SAVE_SUMMARY = True
+SAVE_SUMMARY = False
 
 # Constants
 POSSIBLE_NANS = ['', ' ', np.nan]
 
 # to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 0 #0
-date_prev = "2024-07-25"
+use_specific_prev_date = 1 #0
+date_prev = "2024-07-28"
 
 day_1 = "2023-07-01" #07
 day_2 = "2023-12-31"

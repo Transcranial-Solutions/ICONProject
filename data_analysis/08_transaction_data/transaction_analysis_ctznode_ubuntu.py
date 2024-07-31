@@ -194,6 +194,7 @@ for date_prev in date_of_interest:
     tokentransfer_date_Path = os.path.join(tokentransferPath, date_prev_underscore) 
     token_transfer_df = pd.read_csv(os.path.join(tokentransfer_date_Path, 'IRC_token_transfer_' + date_prev_underscore + '.csv'), low_memory=False)
     
+    
     token_transfer_value = token_transfer_df['Value Transferred in USD'].sum()
     
     try:

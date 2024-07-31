@@ -90,7 +90,7 @@ if date_is_range == 1:
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2022_03_25"
+   day_1 = "2024_07_25"
    day_prev = "2022_03_24"
    date_of_interest = [day_to_text(day_1)]
 
@@ -285,7 +285,7 @@ token_xfer_df['symbol'] = np.where(token_xfer_df['symbol'] == '',
                                        '$unknown', 
                                        token_xfer_df['symbol'])
 
-
+token_xfer_df = token_xfer_df.drop_duplicates()
 token_xfer_df.to_csv(os.path.join(windows_path, 'token_transfer_detail_' + day_today + '.csv'), index=False)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Token price data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
