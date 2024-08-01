@@ -691,6 +691,10 @@ for date_prev in date_of_interest:
                         elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'Address') & (pattern_elements[2] == 'bool'):
                             row['event_from'] = extracted_data[0]
                             row['event_to'] = extracted_data[1]
+                        
+                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'int') & (pattern_elements[2] == 'int'):
+                                row['event_to'] = extracted_data[0]
+                                row['event_value_to'] = extracted_data[1]
           
                         else:
                             row['event_from'] = extracted_data[0]
