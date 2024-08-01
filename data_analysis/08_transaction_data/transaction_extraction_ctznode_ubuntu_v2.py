@@ -629,8 +629,154 @@ for date_prev in date_of_interest:
             df_combined_main = pd.DataFrame()
             df_combined_event = pd.DataFrame()
             
-            df_expanded = split_list_to_columns(df['eventLogs.data'].dropna())[['event_1','event_2', 'event_3']]
+            # df_expanded = split_list_to_columns(df['eventLogs.data'].dropna())[['event_1','event_2', 'event_3', 'event_4']]
+            
+            # # special case for 'relay' and 'cps'
+            # mask = df_expanded['event_1'].isin(['relay', 'cps'])
+            # df_expanded.loc[mask, 'event_1'] = df_expanded.loc[mask, 'event_2']
+            # df_expanded.loc[mask, 'event_2'] = df_expanded.loc[mask, 'event_3']
+            # df_expanded.loc[mask, 'event_3'] = df_expanded.loc[mask, 'event_4']
+            # df_expanded.loc[mask, 'event_4'] = None
+            
+
+            def find_pattern_index(event_log_indexed, patterns):
+                if pd.isna(event_log_indexed):
+                    return None, None
+                for pattern in patterns:
+                    match = re.search(pattern.replace(',', '\s*,\s*'), event_log_indexed)
+                    if match:
+                        return match.start(), pattern
+                return None, None
+            
+            def extract_data(row, patterns):
+                event_log_indexed = row['eventLogs.indexed']
+                event_log_data = row['eventLogs.data']
+                
+                index, pattern = find_pattern_index(event_log_indexed, patterns)
+                if index is not None and isinstance(event_log_data, list):
+                    # Calculate the position of the first match
+                    pos = len(re.findall(',', event_log_indexed[:index]))
+                    pattern_elements = pattern.split(',')
+                    extracted_data = event_log_data[pos:pos+len(pattern_elements)]
+
+                    if (len(extracted_data) == 4):
+                        if event_log_indexed == 'ICXIssued(int,int,int,int)':
+                                row['event_from'] = extracted_data[0]
+                                row['event_to'] = extracted_data[1]
+                                row['event_value_from'] = extracted_data[2]
+                                row['event_value_to'] = extracted_data[3]
+                                
+                        elif event_log_indexed == 'FeeReceived(Address,int,int,Address)':
+                                row['event_from'] = extracted_data[0]
+                                row['event_to'] = extracted_data[3]
+                                row['event_value_from'] = extracted_data[2]
+                                row['event_value_to'] = extracted_data[2]
+                                
+                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'int') & (pattern_elements[2] == 'Address') & (pattern_elements[3] == 'int'):
+                            row['event_from'] = extracted_data[0]
+                            row['event_to'] = extracted_data[2]
+                            row['event_value_from'] = extracted_data[1]
+                            row['event_value_to'] = extracted_data[3]
+                            
+                    elif (len(extracted_data) == 3):
+                                                    
+                        if event_log_indexed == 'IScoreClaimedV2(Address,int,int)':
+                                row['event_to'] = extracted_data[0]
+                                row['event_value_to'] = extracted_data[2]
+                                
+                        elif event_log_indexed == 'FeeDistributed(Address,int,int)':
+                                row['event_to'] = extracted_data[0]
+                                row['event_value_to'] = extracted_data[2]
+                                
+                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'Address') & (pattern_elements[2] == 'bool'):
+                            row['event_from'] = extracted_data[0]
+                            row['event_to'] = extracted_data[1]
+          
+                        else:
+                            row['event_from'] = extracted_data[0]
+                            row['event_to'] = extracted_data[1]
+                            row['event_value_from'] = extracted_data[2]
+                            row['event_value_to'] = extracted_data[2]
+                        
+                    elif (len(extracted_data) == 2):
+                        if (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'int'):
+                            row['event_to'] = extracted_data[0]
+                            row['event_value_to'] = extracted_data[1]
+                        
+                        elif (pattern_elements[0] == 'str') & (pattern_elements[1] == 'int'):
+                            row['event_to'] = extracted_data[0]
+                            row['event_value_to'] = extracted_data[1]
+                        
+                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'bytes'):
+                            row['event_to'] = extracted_data[0]
+                            
+                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'str'):
+                            row['event_to'] = extracted_data[0]
+
+                return row
+                        
+            patterns = [
+                'Address,int,Address,int',
+                'Address,int,int,Address',
+                'int,int,int,int',
+                
+                'Address,Address,bool',
+                'Address,Address,int',
+                'str,str,int',
+                'Address,str,int',
+                'str,Address,int',    
+                'Address,int,int',
+                
+                'Address,int',
+                'str,int',
+                'Address,bytes',
+                'Address,str',
+                
+                        ]
+
+
+            df_temp = df.copy()
+
+            df_temp['event_from'] = np.nan
+            df_temp['event_to'] = np.nan
+            df_temp['event_value_from'] = np.nan
+            df_temp['event_value_to'] = np.nan
+            
+            # Apply the extraction
+            df_temp = df_temp.apply(extract_data, patterns=patterns, axis=1)
+            
+            
+# =============================================================================
+#             
+# =============================================================================
+            
+            what = df[df['eventLogs.indexed'].str.contains('Address,Address,int', na=False)]
+            what = df[df['eventLogs.indexed'].str.contains('str,str,int', na=False)]
+            
+            what = df[df['eventLogs.indexed'].str.contains('Address,str,int', na=False)]
+            what = df[df['eventLogs.indexed'].str.contains('str,Address,int', na=False)]
+
+
+            
+            from_is_address = df_expanded['event_1'].str.startswith('hx') | df_expanded['event_1'].str.startswith('cx')
+            to_is_address = df_expanded['event_2'].str.startswith('hx') | df_expanded['event_2'].str.startswith('cx')
+            
+            check = df_expanded[~from_is_address]
+            what = df_expanded[df_expanded['event_2'] == "hx1000000000000000000000000000000000000000"]
+            
+            
+
             df_expanded.rename(columns={'event_1':'event_from', 'event_2': 'event_to', 'event_3': 'event_value'}, inplace=True)
+            
+            # from_is_address = df_expanded['event_from'].str.startswith('hx') | df_expanded['event_from'].str.startswith('cx')
+            # to_is_address = df_expanded['event_to'].str.startswith('hx') | df_expanded['event_to'].str.startswith('cx')
+            
+            
+            check = df_expanded[~from_is_address]
+            
+            # df_expanded['event_value'] = 
+            
+            
             df_expanded['event_value'] = df_expanded['event_value'].apply(hex_to_int)
             df_combined = df.join(df_expanded, rsuffix='_original')
 
@@ -639,6 +785,8 @@ for date_prev in date_of_interest:
             
             # making nan 0 here
             df_combined['event_value'].fillna(0, inplace=True)
+            
+            check = df_combined[df_combined['txHash'] == '0xa5026bc4bb4a6a0d486ccda7999e9c3b956b5f9b9b8932ddc8a4572bd69d8c13']
             
             if token_addresses:
                 mapped_data = df_combined['eventLogs.scoreAddress'].map(token_addresses)
