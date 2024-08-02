@@ -621,6 +621,28 @@ for date_prev in date_of_interest:
                     entry['event_value_decimals'] = None
                 return entry
             
+            def add_token_info(df, column_name, token_addresses, prefix):
+                """
+                Map token information from token_addresses to a given column in the DataFrame.
+                
+                Args:
+                    df (pd.DataFrame): The DataFrame to modify.
+                    column_name (str): The name of the column to map token information.
+                    token_addresses (dict): A dictionary with token address information.
+                    prefix (str): The prefix to use for new column names (e.g., 'event_from', 'event_to').
+                
+                Returns:
+                    pd.DataFrame: The DataFrame with added token information columns.
+                """
+                mapped_data = df[column_name].map(token_addresses)
+                mapped_df = pd.json_normalize(mapped_data).set_index(mapped_data.index)
+                mapped_df = mapped_df.rename(columns={
+                    'token_decimals': f'{prefix}_decimals',
+                    'token_symbols': f'{prefix}_symbols'
+                })
+                return pd.concat([df, mapped_df], axis=1)
+
+            
             # df_expanded = split_list_to_columns(df['eventLogs.data'].dropna())[['event_1','event_2']]
             # df_expanded.rename(columns={'event_1':'event_from', 'event_2': 'event_to'}, inplace=True)
             # df_combined = df.join(df_expanded, rsuffix='_original')
@@ -638,6 +660,17 @@ for date_prev in date_of_interest:
             # df_expanded.loc[mask, 'event_3'] = df_expanded.loc[mask, 'event_4']
             # df_expanded.loc[mask, 'event_4'] = None
             
+            def unique_ordered(original_list):
+                """
+                Return a list of unique elements while preserving the order of their first occurrence.
+                """
+                seen = set()
+                unique_list = []
+                for item in original_list:
+                    if item not in seen:
+                        seen.add(item)
+                        unique_list.append(item)
+                return unique_list
 
             def find_pattern_index(event_log_indexed, patterns):
                 if pd.isna(event_log_indexed):
@@ -658,145 +691,135 @@ for date_prev in date_of_interest:
                     pos = len(re.findall(',', event_log_indexed[:index]))
                     pattern_elements = pattern.split(',')
                     extracted_data = event_log_data[pos:pos+len(pattern_elements)]
-
-                    if (len(extracted_data) == 4):
-                        if event_log_indexed == 'ICXIssued(int,int,int,int)':
-                                row['event_from'] = extracted_data[0]
-                                row['event_to'] = extracted_data[1]
-                                row['event_value_from'] = extracted_data[2]
-                                row['event_value_to'] = extracted_data[3]
-                                
-                        elif event_log_indexed == 'FeeReceived(Address,int,int,Address)':
-                                row['event_from'] = extracted_data[0]
-                                row['event_to'] = extracted_data[3]
-                                row['event_value_from'] = extracted_data[2]
-                                row['event_value_to'] = extracted_data[2]
-                                
-                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'int') & (pattern_elements[2] == 'Address') & (pattern_elements[3] == 'int'):
-                            row['event_from'] = extracted_data[0]
-                            row['event_to'] = extracted_data[2]
-                            row['event_value_from'] = extracted_data[1]
-                            row['event_value_to'] = extracted_data[3]
-                            
-                    elif (len(extracted_data) == 3):
-                                                    
-                        if event_log_indexed == 'IScoreClaimedV2(Address,int,int)':
-                                row['event_to'] = extracted_data[0]
-                                row['event_value_to'] = extracted_data[2]
-                                
-                        elif event_log_indexed == 'FeeDistributed(Address,int,int)':
-                                row['event_to'] = extracted_data[0]
-                                row['event_value_to'] = extracted_data[2]
-                                
-                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'Address') & (pattern_elements[2] == 'bool'):
+                    
+            
+                    # Handle specific known patterns
+                    if len(extracted_data) >= 2:
+                        if pattern_elements[:2] == ['Address', 'int']:
+                            row['event_to'] = extracted_data[0]
+                            row['event_value_to'] = extracted_data[1]
+                        elif pattern_elements[:2] == ['str', 'int']:
+                            row['event_to'] = extracted_data[0]
+                            row['event_value_to'] = extracted_data[1]
+                        elif pattern_elements[:2] == ['Address', 'bytes'] or pattern_elements[:2] == ['Address', 'str']:
+                            row['event_to'] = extracted_data[0]
+            
+                    if len(extracted_data) >= 3:
+                        if event_log_indexed in ['IScoreClaimedV2(Address,int,int)', 'FeeDistributed(Address,int,int)', 'Stake(Address,int,int)']:
+                            row['event_to'] = extracted_data[0]
+                            row['event_value_to'] = extracted_data[2]
+                        elif event_log_indexed == 'LiquidityPurchased(int,int,int)':
+                            row['event_to'] = extracted_data[0]
+                            row['event_value_from'] = extracted_data[2]
+                            row['event_value_to'] = extracted_data[1]
+                        elif pattern_elements[:3] == ['Address', 'Address', 'bool']:
                             row['event_from'] = extracted_data[0]
                             row['event_to'] = extracted_data[1]
-                        
-                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'int') & (pattern_elements[2] == 'int'):
-                                row['event_to'] = extracted_data[0]
-                                row['event_value_to'] = extracted_data[1]
-          
+                        elif pattern_elements[:3] == ['Address', 'int', 'int']:
+                            row['event_to'] = extracted_data[0]
+                            row['event_value_to'] = extracted_data[1]
                         else:
                             row['event_from'] = extracted_data[0]
                             row['event_to'] = extracted_data[1]
                             row['event_value_from'] = extracted_data[2]
                             row['event_value_to'] = extracted_data[2]
-                        
-                    elif (len(extracted_data) == 2):
-                        if (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'int'):
+            
+                    if len(extracted_data) >= 4:
+                        if event_log_indexed == 'ICXIssued(int,int,int,int)':
+                            row['event_from'] = extracted_data[0]
+                            row['event_to'] = extracted_data[1]
+                            row['event_value_from'] = extracted_data[2]
+                            row['event_value_to'] = extracted_data[2]
+                        elif event_log_indexed == 'FeeReceived(Address,int,int,Address)':
+                            row['event_from'] = extracted_data[0]
+                            row['event_to'] = extracted_data[3]
+                            row['event_value_from'] = extracted_data[2]
+                            row['event_value_to'] = extracted_data[2]
+                        elif event_log_indexed == 'WorkingBalanceUpdated(Address,Address,int,int)':
+                            row['event_from'] = extracted_data[0]
+                            row['event_to'] = extracted_data[1]
+                            row['event_value_from'] = extracted_data[3]
+                            row['event_value_to'] = extracted_data[3]
+                        elif pattern_elements[:4] == ['Address', 'int', 'Address', 'int']:
+                            row['event_from'] = extracted_data[0]
+                            row['event_to'] = extracted_data[2]
+                            row['event_value_from'] = extracted_data[1]
+                            row['event_value_to'] = extracted_data[3]
+            
+                    if len(extracted_data) >= 5:
+                        if event_log_indexed == 'TransferSingle(Address,Address,Address,int,int)':
+                            extracted_data = unique_ordered(extracted_data)
+                            if len(extracted_data) >= 4:
+                                row['event_from'] = extracted_data[0]
+                                row['event_to'] = extracted_data[1]
+                                row['event_value_from'] = extracted_data[3]
+                                row['event_value_to'] = extracted_data[3]
+            
+                        elif pattern_elements == ['Address','int','int','int','int']:
                             row['event_to'] = extracted_data[0]
                             row['event_value_to'] = extracted_data[1]
-                        
-                        elif (pattern_elements[0] == 'str') & (pattern_elements[1] == 'int'):
-                            row['event_to'] = extracted_data[0]
-                            row['event_value_to'] = extracted_data[1]
-                        
-                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'bytes'):
-                            row['event_to'] = extracted_data[0]
-                            
-                        elif (pattern_elements[0] == 'Address') & (pattern_elements[1] == 'str'):
-                            row['event_to'] = extracted_data[0]
-
+            
                 return row
-                        
+
+
             patterns = [
-                'Address,int,Address,int',
-                'Address,int,int,Address',
-                'int,int,int,int',
-                
-                'Address,Address,bool',
-                'Address,Address,int',
-                'str,str,int',
-                'Address,str,int',
-                'str,Address,int',    
-                'Address,int,int',
-                
-                'Address,int',
-                'str,int',
-                'Address,bytes',
-                'Address,str',
-                
+                        'Address,int,int,int,int',
+                        'Address,Address,Address,int,int',
+                        
+                        'Address,int,Address,int',
+                        'Address,int,int,Address',
+                        'Address,Address,int,int',
+                        'int,int,int,int',
+                        
+                        'Address,Address,bool',
+                        'Address,Address,int',
+                        'str,str,int',
+                        'Address,str,int',
+                        'str,Address,int',    
+                        'Address,int,int',
+                        'int,int,int',
+                        
+                        'Address,int',
+                        'str,int',
+                        'Address,bytes',
+                        'Address,str',
                         ]
 
+            df_combined['event_from'] = np.nan
+            df_combined['event_to'] = np.nan
+            df_combined['event_value_from'] = np.nan
+            df_combined['event_value_to'] = np.nan
+            
+            df_combined = df.apply(extract_data, patterns=patterns, axis=1)
+            
+            # making nan 0 here            
+            df_combined['event_value_from'] = df_combined['event_value_from'].apply(hex_to_int).fillna(0)
+            df_combined['event_value_to'] = df_combined['event_value_to'].apply(hex_to_int).fillna(0)
 
-            df_temp = df.copy()
-
-            df_temp['event_from'] = np.nan
-            df_temp['event_to'] = np.nan
-            df_temp['event_value_from'] = np.nan
-            df_temp['event_value_to'] = np.nan
-            
-            # Apply the extraction
-            df_temp = df_temp.apply(extract_data, patterns=patterns, axis=1)
-            
-            
-# =============================================================================
-#             
-# =============================================================================
-            
-            what = df[df['eventLogs.indexed'].str.contains('Address,Address,int', na=False)]
-            what = df[df['eventLogs.indexed'].str.contains('str,str,int', na=False)]
-            
-            what = df[df['eventLogs.indexed'].str.contains('Address,str,int', na=False)]
-            what = df[df['eventLogs.indexed'].str.contains('str,Address,int', na=False)]
-
-
-            
-            from_is_address = df_expanded['event_1'].str.startswith('hx') | df_expanded['event_1'].str.startswith('cx')
-            to_is_address = df_expanded['event_2'].str.startswith('hx') | df_expanded['event_2'].str.startswith('cx')
-            
-            check = df_expanded[~from_is_address]
-            what = df_expanded[df_expanded['event_2'] == "hx1000000000000000000000000000000000000000"]
-            
-            
-
-            df_expanded.rename(columns={'event_1':'event_from', 'event_2': 'event_to', 'event_3': 'event_value'}, inplace=True)
-            
-            # from_is_address = df_expanded['event_from'].str.startswith('hx') | df_expanded['event_from'].str.startswith('cx')
-            # to_is_address = df_expanded['event_to'].str.startswith('hx') | df_expanded['event_to'].str.startswith('cx')
-            
-            
-            check = df_expanded[~from_is_address]
-            
-            # df_expanded['event_value'] = 
-            
-            
-            df_expanded['event_value'] = df_expanded['event_value'].apply(hex_to_int)
-            df_combined = df.join(df_expanded, rsuffix='_original')
 
             # check1 = df_combined[df_combined['txHash'] == '0xdfe6f66fde2d2edf0710292b3b1e645dd3403662e0f9609b409119560b79a103']
             # check2 = token_xfer_df[token_xfer_df['transaction_hash'] == '0xdfe6f66fde2d2edf0710292b3b1e645dd3403662e0f9609b409119560b79a103']
             
-            # making nan 0 here
-            df_combined['event_value'].fillna(0, inplace=True)
-            
+
             check = df_combined[df_combined['txHash'] == '0xa5026bc4bb4a6a0d486ccda7999e9c3b956b5f9b9b8932ddc8a4572bd69d8c13']
             
             if token_addresses:
-                mapped_data = df_combined['eventLogs.scoreAddress'].map(token_addresses)
-                mapped_df = pd.json_normalize(mapped_data).set_index(mapped_data.index)
-                df_combined = pd.concat([df_combined, mapped_df], axis=1)
                 
+                # Map token information for 'eventLogs.scoreAddress'
+                df_combined = add_token_info(df_combined, 'eventLogs.scoreAddress', token_addresses, 'scoreAddress')
+                
+                # Map token information for 'event_from'
+                df_combined = add_token_info(df_combined, 'event_from', token_addresses, 'event_from')
+                
+                # Map token information for 'event_to'
+                df_combined = add_token_info(df_combined, 'event_to', token_addresses, 'event_to')
+
+                
+                
+                
+                
+            
+            
             df_combined['token_decimals'].fillna(18, inplace=True)
             df_combined['token_symbols'].fillna('ICX', inplace=True)
 
