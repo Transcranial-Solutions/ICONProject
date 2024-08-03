@@ -8,11 +8,13 @@ Created on Mon Jul 29 20:20:39 2024
 import requests
 import json
 import pandas as pd
+import numpy as np
 from tqdm import tqdm
 from iconsdk.icon_service import IconService
 from iconsdk.providers.http_provider import HTTPProvider
 from iconsdk.builder.call_builder import CallBuilder
 from pathlib import Path
+import re
 
 wallet_address_path = Path('/home/tono/ICONProject/data_analysis/wallet_addresses')
 
@@ -38,6 +40,23 @@ def fetch_data(url_base, limit=100):
         skip += limit
     return all_data
 
+def is_hex(val):
+    """
+    Check if a given string is a valid hexadecimal number.
+    """
+    if isinstance(val, str) and re.fullmatch(r'0x[0-9a-fA-F]+', val):
+        return True
+    return False
+
+def hex_to_int(val):
+    if pd.isna(val) or not is_hex(val):
+        return np.nan
+    try:
+        return int(val, 0)
+    except ValueError:
+        print(f"Failed to convert {val} to int")
+        return np.nan
+
 def get_token_decimals(address_list, nid):
     """
     Get token decimals for a list of addresses.
@@ -61,7 +80,7 @@ def get_token_decimals(address_list, nid):
             token_symbols = nid.call(cx_address_symbols)            
         
         except:
-            token_decimals_int = 18
+            token_decimals_int = np.nan
             token_symbols = '$unknown'
         
         address_collector[address]['token_decimals'] = token_decimals_int
