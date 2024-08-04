@@ -91,7 +91,7 @@ date_today = today.strftime("%Y-%m-%d")
 
 
 # to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 1 #0
+use_specific_prev_date = 0 #0
 date_prev = "2024-07-28"
 
 day_1 = "2023-01-01" #07
@@ -603,38 +603,14 @@ for date_prev in date_of_interest:
 
             # df = df[cols + eventlog_list + data_list]  # Create new dataframe with columns in the order you want
             df = df[cols + eventlog_list]  # Create new dataframe with columns in the order you want
-            
-            # p2p / p2c / c2p / c2c?
-
+                       
             def split_list_to_columns(lst, prefix='event'):
-                max_len = max(lst.apply(len).max(), 1)  # Find the maximum list length
+                max_len = max(lst.apply(len).max(), 1)
                 return pd.DataFrame(lst.tolist(), index=lst.index).rename(
                     columns={i: f'{prefix}_{i+1}' for i in range(max_len)}
                 )
             
-            def safe_division(entry):
-                try:
-                    event_value = int(entry['event_value'])
-                    token_decimals = int(entry['token_decimals'])
-                    entry['event_value_decimals'] = Decimal(event_value) / Decimal(10**token_decimals)
-                except Exception as e:
-                    print(f"Error processing entry {entry}: {e}")
-                    entry['event_value_decimals'] = np.nan
-                return entry
-            
             def add_token_info(df, column_name, token_addresses, prefix):
-                """
-                Map token information from token_addresses to a given column in the DataFrame.
-                
-                Args:
-                    df (pd.DataFrame): The DataFrame to modify.
-                    column_name (str): The name of the column to map token information.
-                    token_addresses (dict): A dictionary with token address information.
-                    prefix (str): The prefix to use for new column names (e.g., 'event_from', 'event_to').
-                
-                Returns:
-                    pd.DataFrame: The DataFrame with added token information columns.
-                """
                 mapped_data = df[column_name].map(token_addresses)
                 mapped_df = pd.json_normalize(mapped_data).set_index(mapped_data.index)
                 mapped_df = mapped_df.rename(columns={
@@ -642,12 +618,8 @@ for date_prev in date_of_interest:
                     'token_symbols': f'{prefix}_symbols'
                 })
                 return pd.concat([df, mapped_df], axis=1)
-
             
             def unique_ordered(original_list):
-                """
-                Return a list of unique elements while preserving the order of their first occurrence.
-                """
                 seen = set()
                 unique_list = []
                 for item in original_list:
@@ -655,44 +627,98 @@ for date_prev in date_of_interest:
                         seen.add(item)
                         unique_list.append(item)
                 return unique_list
-
-            def find_pattern_index(event_log_indexed, patterns):
-                if pd.isna(event_log_indexed):
+            
+            def safe_division(event_value, token_decimals):
+                try:
+                    event_value = int(event_value)
+                    token_decimals = int(token_decimals)
+                    return Decimal(event_value) / Decimal(10**token_decimals)
+                except Exception as e:
+                    print(f"Error processing entry: {e}")
+                    return np.nan
+            
+            def find_pattern_index_vectorized(event_log_indexed, patterns):
+                compiled_patterns = [re.compile(pattern.replace(',', r'\s*,\s*')) for pattern in patterns]
+                match_starts = []
+                matched_patterns = []
+            
+                for log in event_log_indexed:
+                    if pd.isna(log):
+                        match_starts.append(None)
+                        matched_patterns.append(None)
+                        continue
+            
+                    for pattern, compiled_pattern in zip(patterns, compiled_patterns):
+                        match = compiled_pattern.search(log)
+                        if match:
+                            match_starts.append(match.start())
+                            matched_patterns.append(pattern)
+                            break
+                    else:
+                        match_starts.append(None)
+                        matched_patterns.append(None)
+            
+                return match_starts, matched_patterns
+            
+            def extract_data_vectorized(df, patterns):
+                # Ensure the eventLogs.data column contains lists
+                if isinstance(df['eventLogs.data'].iloc[0], str):
+                    df['eventLogs.data'] = df['eventLogs.data'].apply(eval)
+            
+                event_log_indexed = df['eventLogs.indexed']
+                event_log_data = df['eventLogs.data']
+            
+                # Find pattern indices
+                match_starts, matched_patterns = find_pattern_index_vectorized(event_log_indexed, patterns)
+            
+                # Create new columns
+                df['match_start'] = match_starts
+                df['matched_pattern'] = matched_patterns
+            
+                # Precompute extracted data positions
+                def compute_positions(row):
+                    match_start = row['match_start']
+                    pattern = row['matched_pattern']
+                    if match_start is not None and pattern is not None:
+                        num_commas = len(re.findall(',', row['eventLogs.indexed'][:int(match_start)]))
+                        pattern_elements = pattern.split(',')
+                        return num_commas, pattern_elements
                     return None, None
-                for pattern in patterns:
-                    match = re.search(pattern.replace(',', '\s*,\s*'), event_log_indexed)
-                    if match:
-                        return match.start(), pattern
-                return None, None
             
-            def extract_data(row, patterns):
-                event_log_indexed = row['eventLogs.indexed']
-                event_log_data = row['eventLogs.data']
-                
-                index, pattern = find_pattern_index(event_log_indexed, patterns)
-                if index is not None and isinstance(event_log_data, list):
-                    # Calculate the position of the first match
-                    pos = len(re.findall(',', event_log_indexed[:index]))
-                    pattern_elements = pattern.split(',')
-                    extracted_data = event_log_data[pos:pos+len(pattern_elements)]
-                    
+                df['position_info'] = df.apply(compute_positions, axis=1)
             
-                    # Handle specific known patterns
+                # Vectorized extraction
+                def extract_elements(row):
+                    pos_info = row['position_info']
+                    if pos_info is not None:
+                        pos, pattern_elements = pos_info
+                        if pos is not None and isinstance(row['eventLogs.data'], list):
+                            extracted_data = row['eventLogs.data'][pos:pos + len(pattern_elements)]
+                            return extracted_data
+                    return []
+            
+                df['extracted_data'] = df.apply(extract_elements, axis=1)
+            
+                # Assign values based on patterns
+                def assign_values(row):
+                    extracted_data = row['extracted_data']
+                    if not extracted_data:
+                        return row
+            
+                    pattern_elements = row['position_info'][1]
+            
                     if len(extracted_data) >= 2:
-                        if pattern_elements[:2] == ['Address', 'int']:
+                        if pattern_elements[:2] in (['Address', 'int'], ['str', 'int']):
                             row['event_to'] = extracted_data[0]
                             row['event_value_to'] = extracted_data[1]
-                        elif pattern_elements[:2] == ['str', 'int']:
-                            row['event_to'] = extracted_data[0]
-                            row['event_value_to'] = extracted_data[1]
-                        elif pattern_elements[:2] == ['Address', 'bytes'] or pattern_elements[:2] == ['Address', 'str']:
+                        elif pattern_elements[:2] in (['Address', 'bytes'], ['Address', 'str']):
                             row['event_to'] = extracted_data[0]
             
                     if len(extracted_data) >= 3:
-                        if event_log_indexed in ['IScoreClaimedV2(Address,int,int)', 'FeeDistributed(Address,int,int)', 'Stake(Address,int,int)']:
+                        if row['eventLogs.indexed'] in ['IScoreClaimedV2(Address,int,int)', 'FeeDistributed(Address,int,int)', 'Stake(Address,int,int)']:
                             row['event_to'] = extracted_data[0]
                             row['event_value_to'] = extracted_data[2]
-                        elif event_log_indexed == 'LiquidityPurchased(int,int,int)':
+                        elif row['eventLogs.indexed'] == 'LiquidityPurchased(int,int,int)':
                             row['event_to'] = extracted_data[0]
                             row['event_value_from'] = extracted_data[2]
                             row['event_value_to'] = extracted_data[1]
@@ -709,21 +735,22 @@ for date_prev in date_of_interest:
                             row['event_value_to'] = extracted_data[2]
             
                     if len(extracted_data) >= 4:
-                        if event_log_indexed == 'ICXIssued(int,int,int,int)':
+                        if row['eventLogs.indexed'] == 'ICXIssued(int,int,int,int)':
                             row['event_from'] = extracted_data[0]
                             row['event_to'] = extracted_data[1]
                             row['event_value_from'] = extracted_data[2]
                             row['event_value_to'] = extracted_data[2]
-                        elif event_log_indexed == 'FeeReceived(Address,int,int,Address)':
+                        elif row['eventLogs.indexed'] == 'FeeReceived(Address,int,int,Address)':
                             row['event_from'] = extracted_data[0]
                             row['event_to'] = extracted_data[3]
                             row['event_value_from'] = extracted_data[2]
                             row['event_value_to'] = extracted_data[2]
-                        elif event_log_indexed == 'WorkingBalanceUpdated(Address,Address,int,int)':
+                        elif row['eventLogs.indexed'] == 'WorkingBalanceUpdated(Address,Address,int,int)':
                             row['event_from'] = extracted_data[0]
                             row['event_to'] = extracted_data[1]
-                            row['event_value_from'] = extracted_data[3]
-                            row['event_value_to'] = extracted_data[3]
+                            row['event_value_from'] = '0x0'#'0x12'
+                            row['event_value_to'] = '0x0'#'0x12'
+                            
                         elif pattern_elements[:4] == ['Address', 'int', 'Address', 'int']:
                             row['event_from'] = extracted_data[0]
                             row['event_to'] = extracted_data[2]
@@ -731,56 +758,64 @@ for date_prev in date_of_interest:
                             row['event_value_to'] = extracted_data[3]
             
                     if len(extracted_data) >= 5:
-                        if event_log_indexed == 'TransferSingle(Address,Address,Address,int,int)':
+                        if row['eventLogs.indexed'] == 'TransferSingle(Address,Address,Address,int,int)':
                             extracted_data = unique_ordered(extracted_data)
                             if len(extracted_data) >= 4:
                                 row['event_from'] = extracted_data[0]
                                 row['event_to'] = extracted_data[1]
                                 row['event_value_from'] = extracted_data[3]
                                 row['event_value_to'] = extracted_data[3]
+                                
+                        elif row['eventLogs.indexed'] == 'ReserveUpdated(Address,int,int,int,int)':
+                            row['event_from'] = extracted_data[0]
+                            row['event_to'] = extracted_data[1]
+                            row['event_value_from'] = '0x0'#'0x12'
+                            row['event_value_to'] = '0x0'#'0x12'                                
             
-                        elif pattern_elements == ['Address','int','int','int','int']:
+                        elif pattern_elements == ['Address', 'int', 'int', 'int', 'int']:
                             row['event_to'] = extracted_data[0]
                             row['event_value_to'] = extracted_data[1]
             
-                return row
-
-
+                    return row
+            
+                df = df.apply(assign_values, axis=1)
+            
+                return df
+            
             patterns = [
-                        'Address,int,int,int,int',
-                        'Address,Address,Address,int,int',
-                        
-                        'Address,int,Address,int',
-                        'Address,int,int,Address',
-                        'Address,Address,int,int',
-                        'int,int,int,int',
-                        
-                        'Address,Address,bool',
-                        'Address,Address,int',
-                        'str,str,int',
-                        'Address,str,int',
-                        'str,Address,int',    
-                        'Address,int,int',
-                        'int,int,int',
-                        
-                        'Address,int',
-                        'str,int',
-                        'Address,bytes',
-                        'Address,str',
-                        ]
-
-
-            df_combined = pd.DataFrame()
-            df_combined_main = pd.DataFrame()
-            df_combined_event = pd.DataFrame()
-
+                'Address,int,int,int,int',
+                'Address,Address,Address,int,int',
+                'Address,int,Address,int',
+                'Address,int,int,Address',
+                'Address,Address,int,int',
+                'int,int,int,int',
+                'Address,Address,bool',
+                'Address,Address,int',
+                'str,str,int',
+                'Address,str,int',
+                'str,Address,int',
+                'Address,int,int',
+                'int,int,int',
+                'Address,int',
+                'str,int',
+                'Address,bytes',
+                'Address,str',
+            ]
+            
+            # Prepare DataFrame
+            df_combined = df.copy()
             df_combined['event_from'] = np.nan
             df_combined['event_to'] = np.nan
             df_combined['event_value_from'] = np.nan
             df_combined['event_value_to'] = np.nan
             
-            df_combined = df.apply(extract_data, patterns=patterns, axis=1)
-            
+            # Extract data using the optimized function
+            df_combined = extract_data_vectorized(df_combined, patterns)
+            df_combined.drop(columns=['match_start', 'matched_pattern', 'position_info', 'extracted_data'], inplace=True)
+
+            # =============================================================================
+            # 
+            # =============================================================================
 
             # check1 = df[df['txHash'] == '0x65fe2188648cd7ba5a3c1a99c55335e8b76490690dc13dbfa487747ce8ac8a6e']
             # check1 = df_combined[df_combined['txHash'] == '0xdfe6f66fde2d2edf0710292b3b1e645dd3403662e0f9609b409119560b79a103']
@@ -833,6 +868,7 @@ for date_prev in date_of_interest:
                 )
 
                 # check = df_combined[df_combined['txHash'] == '0xdb3f211ef09aa4797c77a05fe3519e48771425301a9e6dca69ac5ef12dc2bdab']
+                # check = df_combined[df_combined['txHash'] == '0x9baac9fafb9271ae9a47037e22065ad089b32a182b7e091994c31be779c87394']
 
                 
                 
@@ -864,8 +900,9 @@ for date_prev in date_of_interest:
 
             df_temp = df_combined[['event_value', 'token_decimals']]
             data_dict = df_temp.to_dict('records')
-            data_dict = [safe_division(entry) for entry in data_dict]
-            df_combined['event_value_decimals'] = pd.DataFrame(data_dict)['event_value_decimals']
+            # data_dict = [safe_division(entry) for entry in data_dict]
+            data_dict = [safe_division(entry['event_value'], entry['token_decimals']) for entry in data_dict]
+            df_combined['event_value_decimals'] = pd.DataFrame(data_dict)
             df_combined['eventlogs'] = df_combined['eventLogs.indexed'].str.split('(', expand=True)[0]
                         
             
@@ -883,7 +920,7 @@ for date_prev in date_of_interest:
             df_combined_main['tx_type'] = 'main'
             # np.where(df_combined_main['value'] != np.nan, 'ICX', np.nan)
             
-            check = df_combined_main[df_combined_main['txHash'] == '0xdb3f211ef09aa4797c77a05fe3519e48771425301a9e6dca69ac5ef12dc2bdab']
+            # check = df_combined_main[df_combined_main['txHash'] == '0xdb3f211ef09aa4797c77a05fe3519e48771425301a9e6dca69ac5ef12dc2bdab']
 
             
             df_combined_event = df_combined[['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 
@@ -896,8 +933,8 @@ for date_prev in date_of_interest:
             
             df_combined_event['tx_type'] = 'event'
             
-            check = df_combined_event[df_combined_event['txHash'] == '0xdb3f211ef09aa4797c77a05fe3519e48771425301a9e6dca69ac5ef12dc2bdab']
-
+            # check = df_combined_event[df_combined_event['txHash'] == '0xdb3f211ef09aa4797c77a05fe3519e48771425301a9e6dca69ac5ef12dc2bdab']
+            # check = df_combined_event[df_combined_event['txHash'] == '0x9baac9fafb9271ae9a47037e22065ad089b32a182b7e091994c31be779c87394']
 
             columns_to_check = ['from', 'to']
             df_combined_main = df_combined_main.dropna(subset=columns_to_check)
@@ -914,7 +951,7 @@ for date_prev in date_of_interest:
             
             df_combined.loc[:,'regTxCount'] = np.where(df_combined['tx_type'] == 'main', 1, 0)
             df_combined.loc[:,'intTxCount'] = np.where((df_combined['tx_type'] == 'event') & df_combined[['p2p','p2c','c2p','c2c']].any(axis=1), 1, 0)
-            df_combined.loc[:,'systemTickCount'] = np.where(df_combined['txIndex'] == 0, 1, 0)
+            df_combined.loc[:,'systemTickCount'] = np.where((df_combined['txIndex'] == 0) & (df_combined['regTxCount'] !=1) & (df_combined['intTxCount'] != 1), 1, 0)
             df_combined.loc[:,'intEvtCount'] = np.where((df_combined['regTxCount'] !=1) & (df_combined['systemTickCount'] != 1) & (df_combined['intTxCount'] != 1), 1, 0)
 
             df_combined['eventlogs'] = df_combined['eventLogs.indexed'].str.split('(', expand=True)[0]
@@ -936,6 +973,7 @@ for date_prev in date_of_interest:
                 df_output['symbol'] = np.where((df_output['tx_type'] == 'main') & df_output['value'].notna(), 'ICX', df_output['symbol'])
                 
             # check = df_output[df_output['txHash'] == '0xdb3f211ef09aa4797c77a05fe3519e48771425301a9e6dca69ac5ef12dc2bdab']
+            # check = df_output[df_output['txHash'] == '0x9baac9fafb9271ae9a47037e22065ad089b32a182b7e091994c31be779c87394']
 
             df_output['symbol'] = np.where(df_output['symbol'].isna(), df_output['token_symbols'], df_output['symbol'])
             df_output.drop(columns=['token_symbols'], inplace=True)

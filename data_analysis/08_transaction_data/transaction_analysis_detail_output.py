@@ -42,7 +42,7 @@ tx_detail_paths = sorted([i for i in dataPath.glob('tx_detail_with_group*.csv')]
 
 
 # to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 1 #0
+use_specific_prev_date = 0 #0
 date_prev = "2024-07-28"
 
 day_1 = "2023-07-01" #07
@@ -183,7 +183,6 @@ def get_agg_df_for_count_fees_and_value(df):
     df_subset['TxCount'] = df_subset['regTxCount'] + df_subset['intTxCount']
     
     df_subset.loc[df_subset['tx_type'] != 'main', 'tx_fees'] = 0
-    # df_subset.loc[df_subset['tx_type'] != 'main', 'value'] = 0
     
     # Aggregate transaction counts and fees by from_label_group and to_label_group
     df_agg = df_subset.groupby(['from_label_group', 'to_label_group']).agg({
@@ -194,7 +193,16 @@ def get_agg_df_for_count_fees_and_value(df):
     return df_agg
 
 
-def visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='to_label_group', log_scale=False):
+def get_active_user_wallet_count(df):
+    df_temp = df.copy()
+    df_temp['active_user_wallet'] = np.where(df_temp['p2p'] | df_temp['p2c'] | df_temp['c2p'], True, False)
+    df_subset = df_temp[df_temp['active_user_wallet']].reset_index(drop=True)
+    active_user_wallets = pd.concat([df_subset['from'], df_subset['to']])
+    active_user_wallet_count = len(active_user_wallets[active_user_wallets.str.startswith('hx', na=False)].unique())
+    return active_user_wallet_count, df_subset
+
+
+def visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='to_label_group', to_or_from='to', save_path='', log_scale=False):
     sns.set(style="dark")
     plt.style.use("dark_background")
 
@@ -278,6 +286,8 @@ def visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in
         ax1.set_yscale('log')
 
     plt.show()
+    plt.savefig(save_path.joinpath(f'tx_summary_{to_or_from}_{tx_path_date}.png'))
+    plt.close()
 
 
 # visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='to_label_group')
@@ -285,9 +295,11 @@ def visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in
 
 
 
-def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['to_label_group', 'tx_mode'], log_scale=False):
+def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['to_label_group', 'tx_mode'], to_or_from='to', save_path='', log_scale=False):
     sns.set(style="dark")
     plt.style.use("dark_background")
+
+    active_user_wallet_count, _ = get_active_user_wallet_count(df)
 
     tx_count_with_fees = get_tx_group_with_fees(df, in_group)
     
@@ -298,7 +310,7 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
 
     total_tx_count = tx_count_with_fees['count'].sum()
     total_fees = tx_count_with_fees['fees'].sum().round(2)
-    total_tx_count_txt = f"Transactions (Fee-incurring): {int(total_tx_count):,}\nTotal Activity: {int(total_activity_count):,}\n{total_transfer_value_text}"
+    total_tx_count_txt = f"Transactions (Fee-incurring): {int(total_tx_count):,}\nTotal Activity: {int(total_activity_count):,}\n{total_transfer_value_text}\nActive Wallets: {int(active_user_wallet_count):,}"
 
     fig, ax1 = plt.subplots(figsize=(14, 8))
 
@@ -368,7 +380,7 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
              horizontalalignment='right',
              verticalalignment='center',
              linespacing=1.5,
-             fontsize=12,
+             fontsize=11,
              weight='bold')
 
     handles, labels = ax1.get_legend_handles_labels()
@@ -390,14 +402,116 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
         ax1.set_yscale('log')
 
     plt.show()
+    plt.savefig(save_path.joinpath(f'tx_summary_{to_or_from}_{tx_path_date}.png'))
+    plt.close()
 
 
+
+def plot_transaction_network(df, from_column='from_label_group', to_column='to_label_group', 
+                             tx_count_column='TxCount', fees_column='tx_fees', value_column='Value in USD', 
+                             main_node_group='to_label_group', max_size_values=100_000,
+                             save_path='', tx_path_date='', dpi=300):
+    """
+    Plots a transaction network graph based on the provided DataFrame.
+
+    Parameters:
+        df (pd.DataFrame): DataFrame containing transaction data.
+        from_column (str): Name of the column with the source node labels.
+        to_column (str): Name of the column with the destination node labels.
+        tx_count_column (str): Name of the column with transaction counts.
+        fees_column (str): Name of the column with transaction fees.
+        value_column (str): Name of the column with transaction values in USD.
+        main_node_group (str): Group to compute node sizes based on total fees.
+        max_size_values (int): Maximum size of the nodes.
+
+    Returns:
+        None: Displays a plot of the transaction network graph.
+    """
+
+    # Create a directed graph
+    G = nx.DiGraph()
+
+    # Add edges to the graph
+    for index, row in df.iterrows():
+        G.add_edge(row[from_column], row[to_column], weight=row[tx_count_column], fees=row[fees_column])
+
+    # Compute node sizes based on total fees
+    node_fees = df.groupby(main_node_group)[fees_column].sum().to_dict()
+    max_fee = max(node_fees.values())
+    total_fees = df[fees_column].sum()
+
+    # Compute node sizes based on total value transferred
+    node_values_in_usd = df.groupby(main_node_group)[value_column].sum()
+    node_values_in_usd = node_values_in_usd.to_dict()
+    max_value = max(node_values_in_usd.values())
+    total_values_in_usd = df[value_column].sum()
+
+    # Normalizing node sizes and applying a cap
+    node_sizes_values = [min((node_values_in_usd.get(node, 1) / max_value) * max_size_values, max_size_values) for node in G.nodes()]
+
+    # Compute edge colors based on transaction counts
+    edge_weights = np.array([d['weight'] for (u, v, d) in G.edges(data=True)])
+    cmap = cm.get_cmap('viridis')
+    edge_colors = [cmap(weight / max(edge_weights)) for weight in edge_weights]
+
+    # Use the Kamada-Kawai layout for better node distribution
+    pos = nx.circular_layout(G)
+
+    sns.set(style="dark")
+    plt.style.use("dark_background")
+    plt.figure(figsize=(14, 11))
+
+    # Draw nodes with sizes based on fees, semi-transparent and with border
+    nx.draw_networkx_nodes(G, pos, node_size=node_sizes_values, node_color='lightblue', alpha=0.2, edgecolors='black', linewidths=1.5)
+
+    # Draw edges with colors based on transaction count and curved
+    nx.draw_networkx_edges(G, pos, arrowstyle='-|>', arrowsize=10, edge_color=edge_colors,
+                           width=2, connectionstyle='arc3,rad=0.1', alpha=0.6)
+
+    # Draw node labels with fees and values in different colors
+    for node, (x, y) in pos.items():
+        node_text = node
+        value_text = f"\n\n${int(node_values_in_usd.get(node, 0)):,}"
+        fees_text = f"\n\n{int(node_fees.get(node, 0)):,} ICX"
+        
+        plt.text(x, y, node_text, fontsize=9, fontfamily='sans-serif', color='cyan', ha='center', va='center')
+        plt.annotate(f"{value_text}", (x, y), fontsize=8, fontfamily='sans-serif', color='yellow', ha='center', va='center')
+        plt.annotate(f"\n\n{fees_text}", (x, y), fontsize=8, fontfamily='sans-serif', color='orange', ha='center', va='center')
+
+    # Create a ScalarMappable for the colorbar
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min(edge_weights), vmax=max(edge_weights)))
+    sm.set_array([])
+    plt.colorbar(sm, label='Transaction Count')
+
+    plt.title(f'Transaction Network Graph ({tx_path_date})', fontsize=14, loc='left')    
+    # plt.text(0.68, 1.013, '(', color='white', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
+    # plt.text(0.78, 1.013, 'Value Transferred ', color='yellow', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
+    # plt.text(0.87, 1.013, '&', color='white', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
+    # plt.text(0.94, 1.013, 'Fees Burned', color='orange', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
+    # plt.text(0.99, 1.013, ')', color='white', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
+    
+    plt.text(1.00, 1.035, f'Value Transferred (~{total_values_in_usd:,.0f} USD)', color='yellow', fontsize=14, ha='right', va='center', transform=plt.gca().transAxes)
+    plt.text(1.00, 1.015, f'Fees Burned ({total_fees:,.2f} ICX)', color='orange', fontsize=14, ha='right', va='center', transform=plt.gca().transAxes)
+    
+    plt.tight_layout()
+    plt.show()
+
+    save_full_path = Path(save_path) / f'tx_network_graph_{tx_path_date}.png'
+    plt.savefig(save_full_path)#, dpi=dpi)
+    plt.close()
 
 
 daily_issuance = get_iiss_info(walletPath)['Iglobal']*12/365
 
 for tx_path in tqdm(matching_paths):
     tx_path_date = tx_path.stem.split('_')[-1]
+    
+    this_year = tx_path_date[0:4]
+    
+    resultsPath_year = resultsPath.joinpath(this_year)
+    resultsPath_year.mkdir(parents=True, exist_ok=True)
+    
+    
     df = pd.read_csv(tx_path, low_memory=False)
     if "Unnamed: 0" in df.columns:
         df.drop("Unnamed: 0", axis=1, inplace=True)
@@ -405,13 +519,21 @@ for tx_path in tqdm(matching_paths):
     
     df_addresses = pd.concat([df[['from','from_label_group']].rename(columns={'from':'address', 'from_label_group':'group'}),
                              df[['to','to_label_group']].rename(columns={'to':'address', 'to_label_group':'group'})]).drop_duplicates()
-    df_addresses = df_addresses[df_addresses['group'].notna()].reset_index(drop=True)
+    
+    df_addresses = df_addresses.dropna()
+    df_addresses = df_addresses[df_addresses['address'].str.startswith(('cx', 'hx')) | (df_addresses['address'] == '0x0')]
+    
     
     
     tx_path_date_underscore = tx_path_date.replace("-", "_")
     tokentransfer_date_Path = tokentransferPath.joinpath(tx_path_date_underscore, f'IRC_token_transfer_{tx_path_date_underscore}.csv')
     token_transfer_summary_df = pd.read_csv(tokentransfer_date_Path, low_memory=False)
     token_transfer_summary_df = pd.merge(token_transfer_summary_df, df_addresses, on='address', how='left')
+    
+    ## Manual addition
+    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'FIN', 'Optimus', token_transfer_summary_df['IRC Token'])
+    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'BTCB', 'Bitcoin', token_transfer_summary_df['IRC Token'])
+    # token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'ICX', 'Icon', token_transfer_summary_df['IRC Token'])
 
     df = pd.merge(df, token_transfer_summary_df.rename(columns={'IRC Token':'symbol'})[['symbol', 'Price in USD', 'group']], on='symbol', how='left')
     df['group'] = np.where((df['symbol'] == 'ICX') & df['group'].isna(), 'ICX', df['group'])
@@ -419,110 +541,80 @@ for tx_path in tqdm(matching_paths):
     df['Price in USD'] = df['Price in USD'].astype('float64').fillna(0)
     df['Value in USD'] = df['value'] * df['Price in USD']
     
+    ## outlier removal    
+    upper_cap = 50_000_000
+    outliers = (df['Value in USD'] > upper_cap)
+    df.loc[df['Value in USD'] > upper_cap, 'Value in USD'] = 0
+    
     df_agg = get_agg_df_for_count_fees_and_value(df)
     
-    token_transfer_value = df['Value in USD'].sum()
-    token_transfer_value_by_group = df.groupby('group')['Value in USD'].sum()
-    total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
-
-    # try:
-    #     icx_price = token_transfer_summary_df[token_transfer_summary_df['IRC Token'] == 'ICX']['Price in USD'].iloc[0]
-    #     icx_transfer_value = df_agg['value'].sum() * icx_price
-    #     total_transfer_value = icx_transfer_value + token_transfer_value
-    #     total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
-    #     token_transfer_value_by_group['ICX'] = icx_transfer_value
-    # except:
-    #     total_transfer_value_text = 'Total Value Transferred: Not Available'
-
-    
-    # df_temp = df[df['tx_type'] == 'main']
-    # df_temp['p2p'].sum() + df_temp['p2c'].sum() + df_temp['c2p'].sum() + df_temp['c2c'].sum()
-    # df_temp['regTxCount'].sum() + df_temp['intTxCount'].sum()
-    
-    # tx_count_with_fees_by_mode = get_tx_group_with_fees(df, in_group=['to_label_group', 'tx_mode'])
-    # tx_count_with_fees_by_mode_from = get_tx_group_with_fees(df, in_group=['from_label_group', 'tx_mode'])
+    # total_transfer_value = df['Value in USD'].sum()
+    # total_transfer_value_by_group = df.groupby('group')['Value in USD'].sum()
+    # total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
     
     
-    # tx_count_with_fees_to = get_tx_group_with_fees(df, 'to_label_group')
-    # tx_count_with_fees_from = get_tx_group_with_fees(df, 'from_label_group')
+    total_transfer_value = df_agg['Value in USD'].sum()
+    # total_transfer_value_by_group = df_agg.groupby('group')['Value in USD'].sum()
+    total_transfer_value_text = f'Total Value Transferred: ~{total_transfer_value:,.0f} USD'
+
+    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['from_label_group', 'tx_mode'], to_or_from='from', save_path=resultsPath_year)
+    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['to_label_group', 'tx_mode'], to_or_from='to', save_path=resultsPath_year)
     
-    
-
-    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['from_label_group', 'tx_mode'])
-    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['to_label_group', 'tx_mode'])
+    plot_transaction_network(df_agg, save_path=resultsPath_year, tx_path_date=tx_path_date)
 
 
 
 
 
 
+active_user_wallet_count, df_subset = get_active_user_wallet_count(df)
+
+
+df_temp_subset_to_hx = df_subset[df_subset['to'].str.startswith('hx', na=False)]
+df_temp_subset_to_hx = df_temp_subset_to_hx[['to', 'to_label_group']].drop_duplicates()
+
+
+unique_to_counts = df_temp_subset_to_hx.groupby('to_label_group')['to'].nunique()
+
+# Convert the results to a DataFrame for plotting
+unique_to_counts_df = unique_to_counts.reset_index(name='unique_to_count')
+
+# Plotting the bar plot
+plt.figure(figsize=(10, 6))
+sns.barplot(data=unique_to_counts_df, x='to_label_group', y='unique_to_count', palette='viridis')
+
+# Add titles and labels
+plt.title('Unique Addresses Count by Label Group', fontsize=16)
+plt.xlabel('Label Group', fontsize=14)
+plt.ylabel('Unique Address Count', fontsize=14)
+plt.xticks(rotation=90)
+plt.tight_layout()
+
+# Show plot
+plt.show()
 
 
 
 
-# Create a directed graph
-G = nx.DiGraph()
-
-# Add edges to the graph
-for index, row in df_agg.iterrows():
-    G.add_edge(row['from_label_group'], row['to_label_group'], weight=row['TxCount'], fees=row['tx_fees'])
-
-main_node_group = 'to_label_group'
-
-# Compute node sizes based on total fees
-node_fees = df_agg.groupby(main_node_group)['tx_fees'].sum().to_dict()
-max_fee = max(node_fees.values())
-
-node_values_in_usd = df_agg.groupby(main_node_group)['Value in USD'].sum()
-
-node_values_in_usd = token_transfer_value_by_group.add(node_values_in_usd, fill_value=0).to_dict()
-max_value = max(node_values_in_usd.values())
-
-# Normalizing node sizes and applying a cap
-max_size_values = 100_000  # Maximum node size
-node_sizes_values = [min((node_values_in_usd.get(node, 1) / max_value) * max_size_values, max_size_values) for node in G.nodes()]
+df_temp_subset_from_hx = df_subset[df_subset['from'].str.startswith('hx', na=False)]
+df_temp_subset_from_hx = df_temp_subset_from_hx[['from', 'from_label_group']].drop_duplicates()
 
 
-# Compute edge colors based on transaction counts
-edge_weights = np.array([d['weight'] for (u, v, d) in G.edges(data=True)])
-cmap = cm.get_cmap('viridis')
-edge_colors = [cmap(weight / max(edge_weights)) for weight in edge_weights]
+unique_to_counts = df_temp_subset_from_hx.groupby('from_label_group')['from'].nunique()
 
-# Use the Kamada-Kawai layout for better node distribution
-pos = nx.circular_layout(G)
+# Convert the results to a DataFrame for plotting
+unique_to_counts_df = unique_to_counts.reset_index(name='unique_from_count')
 
-sns.set(style="dark")
-plt.style.use("dark_background")
-plt.figure(figsize=(20, 20))
+# Plotting the bar plot
+plt.figure(figsize=(10, 6))
+sns.barplot(data=unique_to_counts_df, x='from_label_group', y='unique_from_count', palette='viridis')
 
-# Draw nodes with sizes based on fees, semi-transparent and with border
-nx.draw_networkx_nodes(G, pos, node_size=node_sizes_values, node_color='lightblue', alpha=0.2, edgecolors='black', linewidths=1.5)
-# nx.draw_networkx_nodes(G, pos, node_size=max_size_fees, node_color='orange', alpha=0.2, edgecolors='orange', linewidths=1.5)
+# Add titles and labels
+plt.title('Unique Addresses Count by Label Group', fontsize=16)
+plt.xlabel('Label Group', fontsize=14)
+plt.ylabel('Unique Address Count', fontsize=14)
+plt.xticks(rotation=90)
+plt.tight_layout()
 
-# Draw edges with colors based on transaction count and curved
-edges = nx.draw_networkx_edges(G, pos, arrowstyle='-|>', arrowsize=10, edge_color=edge_colors,
-                               width=2, connectionstyle='arc3,rad=0.1', alpha=0.6)
-
-# Draw node labels with fees and values in different colors
-for node, (x, y) in pos.items():
-    node_text = node#.replace(' ', '\n')
-    value_text = f"\n\n${int(node_values_in_usd.get(node, 0)):,}"
-    fees_text = f"\n\n{int(node_fees.get(node, 0)):,} ICX"
-    
-    plt.text(x, y, node_text, fontsize=9, fontfamily='sans-serif', color='cyan', ha='center', va='center')
-    plt.annotate(f"{value_text}", (x, y), fontsize=8, fontfamily='sans-serif', color='yellow', ha='center', va='center')
-    plt.annotate(f"\n\n{fees_text}", (x, y), fontsize=8, fontfamily='sans-serif', color='orange', ha='center', va='center')
-
-# Create a ScalarMappable for the colorbar
-sm = plt.cm.ScalarMappable(cmap=cmap, norm=plt.Normalize(vmin=min(edge_weights), vmax=max(edge_weights)))
-sm.set_array([])
-plt.colorbar(sm, label='Transaction Count')
-
-plt.title('Transaction Network Graph', fontsize=14)
-plt.text(0.62, 1.013, '(', color='white', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
-plt.text(0.70, 1.013, 'Value Transferred ', color='yellow', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
-plt.text(0.78, 1.013, '&', color='white', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
-plt.text(0.84, 1.013, 'Fees Burned', color='orange', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
-plt.text(0.90, 1.013, ')', color='white', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
-
+# Show plot
 plt.show()

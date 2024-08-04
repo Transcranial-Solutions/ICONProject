@@ -110,7 +110,6 @@ def main():
     
     # Get Token Decimals
     address_collector = get_token_decimals(address_list, nid)
-    
     save_to_json(address_collector, wallet_address_path.joinpath('token_addresses.json'))
     
     

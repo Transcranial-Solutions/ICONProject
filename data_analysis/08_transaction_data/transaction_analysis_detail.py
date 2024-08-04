@@ -33,7 +33,7 @@ SAVE_SUMMARY = False
 POSSIBLE_NANS = ['', ' ', np.nan]
 
 # to use specific date (1), use yesterday (0), use range(2)
-use_specific_prev_date = 1 #0
+use_specific_prev_date = 0 #0
 date_prev = "2024-07-28"
 
 day_1 = "2023-07-01" #07
@@ -358,10 +358,10 @@ def attach_wallet_info_to_tx_data(tx_path, merged_addresses):
     df['to_label'] = df['to'].map(merged_addresses)
     df['from_label'] = df['from'].map(merged_addresses)
     
-    df['eventlogs_cx_label'] = np.where(df['txIndex'] == 0, 'System', df['eventlogs_cx_label'])
-    df['to_label'] = np.where(df['txIndex'] == 0, 'System', df['to_label'])
-    df['from_label'] = np.where(df['txIndex'] == 0, 'System', df['from_label'])
-    
+    df['eventlogs_cx_label'] = np.where(df['systemTickCount'] == 1, 'System', df['eventlogs_cx_label'])
+    df['to_label'] = np.where(df['systemTickCount'] == 1, 'System', df['to_label'])
+    df['from_label'] = np.where(df['systemTickCount'] == 1, 'System', df['from_label'])
+
     df['to_label'] = np.where(df['to'].str.startswith('hx', na=False) & df['to_label'].isna(), 'unknown_hx', df['to_label'])
     df['to_label'] = np.where(df['to'].str.startswith('cx', na=False) & df['to_label'].isna(), 'unknown_cx', df['to_label'])
     
@@ -401,7 +401,8 @@ def main():
         for tx_path in tqdm(loop_paths, desc="tx details with group info"):
             tqdm.write(f"Working on: {tx_path.stem}")
             tx_date = tx_path.stem.split('_')[-1]
-            df = attach_wallet_info_to_tx_data(tx_path, merged_addresses)
+            df = attach_wallet_info_to_tx_data(tx_path, merged_addresses)            
+            # check = df[df['txHash'] == '0x9baac9fafb9271ae9a47037e22065ad089b32a182b7e091994c31be779c87394']
             df.to_csv(dataPath.joinpath(f'tx_detail_with_group_info_{tx_date}.csv'), index=False)
         
 
