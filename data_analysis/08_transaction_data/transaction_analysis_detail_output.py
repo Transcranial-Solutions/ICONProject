@@ -39,7 +39,7 @@ tokentransferPath = Path(dailyPath).joinpath("10_token_transfer/results/")
 walletPath.mkdir(parents=True, exist_ok=True)
 
 tx_detail_paths = sorted([i for i in dataPath.glob('tx_detail_with_group*.csv')])
-
+tx_block_paths = sorted([i for i in dataPath.glob('transaction_blocks*.csv')])
 
 # to use specific date (1), use yesterday (0), use range(2)
 use_specific_prev_date = 0 #0
@@ -48,12 +48,12 @@ date_prev = "2024-07-28"
 day_1 = "2023-07-01" #07
 day_2 = "2023-12-31"
 
-def yesterday(doi = "2021-08-20"):
-    yesterday = datetime.fromisoformat(doi) - timedelta(1)
+def yesterday(doi = "2021-08-20", delta=1):
+    yesterday = datetime.fromisoformat(doi) - timedelta(delta)
     return yesterday.strftime('%Y-%m-%d')
 
-def tomorrow(doi = "2021-08-20"):
-    tomorrow = datetime.fromisoformat(doi) + timedelta(1)
+def tomorrow(doi = "2021-08-20", delta=1):
+    tomorrow = datetime.fromisoformat(doi) + timedelta(delta)
     return tomorrow.strftime('%Y-%m-%d')
 
 # today's date
@@ -88,6 +88,22 @@ def hex_to_int(val: str):
     except ValueError:
         print(f"failed to convert {val} to int")
         return float("NAN")
+
+def int_to_hex(val: int) -> str:
+    """
+    Converts an integer to a hexadecimal string.
+    
+    Parameters:
+        val (int): The integer value to be converted to hex.
+
+    Returns:
+        str: The hexadecimal string representation of the integer.
+    """
+    try:
+        return hex(val).lower()
+    except TypeError:
+        print(f"failed to convert {val} to hex")
+        return "NAN"
 
 def parse_icx(val: str):
     try:
@@ -134,6 +150,106 @@ def get_iiss_info(walletPath):
     return df
 
 
+def get_balanced_burned(block_height):
+    # ctz_solidwallet = 'https://ctz.solidwallet.io/api/v3'
+    local_endpoint = "http://127.0.0.1:9000/api/v3"
+    
+    icon_service = IconService(HTTPProvider(local_endpoint))
+    contract_address = "cxdc30a0d3a1f131565c071272a20bc0b06fd4c17b"
+    
+    # block_height = "0x50d14d2"  
+    
+    call = CallBuilder()\
+        .from_("hx0000000000000000000000000000000000000000")\
+        .to(contract_address)\
+        .method("getBurnedAmount")\
+        .height(block_height)\
+        .build()
+    try:
+        result = icon_service.call(call)
+        print(f"Burned Amount: {result}")
+    except Exception as e:
+        result = '0x0'
+        print(f"An error occurred: {e}")
+    
+    return loop_to_icx(hex_to_int(result))
+
+def get_balanced_burned_amount(date_of_interest, tx_block_paths):
+    
+    def calculate_differences(data_dict):
+        sorted_dates = sorted(data_dict.keys(), key=lambda date: datetime.strptime(date, '%Y-%m-%d'))
+        
+        differences = {}
+        
+        previous_value = data_dict[sorted_dates[0]]
+        for i, date in enumerate(sorted_dates):
+            if i == 0:
+        
+                differences[date] = 0
+            else:
+                current_value = data_dict[date]
+                differences[date] = current_value - previous_value
+                previous_value = current_value
+    
+        if sorted_dates:
+            differences.pop(sorted_dates[0])
+    
+        return differences
+
+
+    date_of_interest_with_previous = [yesterday(date_of_interest[0])] + date_of_interest    
+    matching_paths = [path for path in tx_block_paths if any(date in str(path) for date in date_of_interest_with_previous)]
+    
+    balanced_burned_collector = {}
+    for matching_path in matching_paths:
+        date_to_check = matching_path.stem.split('_')[-1]
+        balanced_burned_collector[date_to_check] = {}
+        
+        df = pd.read_csv(matching_path)
+        block_height = df['blockHeight'].iloc[0]
+        
+        block_height_hex = int_to_hex(block_height)
+        balanced_burned_icx = get_balanced_burned(block_height_hex)
+        balanced_burned_collector[date_to_check] = balanced_burned_icx
+    
+    return calculate_differences(balanced_burned_collector)
+    
+
+def compute_tx_group(df, from_label='from_label_group', to_label='to_label_group'):
+    """
+    Computes the 'tx_group' column based on the conditions specified, prioritizing non-NaN values.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data with 'from_label_group' and 'to_label_group' columns.
+        from_label (str): The name of the column representing the from label group.
+        to_label (str): The name of the column representing the to label group.
+
+    Returns:
+        pd.DataFrame: The DataFrame with an additional 'tx_group' column.
+    """
+
+    # Initialize the 'tx_group' column with NaN
+    df['tx_group'] = np.nan
+
+    # Condition 1: Prefer non-NaN 'from_label' over 'to_label' if one of them is unknown
+    mask_from_known = df[from_label].notna() & (df[to_label].isna() | df[to_label].str.startswith('unknown'))
+    df.loc[mask_from_known, 'tx_group'] = df[from_label]
+
+    mask_to_known = df[to_label].notna() & (df[from_label].isna() | df[from_label].str.startswith('unknown'))
+    df.loc[mask_to_known, 'tx_group'] = df[to_label]
+
+    # Condition 2: If both are unknown, prioritize 'unknown_cx' over 'unknown_hx'
+    mask_both_unknown = df[from_label].str.startswith('unknown') & df[to_label].str.startswith('unknown')
+    df.loc[mask_both_unknown & (df[from_label] == 'unknown_cx'), 'tx_group'] = 'unknown_cx'
+    df.loc[mask_both_unknown & (df[to_label] == 'unknown_cx'), 'tx_group'] = 'unknown_cx'
+    df.loc[mask_both_unknown & (df[from_label] == 'unknown_hx'), 'tx_group'] = 'unknown_hx'
+    df.loc[mask_both_unknown & (df[to_label] == 'unknown_hx'), 'tx_group'] = 'unknown_hx'
+
+    # Condition 3: If one of them is NaN, use the other one
+    df.loc[df['tx_group'].isna() & df[from_label].notna(), 'tx_group'] = df[from_label]
+    df.loc[df['tx_group'].isna() & df[to_label].notna(), 'tx_group'] = df[to_label]
+
+    return df
 
 def get_tx_group_with_fees(df, in_group): 
     if not isinstance(in_group, list):
@@ -148,6 +264,8 @@ def get_tx_group_with_fees(df, in_group):
     choices = ['hx -> hx', 'hx -> cx', 'cx -> hx', 'cx -> cx']
     
     df_subset.loc[:, 'tx_mode'] = np.select(conditions, choices, default=np.nan)
+    
+    df_subset = compute_tx_group(df_subset)
     
     tx_count = df_subset[in_group].value_counts().rename('count')
     tx_fees = df_subset[df_subset['tx_type'] == 'main'].groupby(in_group)['tx_fees'].sum().rename('fees')
@@ -177,6 +295,7 @@ def get_tx_group_with_fees(df, in_group):
     return tx_with_fees
 
 
+
 def get_agg_df_for_count_fees_and_value(df):
     # Filter the subset of data based on the boolean columns
     df_subset = df[df['p2p'] | df['p2c'] | df['c2p'] | df['c2c']].reset_index(drop=True)
@@ -202,106 +321,108 @@ def get_active_user_wallet_count(df):
     return active_user_wallet_count, df_subset
 
 
-def visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='to_label_group', to_or_from='to', save_path='', log_scale=False):
-    sns.set(style="dark")
-    plt.style.use("dark_background")
+# def visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='to_label_group', to_or_from='to', save_path='', log_scale=False):
+#     sns.set(style="dark")
+#     plt.style.use("dark_background")
 
-    tx_count_with_fees = get_tx_group_with_fees(df, in_group)
+#     tx_count_with_fees = get_tx_group_with_fees(df, in_group)
     
-    contract_address_label = 'Destination' if in_group == 'to_label_group' else 'Source'
+#     contract_address_label = 'Destination' if in_group == 'to_label_group' else 'Source'
     
-    total_activity_count = df['regTxCount'].sum() + df['intTxCount'].sum() + df['systemTickCount'].sum() + df['intEvtCount'].sum()
-    total_activity_count_txt = f"Regular Tx: {df['regTxCount'].sum():,}; Internal Tx: {df['intTxCount'].sum():,}\nInternal Events: {df['intEvtCount'].sum():,}; System Ticks: {df['systemTickCount'].sum():,}"
+#     total_activity_count = df['regTxCount'].sum() + df['intTxCount'].sum() + df['systemTickCount'].sum() + df['intEvtCount'].sum()
+#     total_activity_count_txt = f"Regular Tx: {df['regTxCount'].sum():,}; Internal Tx: {df['intTxCount'].sum():,}\nInternal Events: {df['intEvtCount'].sum():,}; System Ticks: {df['systemTickCount'].sum():,}"
 
-    total_tx_count = tx_count_with_fees['count'].sum()
-    total_fees = tx_count_with_fees['fees'].sum().round(2)
-    total_tx_count_txt = f"Transactions (Fee-incurring): {int(total_tx_count):,}\nTotal Activity: {int(total_activity_count):,}\n{total_transfer_value_text}"
+#     total_tx_count = tx_count_with_fees['count'].sum()
+#     total_fees = tx_count_with_fees['fees'].sum().round(2)
+#     total_tx_count_txt = f"Transactions (Fee-incurring): {int(total_tx_count):,}\nTotal Activity: {int(total_activity_count):,}\n{total_transfer_value_text}"
 
-    fig, ax1 = plt.subplots(figsize=(14, 8))
+#     fig, ax1 = plt.subplots(figsize=(14, 8))
 
-    # Bar plot for transaction counts
-    tx_count_with_fees_sorted = tx_count_with_fees.sort_values(by=['fees','count'], ascending=False)
-    tx_count_with_fees_sorted.plot(kind='bar', x='group', y='count', stacked=True, ax=ax1, color='palegoldenrod', legend=False)
+#     # Bar plot for transaction counts
+#     tx_count_with_fees_sorted = tx_count_with_fees.sort_values(by=['fees','count'], ascending=False)
+#     tx_count_with_fees_sorted.plot(kind='bar', x='group', y='count', stacked=True, ax=ax1, color='palegoldenrod', legend=False)
 
-    plt.title(f'Daily Transactions ({tx_path_date})', fontsize=14, weight='bold', pad=10, loc='left')
-    ax1.set_xlabel(f'{contract_address_label} Contracts/Addresses')
-    ax1.set_ylabel('Transactions', labelpad=10)
-    ax1.set_xticklabels(tx_count_with_fees_sorted['group'], rotation=90, ha="center")
+#     plt.title(f'Daily Transactions ({tx_path_date})', fontsize=14, weight='bold', pad=10, loc='left')
+#     ax1.set_xlabel(f'{contract_address_label} Contracts/Addresses')
+#     ax1.set_ylabel('Transactions', labelpad=10)
+#     ax1.set_xticklabels(tx_count_with_fees_sorted['group'], rotation=90, ha="center")
 
-    # Line plot for transaction fees
-    ax2 = ax1.twinx()
-    ax2.plot(tx_count_with_fees_sorted['group'], tx_count_with_fees_sorted['fees'], marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black', markersize=8)
-    ax2.set_ylabel('Fees burned (ICX)', labelpad=10)
+#     # Line plot for transaction fees
+#     ax2 = ax1.twinx()
+#     ax2.plot(tx_count_with_fees_sorted['group'], tx_count_with_fees_sorted['fees'], marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black', markersize=8)
+#     ax2.set_ylabel('Fees burned (ICX)', labelpad=10)
     
-    daily_burned_percentage = f"{tx_count_with_fees['fees'].sum()/daily_issuance:.2%}"
-    fees_burned_label = f'Total Fees Burned ({total_fees} ICX / {daily_burned_percentage} of daily inflation)'
+#     daily_burned_percentage = f"{tx_count_with_fees['fees'].sum()/daily_issuance:.2%}"
+#     fees_burned_label = f'Fees Burned ({total_fees} ICX / {daily_burned_percentage} of daily inflation)'
 
-    # Adjust axis formatting
-    xmin, xmax = ax1.get_xlim()
-    ymin, ymax = ax1.get_ylim()
+#     # Adjust axis formatting
+#     xmin, xmax = ax1.get_xlim()
+#     ymin, ymax = ax1.get_ylim()
 
-    # Increase ymax by 5%
-    ax1.set_ylim(ymin, ymax * 1.05)
+#     # Increase ymax by 5%
+#     ax1.set_ylim(ymin, ymax * 1.05)
 
-    if ymax >= 3_000:
-        ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x / 1e3) + ' K'))
-    if ymax >= 1_000_000:
-        ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
+#     if ymax >= 3_000:
+#         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x / 1e3) + ' K'))
+#     if ymax >= 1_000_000:
+#         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
 
-    color = 'white'
-    m_line = mlines.Line2D([], [], color=color, label=f'{fees_burned_label}', linewidth=1, marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black')
-    leg = plt.legend(handles=[m_line], loc='upper right', fontsize='medium', bbox_to_anchor=(0.98, 0.999), frameon=False)
-    for text in leg.get_texts():
-        plt.setp(text, color='cyan')
+#     color = 'white'
+#     m_line = mlines.Line2D([], [], color=color, label=f'{fees_burned_label}', linewidth=1, marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black')
+#     leg = plt.legend(handles=[m_line], loc='upper right', fontsize='medium', bbox_to_anchor=(0.98, 0.999), frameon=False)
+#     for text in leg.get_texts():
+#         plt.setp(text, color='cyan')
 
-    plt.tight_layout(rect=[0,0,1,1])
+#     plt.tight_layout(rect=[0,0,1,1])
 
-    xmin, xmax = ax1.get_xlim()
-    ymin, ymax = ax1.get_ylim()
+#     xmin, xmax = ax1.get_xlim()
+#     ymin, ymax = ax1.get_ylim()
     
-    ymax_scale_factor = 0.22 if log_scale else 0.82
-    ax1.text(xmax * 0.97, ymax * ymax_scale_factor, total_tx_count_txt,
-             horizontalalignment='right',
-             verticalalignment='center',
-             linespacing=1.5,
-             fontsize=12,
-             weight='bold')
+#     ymax_scale_factor = 0.22 if log_scale else 0.82
+#     ax1.text(xmax * 0.97, ymax * ymax_scale_factor, total_tx_count_txt,
+#              horizontalalignment='right',
+#              verticalalignment='center',
+#              linespacing=1.5,
+#              fontsize=12,
+#              weight='bold')
 
-    handles, labels = ax1.get_legend_handles_labels()
-    labels = [i.replace('count', 'Tx count') if 'count' in i else i for i in labels]
-    ax1.legend(handles, labels, loc='upper right', bbox_to_anchor=(1, 1.08), frameon=False, fancybox=True, shadow=True, ncol=3)
+#     handles, labels = ax1.get_legend_handles_labels()
+#     labels = [i.replace('count', 'Tx count') if 'count' in i else i for i in labels]
+#     ax1.legend(handles, labels, loc='upper right', bbox_to_anchor=(1, 1.08), frameon=False, fancybox=True, shadow=True, ncol=3)
 
-    ax1.text(xmax * 1.07, ymax * -0.12, total_activity_count_txt,
-             horizontalalignment='right',
-             verticalalignment='center',
-             rotation=90,
-             linespacing=1.5,
-             fontsize=8)
+#     ax1.text(xmax * 1.07, ymax * -0.12, total_activity_count_txt,
+#              horizontalalignment='right',
+#              verticalalignment='center',
+#              rotation=90,
+#              linespacing=1.5,
+#              fontsize=8)
     
-    ax2.spines['right'].set_color('cyan')
-    ax2.yaxis.label.set_color('cyan')
-    ax2.tick_params(axis='y', colors="cyan")
+#     ax2.spines['right'].set_color('cyan')
+#     ax2.yaxis.label.set_color('cyan')
+#     ax2.tick_params(axis='y', colors="cyan")
 
-    if log_scale:
-        ax1.set_yscale('log')
+#     if log_scale:
+#         ax1.set_yscale('log')
 
-    plt.show()
-    plt.savefig(save_path.joinpath(f'tx_summary_{to_or_from}_{tx_path_date}.png'))
-    plt.close()
+#     plt.show()
+#     plt.savefig(save_path.joinpath(f'tx_summary_{to_or_from}_{tx_path_date}.png'))
+#     plt.close()
 
 
 # visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='to_label_group')
 # visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='from_label_group')
 
 
-
-def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['to_label_group', 'tx_mode'], to_or_from='to', save_path='', log_scale=False):
+def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, in_group=['to_label_group', 'tx_mode'], to_or_from='to', save_path='', log_scale=False):
     sns.set(style="dark")
     plt.style.use("dark_background")
 
     active_user_wallet_count, _ = get_active_user_wallet_count(df)
 
     tx_count_with_fees = get_tx_group_with_fees(df, in_group)
+    L1_fees = tx_count_with_fees['fees'].sum()
+    dex_row = {'group': 'Balanced', 'tx_mode': 'DEX', 'fees': balanced_burn, 'count': 0}
+    tx_count_with_fees = tx_count_with_fees.append(dex_row, ignore_index=True)
     
     contract_address_label = 'Destination' if 'to_label_group' in in_group else 'Source'
     
@@ -309,7 +430,7 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
     total_activity_count_txt = f"Regular Tx: {df['regTxCount'].sum():,}; Internal Tx: {df['intTxCount'].sum():,}\nInternal Events: {df['intEvtCount'].sum():,}; System Ticks: {df['systemTickCount'].sum():,}"
 
     total_tx_count = tx_count_with_fees['count'].sum()
-    total_fees = tx_count_with_fees['fees'].sum().round(2)
+    total_fees = f"{round(tx_count_with_fees['fees'].sum()):,}"
     total_tx_count_txt = f"Transactions (Fee-incurring): {int(total_tx_count):,}\nTotal Activity: {int(total_activity_count):,}\n{total_transfer_value_text}\nActive Wallets: {int(active_user_wallet_count):,}"
 
     fig, ax1 = plt.subplots(figsize=(14, 8))
@@ -350,7 +471,7 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
     ax2.set_ylabel('Fees burned (ICX)', labelpad=10)
     
     daily_burned_percentage = f"{tx_count_with_fees_main_order['fees'].sum()/daily_issuance:.2%}"
-    fees_burned_label = f'Total Fees Burned ({total_fees} ICX / {daily_burned_percentage} of daily inflation)'
+    fees_burned_label = f'Fees Burned: {total_fees} ICX (L1: {round(L1_fees):,}; DEX: {round(balanced_burn):,}) / {daily_burned_percentage} of daily inflation'
 
     # Adjust axis formatting
     xmin, xmax = ax1.get_xlim()
@@ -407,7 +528,7 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
 
 
 
-def plot_transaction_network(df, from_column='from_label_group', to_column='to_label_group', 
+def plot_transaction_network(df, balanced_burn=0, from_column='from_label_group', to_column='to_label_group', 
                              tx_count_column='TxCount', fees_column='tx_fees', value_column='Value in USD', 
                              main_node_group='to_label_group', max_size_values=100_000,
                              save_path='', tx_path_date='', dpi=300):
@@ -437,8 +558,9 @@ def plot_transaction_network(df, from_column='from_label_group', to_column='to_l
 
     # Compute node sizes based on total fees
     node_fees = df.groupby(main_node_group)[fees_column].sum().to_dict()
+    node_fees['Balanced'] += balanced_burn
     max_fee = max(node_fees.values())
-    total_fees = df[fees_column].sum()
+    total_fees = df[fees_column].sum() + balanced_burn
 
     # Compute node sizes based on total value transferred
     node_values_in_usd = df.groupby(main_node_group)[value_column].sum()
@@ -501,7 +623,92 @@ def plot_transaction_network(df, from_column='from_label_group', to_column='to_l
     plt.close()
 
 
+
+def get_unique_active_wallet_interactions(df, save_path, tx_path_date, log_scale=True):
+    """
+    Computes unique active wallet interactions and plots a bar chart.
+
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing transaction data with 'from' and 'to' columns.
+        log_scale (bool): Whether to use a logarithmic scale for the y-axis.
+
+    Returns:
+        None
+    """
+
+    # Get active user wallet count and the subset of the DataFrame
+    active_user_wallet_count, df_subset = get_active_user_wallet_count(df)
+
+    # Sort the addresses in 'from' and 'to' columns and store them in new columns
+    sorted_from_to = pd.DataFrame({
+        'sorted_from': np.minimum(df_subset['from'], df_subset['to']),
+        'sorted_to': np.maximum(df_subset['from'], df_subset['to'])
+    })
+
+    # Combine the sorted columns into a single column for unique identification
+    df_subset['pair_id'] = sorted_from_to['sorted_from'] + '_' + sorted_from_to['sorted_to']
+
+    # Drop duplicates based on the 'pair_id' column
+    unique_pairs_df = df_subset.drop_duplicates(subset='pair_id').reset_index(drop=True)
+
+    # Drop the 'pair_id' column if it is no longer needed
+    unique_pairs_df = unique_pairs_df.drop(columns='pair_id')
+
+    # Compute the 'tx_group' column using the previously defined function
+    unique_pairs_df = compute_tx_group(unique_pairs_df)
+
+    # Count unique wallet interactions by group
+    wallet_interaction_by_group_counts = (
+        unique_pairs_df['tx_group']
+        .value_counts()
+        .reset_index()
+        .rename(columns={'index': 'group', 'tx_group': 'count'})
+    )
+
+    # Plot the results using seaborn
+    fig, ax1 = plt.subplots(figsize=(14, 8))
+    sns.barplot(data=wallet_interaction_by_group_counts, x='group', y='count', palette='viridis', ax=ax1)
+
+    # Add title and labels
+    plt.title('Unique Active Wallet Interactions', fontsize=16)
+    plt.xlabel('Interaction Group', fontsize=14)
+    plt.ylabel('Number of Wallets', fontsize=14)
+    plt.xticks(rotation=90)
+
+    # Add counts above each bar
+    for i, row in wallet_interaction_by_group_counts.iterrows():
+        ax1.text(i, row['count'], f'{row["count"]}', ha='center', va='bottom', fontsize=8)
+
+    # Apply logarithmic scale if specified
+    if log_scale:
+        ax1.set_yscale('log')
+        plt.ylabel('Number of Wallets (Log Scale)', fontsize=14)
+
+    ax1.text(
+        0.98, 0.96,  # X and Y position in axes coordinates
+        f"Unique active wallets: {active_user_wallet_count:,.0f}",
+        transform=ax1.transAxes,  # Specify that the coordinates are relative to the axes
+        fontsize=12,
+        ha='right',  # Horizontal alignment
+        va='top',  # Vertical alignment
+        bbox=dict(facecolor='cyan', alpha=0.5, edgecolor='none')  # Optional: Add a semi-transparent background box
+    )
+
+    plt.tight_layout()
+    plt.show()
+    
+    save_full_path = Path(save_path) / f'active_wallet_count_{tx_path_date}.png'
+    plt.savefig(save_full_path)#, dpi=dpi)
+    plt.close()
+    
+    
+# =============================================================================
+# RUN    
+# =============================================================================
+
+balanced_dex_icx_burned = get_balanced_burned_amount(date_of_interest, tx_block_paths)
 daily_issuance = get_iiss_info(walletPath)['Iglobal']*12/365
+
 
 for tx_path in tqdm(matching_paths):
     tx_path_date = tx_path.stem.split('_')[-1]
@@ -516,15 +723,15 @@ for tx_path in tqdm(matching_paths):
     if "Unnamed: 0" in df.columns:
         df.drop("Unnamed: 0", axis=1, inplace=True)
 
-    
+    balanced_burn = balanced_dex_icx_burned.get(tx_path_date)  
+
     df_addresses = pd.concat([df[['from','from_label_group']].rename(columns={'from':'address', 'from_label_group':'group'}),
                              df[['to','to_label_group']].rename(columns={'to':'address', 'to_label_group':'group'})]).drop_duplicates()
     
     df_addresses = df_addresses.dropna()
     df_addresses = df_addresses[df_addresses['address'].str.startswith(('cx', 'hx')) | (df_addresses['address'] == '0x0')]
     
-    
-    
+
     tx_path_date_underscore = tx_path_date.replace("-", "_")
     tokentransfer_date_Path = tokentransferPath.joinpath(tx_path_date_underscore, f'IRC_token_transfer_{tx_path_date_underscore}.csv')
     token_transfer_summary_df = pd.read_csv(tokentransfer_date_Path, low_memory=False)
@@ -552,69 +759,26 @@ for tx_path in tqdm(matching_paths):
     # total_transfer_value_by_group = df.groupby('group')['Value in USD'].sum()
     # total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
     
-    
     total_transfer_value = df_agg['Value in USD'].sum()
     # total_transfer_value_by_group = df_agg.groupby('group')['Value in USD'].sum()
-    total_transfer_value_text = f'Total Value Transferred: ~{total_transfer_value:,.0f} USD'
+    total_transfer_value_text = f'Value Transferred: ~{total_transfer_value:,.0f} USD'
 
-    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['from_label_group', 'tx_mode'], to_or_from='from', save_path=resultsPath_year)
-    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, in_group=['to_label_group', 'tx_mode'], to_or_from='to', save_path=resultsPath_year)
+    # visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, in_group=['from_label_group', 'tx_mode'], to_or_from='from', save_path=resultsPath_year)
+    # visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, in_group=['to_label_group', 'tx_mode'], to_or_from='to', save_path=resultsPath_year)
     
-    plot_transaction_network(df_agg, save_path=resultsPath_year, tx_path_date=tx_path_date)
+    # transaction count and fees
+    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, in_group=['tx_group', 'tx_mode'], to_or_from='mixed', save_path=resultsPath_year)
+
+    # network / value transferred and fees
+    plot_transaction_network(df_agg, balanced_burn, save_path=resultsPath_year, tx_path_date=tx_path_date)
+
+    # unique active wallet counts
+    get_unique_active_wallet_interactions(df, save_path=resultsPath_year, tx_path_date=tx_path_date, log_scale=True)
 
 
 
 
 
 
-active_user_wallet_count, df_subset = get_active_user_wallet_count(df)
 
 
-df_temp_subset_to_hx = df_subset[df_subset['to'].str.startswith('hx', na=False)]
-df_temp_subset_to_hx = df_temp_subset_to_hx[['to', 'to_label_group']].drop_duplicates()
-
-
-unique_to_counts = df_temp_subset_to_hx.groupby('to_label_group')['to'].nunique()
-
-# Convert the results to a DataFrame for plotting
-unique_to_counts_df = unique_to_counts.reset_index(name='unique_to_count')
-
-# Plotting the bar plot
-plt.figure(figsize=(10, 6))
-sns.barplot(data=unique_to_counts_df, x='to_label_group', y='unique_to_count', palette='viridis')
-
-# Add titles and labels
-plt.title('Unique Addresses Count by Label Group', fontsize=16)
-plt.xlabel('Label Group', fontsize=14)
-plt.ylabel('Unique Address Count', fontsize=14)
-plt.xticks(rotation=90)
-plt.tight_layout()
-
-# Show plot
-plt.show()
-
-
-
-
-df_temp_subset_from_hx = df_subset[df_subset['from'].str.startswith('hx', na=False)]
-df_temp_subset_from_hx = df_temp_subset_from_hx[['from', 'from_label_group']].drop_duplicates()
-
-
-unique_to_counts = df_temp_subset_from_hx.groupby('from_label_group')['from'].nunique()
-
-# Convert the results to a DataFrame for plotting
-unique_to_counts_df = unique_to_counts.reset_index(name='unique_from_count')
-
-# Plotting the bar plot
-plt.figure(figsize=(10, 6))
-sns.barplot(data=unique_to_counts_df, x='from_label_group', y='unique_from_count', palette='viridis')
-
-# Add titles and labels
-plt.title('Unique Addresses Count by Label Group', fontsize=16)
-plt.xlabel('Label Group', fontsize=14)
-plt.ylabel('Unique Address Count', fontsize=14)
-plt.xticks(rotation=90)
-plt.tight_layout()
-
-# Show plot
-plt.show()

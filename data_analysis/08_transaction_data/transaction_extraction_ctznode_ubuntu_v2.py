@@ -92,10 +92,10 @@ date_today = today.strftime("%Y-%m-%d")
 
 # to use specific date (1), use yesterday (0), use range(2)
 use_specific_prev_date = 0 #0
-date_prev = "2024-07-28"
+date_prev = "2024-07-01"
 
-day_1 = "2023-01-01" #07
-day_2 = "2023-06-30"
+day_1 = "2024-07-01" #07
+day_2 = "2024-08-01"
 
 if use_specific_prev_date == 1:
     date_of_interest = [date_prev]
@@ -296,7 +296,7 @@ for date_prev in date_of_interest:
         combined_df = pd.DataFrame(data=range(start_block, end_block), columns=['blockHeight'])
         combined_df['block_createDate'] = date_prev
 
-        # combined_df.to_csv(os.path.join(dataPath, 'transaction_blocks_' + date_prev + '.csv'), index=False)
+        combined_df.to_csv(os.path.join(dataPath, 'transaction_blocks_' + date_prev + '.csv'), index=False)
 
 
     try:
@@ -369,8 +369,6 @@ for date_prev in date_of_interest:
         
         
         block_df = run_block()
-
-        # TODO: Save block info when completed
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
         # saving block data balance
@@ -970,7 +968,7 @@ for date_prev in date_of_interest:
                 df_output.drop(columns='amount', inplace=True)
             else:
                 df_output = df_combined
-                df_output['symbol'] = np.where((df_output['tx_type'] == 'main') & df_output['value'].notna(), 'ICX', df_output['symbol'])
+                df_output['symbol'] = np.where((df_output['tx_type'] == 'main') & df_output['value'].notna(), 'ICX', np.nan)
                 
             # check = df_output[df_output['txHash'] == '0xdb3f211ef09aa4797c77a05fe3519e48771425301a9e6dca69ac5ef12dc2bdab']
             # check = df_output[df_output['txHash'] == '0x9baac9fafb9271ae9a47037e22065ad089b32a182b7e091994c31be779c87394']
@@ -979,34 +977,6 @@ for date_prev in date_of_interest:
             df_output.drop(columns=['token_symbols'], inplace=True)
             df_output['value'] = df_output['value'].astype('float64')
 
-
-
-            # print(token_xfer_df_length)
-            # test= pd.merge(df_combined, token_xfer_df, on=['eventlogs_cx', 'from', 'to', 'txHash', 'log_index'], how='left')
-            # merged_df = pd.merge(token_xfer_df, df_combined, on=['eventlogs_cx', 'from', 'to', 'txHash', 'log_index'], how='left', indicator=True)
-            # not_merged_df = merged_df[merged_df['_merge'] == 'left_only']
-            # not_merged_df = not_merged_df.drop(columns=['_merge'])
-            
-            # check1 = df_output[df_output['txHash'] == '0xaeac84d2f2b97589c075b60d5a13624eea12be25ce76d33c1a41f373ff98364f']
-            # check2 = token_xfer_df[token_xfer_df['txHash'] == '0xaeac84d2f2b97589c075b60d5a13624eea12be25ce76d33c1a41f373ff98364f']
-
-            # check1 = test[test['txHash'] == '0x75b7700c2f7b96315d4abd5cb5f029a494631317cba89118ea6f94cffcceb7e5']
-            # check3 = df[df['txHash'] == '0x75b7700c2f7b96315d4abd5cb5f029a494631317cba89118ea6f94cffcceb7e5']            
-            # check4 = df_combined[df_combined['txHash'] == '0x75b7700c2f7b96315d4abd5cb5f029a494631317cba89118ea6f94cffcceb7e5']
-
-
-            # keep_cols = ['timestamp', 'dataType', 'txIndex', 'status', 'failure.code', 'failure.message', 'txHash', 'from', 'to', 
-            #              'tx_date', 'tx_fees', 'tx_time', 'value', 'eventlogs_cx', 'eventlogs', 'event_from', 'event_to', 
-            #              'p2p_main', 'p2c_main', 'c2p_main', 'c2c_main', 'p2p_event', 'p2c_event', 'c2p_event', 'c2c_event', 'regTxCount', 'intEvtCount', 'intTxCount', 'systemTickCount']
-            
-            # df_combined = df_combined[keep_cols].reset_index(drop=True)
-
-
-            # counting internal transactions / total events
-            # df.loc[:, 'intTxCount'] = np.where(df['eventLogs.indexed'].str.contains('Address', na=False), 1, 0)          
-            
-            # df_combined['regTxCount'].sum() + df_combined['intTxCount'].sum() + df_combined['intEvtCount'].sum() + df_combined['systemTickCount'].sum()
-            
             int_tx_event = df_output.groupby('txHash').agg('sum')[['regTxCount', 'intTxCount', 'intEvtCount', 'systemTickCount']].reset_index()
 
             tx_all = pd.merge(tx_all, int_tx_event, on='txHash', how='left')
