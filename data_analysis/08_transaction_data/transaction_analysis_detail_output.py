@@ -35,6 +35,7 @@ dataPath = Path(projectPath).joinpath('data')
 resultsPath = Path(projectPath).joinpath('results')
 walletPath = Path(projectPath).joinpath("wallet")
 tokentransferPath = Path(dailyPath).joinpath("10_token_transfer/results/")
+tokenaddressPath = Path(dailyPath).joinpath("wallet_addresses")
 
 walletPath.mkdir(parents=True, exist_ok=True)
 
@@ -45,8 +46,8 @@ tx_block_paths = sorted([i for i in dataPath.glob('transaction_blocks*.csv')])
 use_specific_prev_date = 0 #0
 date_prev = "2024-07-28"
 
-day_1 = "2023-07-01" #07
-day_2 = "2023-12-31"
+day_1 = "2024-07-01" #07
+day_2 = "2024-08-02"
 
 def yesterday(doi = "2021-08-20", delta=1):
     yesterday = datetime.fromisoformat(doi) - timedelta(delta)
@@ -113,6 +114,13 @@ def parse_icx(val: str):
     except ValueError:
         return float("NAN")
 
+def load_from_json(filename):
+    """
+    Load dictionary data from a JSON file.
+    """
+    with open(filename, 'r') as json_file:
+        data = json.load(json_file)
+    return data
 
 # get iiss info
 def get_iiss_info(walletPath):
@@ -320,97 +328,6 @@ def get_active_user_wallet_count(df):
     active_user_wallet_count = len(active_user_wallets[active_user_wallets.str.startswith('hx', na=False)].unique())
     return active_user_wallet_count, df_subset
 
-
-# def visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='to_label_group', to_or_from='to', save_path='', log_scale=False):
-#     sns.set(style="dark")
-#     plt.style.use("dark_background")
-
-#     tx_count_with_fees = get_tx_group_with_fees(df, in_group)
-    
-#     contract_address_label = 'Destination' if in_group == 'to_label_group' else 'Source'
-    
-#     total_activity_count = df['regTxCount'].sum() + df['intTxCount'].sum() + df['systemTickCount'].sum() + df['intEvtCount'].sum()
-#     total_activity_count_txt = f"Regular Tx: {df['regTxCount'].sum():,}; Internal Tx: {df['intTxCount'].sum():,}\nInternal Events: {df['intEvtCount'].sum():,}; System Ticks: {df['systemTickCount'].sum():,}"
-
-#     total_tx_count = tx_count_with_fees['count'].sum()
-#     total_fees = tx_count_with_fees['fees'].sum().round(2)
-#     total_tx_count_txt = f"Transactions (Fee-incurring): {int(total_tx_count):,}\nTotal Activity: {int(total_activity_count):,}\n{total_transfer_value_text}"
-
-#     fig, ax1 = plt.subplots(figsize=(14, 8))
-
-#     # Bar plot for transaction counts
-#     tx_count_with_fees_sorted = tx_count_with_fees.sort_values(by=['fees','count'], ascending=False)
-#     tx_count_with_fees_sorted.plot(kind='bar', x='group', y='count', stacked=True, ax=ax1, color='palegoldenrod', legend=False)
-
-#     plt.title(f'Daily Transactions ({tx_path_date})', fontsize=14, weight='bold', pad=10, loc='left')
-#     ax1.set_xlabel(f'{contract_address_label} Contracts/Addresses')
-#     ax1.set_ylabel('Transactions', labelpad=10)
-#     ax1.set_xticklabels(tx_count_with_fees_sorted['group'], rotation=90, ha="center")
-
-#     # Line plot for transaction fees
-#     ax2 = ax1.twinx()
-#     ax2.plot(tx_count_with_fees_sorted['group'], tx_count_with_fees_sorted['fees'], marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black', markersize=8)
-#     ax2.set_ylabel('Fees burned (ICX)', labelpad=10)
-    
-#     daily_burned_percentage = f"{tx_count_with_fees['fees'].sum()/daily_issuance:.2%}"
-#     fees_burned_label = f'Fees Burned ({total_fees} ICX / {daily_burned_percentage} of daily inflation)'
-
-#     # Adjust axis formatting
-#     xmin, xmax = ax1.get_xlim()
-#     ymin, ymax = ax1.get_ylim()
-
-#     # Increase ymax by 5%
-#     ax1.set_ylim(ymin, ymax * 1.05)
-
-#     if ymax >= 3_000:
-#         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x / 1e3) + ' K'))
-#     if ymax >= 1_000_000:
-#         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
-
-#     color = 'white'
-#     m_line = mlines.Line2D([], [], color=color, label=f'{fees_burned_label}', linewidth=1, marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black')
-#     leg = plt.legend(handles=[m_line], loc='upper right', fontsize='medium', bbox_to_anchor=(0.98, 0.999), frameon=False)
-#     for text in leg.get_texts():
-#         plt.setp(text, color='cyan')
-
-#     plt.tight_layout(rect=[0,0,1,1])
-
-#     xmin, xmax = ax1.get_xlim()
-#     ymin, ymax = ax1.get_ylim()
-    
-#     ymax_scale_factor = 0.22 if log_scale else 0.82
-#     ax1.text(xmax * 0.97, ymax * ymax_scale_factor, total_tx_count_txt,
-#              horizontalalignment='right',
-#              verticalalignment='center',
-#              linespacing=1.5,
-#              fontsize=12,
-#              weight='bold')
-
-#     handles, labels = ax1.get_legend_handles_labels()
-#     labels = [i.replace('count', 'Tx count') if 'count' in i else i for i in labels]
-#     ax1.legend(handles, labels, loc='upper right', bbox_to_anchor=(1, 1.08), frameon=False, fancybox=True, shadow=True, ncol=3)
-
-#     ax1.text(xmax * 1.07, ymax * -0.12, total_activity_count_txt,
-#              horizontalalignment='right',
-#              verticalalignment='center',
-#              rotation=90,
-#              linespacing=1.5,
-#              fontsize=8)
-    
-#     ax2.spines['right'].set_color('cyan')
-#     ax2.yaxis.label.set_color('cyan')
-#     ax2.tick_params(axis='y', colors="cyan")
-
-#     if log_scale:
-#         ax1.set_yscale('log')
-
-#     plt.show()
-#     plt.savefig(save_path.joinpath(f'tx_summary_{to_or_from}_{tx_path_date}.png'))
-#     plt.close()
-
-
-# visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='to_label_group')
-# visualise_tx_group_with_fees(df, tx_path_date, total_transfer_value_text, in_group='from_label_group')
 
 
 def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, in_group=['to_label_group', 'tx_mode'], to_or_from='to', save_path='', log_scale=False):
@@ -735,12 +652,21 @@ for tx_path in tqdm(matching_paths):
     tx_path_date_underscore = tx_path_date.replace("-", "_")
     tokentransfer_date_Path = tokentransferPath.joinpath(tx_path_date_underscore, f'IRC_token_transfer_{tx_path_date_underscore}.csv')
     token_transfer_summary_df = pd.read_csv(tokentransfer_date_Path, low_memory=False)
-    token_transfer_summary_df = pd.merge(token_transfer_summary_df, df_addresses, on='address', how='left')
+    
+    if 'address' in token_transfer_summary_df.columns:
+        token_transfer_summary_df = pd.merge(token_transfer_summary_df, df_addresses, on='address', how='left')
+    else:
+        token_addresses = load_from_json(tokenaddressPath.joinpath('token_addresses.json'))
+        symbol_to_address = {v['token_symbols']: k for k, v in token_addresses.items()}
+        token_transfer_summary_df['address'] = token_transfer_summary_df['IRC Token'].map(symbol_to_address)
+        token_transfer_summary_df = pd.merge(token_transfer_summary_df, df_addresses, on='address', how='left')
     
     ## Manual addition
     token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'FIN', 'Optimus', token_transfer_summary_df['IRC Token'])
     token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'BTCB', 'Bitcoin', token_transfer_summary_df['IRC Token'])
-    # token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'ICX', 'Icon', token_transfer_summary_df['IRC Token'])
+    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'BNB', 'BNB', token_transfer_summary_df['IRC Token'])
+    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'HVH', 'Havah', token_transfer_summary_df['IRC Token'])
+    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'].str.contains('USDC', na=False) & ~token_transfer_summary_df['IRC Token'].str.contains('IUSDC', na=False), 'USDC', token_transfer_summary_df['IRC Token'])
 
     df = pd.merge(df, token_transfer_summary_df.rename(columns={'IRC Token':'symbol'})[['symbol', 'Price in USD', 'group']], on='symbol', how='left')
     df['group'] = np.where((df['symbol'] == 'ICX') & df['group'].isna(), 'ICX', df['group'])

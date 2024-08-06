@@ -105,8 +105,16 @@ def main():
     # Get Address List
     address_list = jtracker_df['address'].to_list()
     
+    local_endpoint = "http://127.0.0.1:9000/api/v3"
+    icon_solidwallet_endpoint = "https://ctz.solidwallet.io/api/v3"
+    
     # Initialize Icon Service
-    nid = IconService(HTTPProvider("https://ctz.solidwallet.io/api/v3"))
+    try:
+        print("Trying local endpoint")
+        nid = IconService(HTTPProvider(local_endpoint))
+    except:
+        print("Local endpoint failed. Using Solidwallet instead.")
+        nid = IconService(HTTPProvider(icon_solidwallet_endpoint))
     
     # Get Token Decimals
     address_collector = get_token_decimals(address_list, nid)

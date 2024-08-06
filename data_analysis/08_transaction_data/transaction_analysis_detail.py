@@ -13,6 +13,10 @@ from tqdm import tqdm
 import json
 import requests
 from datetime import datetime, timedelta
+from iconsdk.icon_service import IconService
+from iconsdk.providers.http_provider import HTTPProvider
+from iconsdk.builder.call_builder import CallBuilder
+from iconsdk.wallet.wallet import KeyWallet
 
 # Define paths
 dailyPath = '/home/tono/ICONProject/data_analysis/'
@@ -23,6 +27,7 @@ resultsPath = Path(projectPath).joinpath('results')
 
 tx_detail_paths = sorted([i for i in dataPath.glob('tx_detail*.csv')])
 tx_detail_paths = [i for i in tx_detail_paths if '_with_group' not in i.as_posix()]
+tx_block_paths = sorted([i for i in dataPath.glob('transaction_blocks*.csv')])
 
 
 ATTACH_WALLET_INFO = True
@@ -36,15 +41,15 @@ POSSIBLE_NANS = ['', ' ', np.nan]
 use_specific_prev_date = 0 #0
 date_prev = "2024-07-28"
 
-day_1 = "2023-07-01" #07
-day_2 = "2023-12-31"
+day_1 = "2024-07-01" #07
+day_2 = "2024-08-02"
 
-def yesterday(doi = "2021-08-20"):
-    yesterday = datetime.fromisoformat(doi) - timedelta(1)
+def yesterday(doi = "2021-08-20", delta=1):
+    yesterday = datetime.fromisoformat(doi) - timedelta(delta)
     return yesterday.strftime('%Y-%m-%d')
 
-def tomorrow(doi = "2021-08-20"):
-    tomorrow = datetime.fromisoformat(doi) + timedelta(1)
+def tomorrow(doi = "2021-08-20", delta=1):
+    tomorrow = datetime.fromisoformat(doi) + timedelta(delta)
     return tomorrow.strftime('%Y-%m-%d')
 
 
@@ -72,6 +77,41 @@ matching_paths = [path for path in tx_detail_paths if any(date in path.name for 
 
 
 
+def loop_to_icx(loop):
+    icx = loop / 1000000000000000000
+    return(icx)
+
+def hex_to_int(val: str):
+    try:
+        return int(val, 0)
+    except ValueError:
+        print(f"failed to convert {val} to int")
+        return float("NAN")
+
+def int_to_hex(val: int) -> str:
+    """
+    Converts an integer to a hexadecimal string.
+    
+    Parameters:
+        val (int): The integer value to be converted to hex.
+
+    Returns:
+        str: The hexadecimal string representation of the integer.
+    """
+    try:
+        return hex(val).lower()
+    except TypeError:
+        print(f"failed to convert {val} to hex")
+        return "NAN"
+
+def parse_icx(val: str):
+    try:
+        return loop_to_icx(int(val, 0))
+    except ZeroDivisionError:
+        return float("NAN")
+    except ValueError:
+        return float("NAN")
+    
 def replace_dict_if_unknown(key, d, value):
     if ("-" in d.values()) or (d.values() == None):
         d.update({key: value})
@@ -343,10 +383,78 @@ def process_transaction_file(tx_path):
     summary['cx_address_count'] = len(cx_addresses)
 
     # tx fees (fees burned)
-    summary['tx_fees'] = df.loc[df['tx_type'] == 'main', 'tx_fees'].sum()
+    summary['tx_fees_L1'] = df.loc[df['tx_type'] == 'main', 'tx_fees'].sum()
 
     return tx_date, summary
 
+def get_balanced_burned_amount(date_of_interest, tx_block_paths):
+    
+    def calculate_differences(data_dict):
+        sorted_dates = sorted(data_dict.keys(), key=lambda date: datetime.strptime(date, '%Y-%m-%d'))
+        
+        differences = {}
+        
+        previous_value = data_dict[sorted_dates[0]]
+        for i, date in enumerate(sorted_dates):
+            if i == 0:
+        
+                differences[date] = 0
+            else:
+                current_value = data_dict[date]
+                differences[date] = current_value - previous_value
+                previous_value = current_value
+    
+        if sorted_dates:
+            differences.pop(sorted_dates[0])
+    
+        return differences
+
+    if not isinstance(date_of_interest, list):
+        date_of_interest = [date_of_interest]
+        
+    if not isinstance(tx_block_paths, list):
+        tx_block_paths = [tx_block_paths]
+        
+    date_of_interest_with_previous = [yesterday(date_of_interest[0])] + date_of_interest    
+    matching_paths = [path for path in tx_block_paths if any(date in str(path) for date in date_of_interest_with_previous)]
+
+    balanced_burned_collector = {}
+    for matching_path in matching_paths:
+        date_to_check = matching_path.stem.split('_')[-1]
+        balanced_burned_collector[date_to_check] = {}
+        
+        df = pd.read_csv(matching_path)
+        block_height = df['blockHeight'].iloc[0]
+        
+        block_height_hex = int_to_hex(block_height)
+        balanced_burned_icx = get_balanced_burned(block_height_hex)
+        balanced_burned_collector[date_to_check] = balanced_burned_icx
+    
+    return calculate_differences(balanced_burned_collector)
+
+def get_balanced_burned(block_height):
+    # ctz_solidwallet = 'https://ctz.solidwallet.io/api/v3'
+    local_endpoint = "http://127.0.0.1:9000/api/v3"
+    
+    icon_service = IconService(HTTPProvider(local_endpoint))
+    contract_address = "cxdc30a0d3a1f131565c071272a20bc0b06fd4c17b"
+    
+    # block_height = "0x50d14d2"  
+    
+    call = CallBuilder()\
+        .from_("hx0000000000000000000000000000000000000000")\
+        .to(contract_address)\
+        .method("getBurnedAmount")\
+        .height(block_height)\
+        .build()
+    try:
+        result = icon_service.call(call)
+        print(f"Burned Amount: {result}")
+    except Exception as e:
+        result = '0x0'
+        print(f"An error occurred: {e}")
+    
+    return loop_to_icx(hex_to_int(result))
 
 def attach_wallet_info_to_tx_data(tx_path, merged_addresses):
     df = pd.read_csv(tx_path, low_memory=False)
@@ -376,7 +484,9 @@ def attach_wallet_info_to_tx_data(tx_path, merged_addresses):
 
 
 def main():
+ 
     if SAVE_SUMMARY:
+        
         summary_counts = {}
         for tx_path in tqdm(tx_detail_paths, desc="Summarising tx details"):
             tqdm.write(f"Working on: {tx_path.stem}")
@@ -384,6 +494,8 @@ def main():
     
             if result_of_tx:
                 tx_date, summary = result_of_tx
+                balanced_dex_icx_burned = get_balanced_burned_amount(tx_date, tx_block_paths)
+                summary['tx_fees_DEX'] = balanced_dex_icx_burned.get(tx_date)
                 summary_counts[tx_date] = summary
         
         # summary_counts_native = convert_to_native(summary_counts)

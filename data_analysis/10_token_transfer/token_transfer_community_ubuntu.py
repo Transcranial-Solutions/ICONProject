@@ -263,19 +263,19 @@ def token_tx_using_original_icon_tracker(total_pages=500):
     return token_xfer_df
 
 
-def try_multiple_times_if_fails():
+def try_multiple_times_if_fails(total_pages=500):
     ## just adding multiple try catch so that hopefully it'll go through
     try:
-        df = token_tx_using_community_tracker(total_pages=500)
+        df = token_tx_using_community_tracker(total_pages)
     except:
         try:
-            df = token_tx_using_newer_icon_tracker(total_pages=500)
+            df = token_tx_using_newer_icon_tracker(total_pages)
         except:
-            df = token_tx_using_original_icon_tracker(total_pages=500)
+            df = token_tx_using_original_icon_tracker(total_pages)
     finally:
         return df
 
-token_xfer_df = try_multiple_times_if_fails()
+token_xfer_df = try_multiple_times_if_fails(total_pages=500)
 
 token_xfer_df['token_name'] = np.where(token_xfer_df['token_name'] == '', 
                                        'unknown_token', 
