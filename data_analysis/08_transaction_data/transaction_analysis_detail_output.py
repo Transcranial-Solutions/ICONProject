@@ -44,7 +44,7 @@ tx_block_paths = sorted([i for i in dataPath.glob('transaction_blocks*.csv')])
 
 # to use specific date (1), use yesterday (0), use range(2)
 use_specific_prev_date = 0 #0
-date_prev = "2024-07-28"
+date_prev = "2024-08-02"
 
 day_1 = "2024-07-01" #07
 day_2 = "2024-08-02"

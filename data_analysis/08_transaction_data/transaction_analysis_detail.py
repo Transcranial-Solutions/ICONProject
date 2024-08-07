@@ -39,7 +39,7 @@ POSSIBLE_NANS = ['', ' ', np.nan]
 
 # to use specific date (1), use yesterday (0), use range(2)
 use_specific_prev_date = 0 #0
-date_prev = "2024-07-28"
+date_prev = "2024-08-02"
 
 day_1 = "2024-07-01" #07
 day_2 = "2024-08-02"
@@ -501,7 +501,7 @@ def main():
         # summary_counts_native = convert_to_native(summary_counts)
         # print(json.dumps(summary_counts_native, indent=4))
     
-        df_tx_detail_summary = pd.DataFrame(summary_counts).T
+        df_tx_detail_summary = pd.DataFrame(summary_counts).T.rename_axis('date').reset_index()
         df_tx_detail_summary.to_csv(resultsPath.joinpath('tx_detail_summary.csv'), index=False)
     
     # this is for detailed tx analysis

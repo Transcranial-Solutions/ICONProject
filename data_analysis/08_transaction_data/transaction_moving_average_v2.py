@@ -72,7 +72,7 @@ else:
 
 print(date_of_interest)
 
-df_tx = pd.read_csv(os.path.join(resultPath, 'compiled_tx_summary_date.csv'), low_memory=False)
+df_tx = pd.read_csv(os.path.join(resultPath, 'tx_detail_summary.csv'), low_memory=False)
 
 
 for date_prev in date_of_interest:
