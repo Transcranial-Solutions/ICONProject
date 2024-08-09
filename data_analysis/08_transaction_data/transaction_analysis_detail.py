@@ -32,7 +32,8 @@ tx_block_paths = sorted([i for i in dataPath.glob('transaction_blocks*.csv')])
 
 ATTACH_WALLET_INFO = True
 ONLY_SAVE_SPECIFIED_DATE = True ## if False, it will do all the data we have
-SAVE_SUMMARY = False
+SAVE_SUMMARY = True
+REFRESH_SAVED_SUMMARY = False
 
 # Constants
 POSSIBLE_NANS = ['', ' ', np.nan]
@@ -41,8 +42,8 @@ POSSIBLE_NANS = ['', ' ', np.nan]
 use_specific_prev_date = 0 #0
 date_prev = "2024-08-02"
 
-day_1 = "2024-07-01" #07
-day_2 = "2024-08-02"
+day_1 = "2023-07-01" #07
+day_2 = "2024-08-08"
 
 def yesterday(doi = "2021-08-20", delta=1):
     yesterday = datetime.fromisoformat(doi) - timedelta(delta)
@@ -160,6 +161,7 @@ def group_wallet(df, in_col='to_def'):
 
 def manual_grouping(df, in_col):
     group_col = f'{in_col}_group'
+    address_col = in_col.split('_label')[0]
     
     # Balanced
     balanced_conditions = [
@@ -189,17 +191,17 @@ def manual_grouping(df, in_col):
         'cx5ce7d060eef6ebaf23fa8a8717d3a5c8f0a3fda9',
         'cx2d86ce51600803e187ce769129d1f6442bcefb5b'
     ]
-    df[group_col] = np.where(df['to'].isin(craft_addresses), 'Craft', df[group_col])
+    df[group_col] = np.where(df[address_col].isin(craft_addresses), 'Craft', df[group_col])
 
     # iAM
-    df[group_col] = np.where(df['to'] == 'cx210ded1e8e109a93c89e9e5a5d0dcbc48ef90394', 'iAM ', df[group_col])
+    df[group_col] = np.where(df[address_col] == 'cx210ded1e8e109a93c89e9e5a5d0dcbc48ef90394', 'iAM ', df[group_col])
 
     # Bridge
     bridge_addresses = [
         'cxa82aa03dae9ca03e3537a8a1e2f045bcae86fd3f',
         'cx0eb215b6303142e37c0c9123abd1377feb423f0e'
     ]
-    df[group_col] = np.where(df['to'].isin(bridge_addresses), 'Bridge', df[group_col])
+    df[group_col] = np.where(df[address_col].isin(bridge_addresses), 'Bridge', df[group_col])
 
     # ICONbet
     iconbet_conditions = [
@@ -216,7 +218,7 @@ def manual_grouping(df, in_col):
         df[group_col].str.lower().str.startswith('gang', na=False)
     ]
     gangstabet_addresses = ['cx8683d50b9f53275081e13b64fba9d6a56b7c575d']
-    df[group_col] = np.where(df['to'].isin(gangstabet_addresses), 'GangstaBet', df[group_col])
+    df[group_col] = np.where(df[address_col].isin(gangstabet_addresses), 'GangstaBet', df[group_col])
     df[group_col] = np.select(gangstabet_conditions, ['GangstaBet'] * len(gangstabet_conditions), default=df[group_col])
 
     # EPX
@@ -227,7 +229,7 @@ def manual_grouping(df, in_col):
     df[group_col] = np.select(epx_conditions, ['EPX'] * len(epx_conditions), default=df[group_col])
 
     # UP
-    df[group_col] = np.where(df['to'] == 'cxc432c12e6c91f8a685ee6ff50a653c8a056875e4', 'UP', df[group_col])
+    df[group_col] = np.where(df[address_col] == 'cxc432c12e6c91f8a685ee6ff50a653c8a056875e4', 'UP', df[group_col])
 
     # Inanis
     df[group_col] = np.where(df[group_col].str.contains('Inanis', case=False, na=False), 'Inanis', df[group_col])
@@ -254,14 +256,14 @@ def manual_grouping(df, in_col):
         'hx891d1d00f371272c0d2f735d58acd435ffef9e62',
         'cxf14dea1cff7ceb29a46e6d04533a08f84441e41d'
     ]
-    df[group_col] = np.where(df['to'].isin(blobble_addresses), 'Blobble', df[group_col])
+    df[group_col] = np.where(df[address_col].isin(blobble_addresses), 'Blobble', df[group_col])
     df[group_col] = np.where(df[group_col].str.contains('blobble', case=False, na=False), 'Blobble', df[group_col])
 
     return df
 
 def grouping_wrapper(df, in_col):
     df = group_wallet(df, in_col)
-    df = manual_grouping(df, in_col)
+    # df = manual_grouping(df, in_col)
     return df
 
 
@@ -440,21 +442,26 @@ def get_balanced_burned(block_height):
     contract_address = "cxdc30a0d3a1f131565c071272a20bc0b06fd4c17b"
     
     # block_height = "0x50d14d2"  
-    
-    call = CallBuilder()\
-        .from_("hx0000000000000000000000000000000000000000")\
-        .to(contract_address)\
-        .method("getBurnedAmount")\
-        .height(block_height)\
-        .build()
     try:
-        result = icon_service.call(call)
-        print(f"Burned Amount: {result}")
-    except Exception as e:
+        call = CallBuilder()\
+            .from_("hx0000000000000000000000000000000000000000")\
+            .to(contract_address)\
+            .method("getBurnedAmount")\
+            .height(block_height)\
+            .build()
+        try:
+            result = icon_service.call(call)
+            print(f"Burned Amount: {result}")
+        except Exception as e:
+            result = '0x0'
+            print(f"An error occurred: {e}")
+            
+    except:
         result = '0x0'
-        print(f"An error occurred: {e}")
-    
-    return loop_to_icx(hex_to_int(result))
+        print("Maybe contract does not exist.")
+
+    output = loop_to_icx(hex_to_int(result))
+    return output
 
 def attach_wallet_info_to_tx_data(tx_path, merged_addresses):
     df = pd.read_csv(tx_path, low_memory=False)
@@ -487,22 +494,44 @@ def main():
  
     if SAVE_SUMMARY:
         
-        summary_counts = {}
-        for tx_path in tqdm(tx_detail_paths, desc="Summarising tx details"):
-            tqdm.write(f"Working on: {tx_path.stem}")
-            result_of_tx = process_transaction_file(tx_path)
-    
-            if result_of_tx:
-                tx_date, summary = result_of_tx
-                balanced_dex_icx_burned = get_balanced_burned_amount(tx_date, tx_block_paths)
-                summary['tx_fees_DEX'] = balanced_dex_icx_burned.get(tx_date)
-                summary_counts[tx_date] = summary
+        if not REFRESH_SAVED_SUMMARY:
+            df_tx_detail_summary_loaded = pd.read_csv(resultsPath.joinpath('tx_detail_summary.csv'), low_memory=False)
+            
+            summary_loaded_date = list(df_tx_detail_summary_loaded['date'])
+            tx_detail_paths_date = [i.stem.split('_')[-1] for i in tx_detail_paths]
+            
+            diff_dates = list(set(tx_detail_paths_date).difference(set(summary_loaded_date)))
+            if len(diff_dates) > 0:
+                tx_detail_paths_date_truncated = [path for path in tx_detail_paths if any(elem in path.stem.split('_') for elem in diff_dates)]
+            else:
+                tx_detail_paths_date_truncated = []
+        else:
+            tx_detail_paths_date_truncated = tx_detail_paths.copy()
         
-        # summary_counts_native = convert_to_native(summary_counts)
-        # print(json.dumps(summary_counts_native, indent=4))
-    
-        df_tx_detail_summary = pd.DataFrame(summary_counts).T.rename_axis('date').reset_index()
-        df_tx_detail_summary.to_csv(resultsPath.joinpath('tx_detail_summary.csv'), index=False)
+        if len(tx_detail_paths_date_truncated) > 0:
+        
+            summary_counts = {}
+            for tx_path in tqdm(tx_detail_paths_date_truncated, desc="Summarising tx details"):
+                tqdm.write(f"Working on: {tx_path.stem}")
+                result_of_tx = process_transaction_file(tx_path)
+        
+                if result_of_tx:
+                    tx_date, summary = result_of_tx
+                    balanced_dex_icx_burned = get_balanced_burned_amount(tx_date, tx_block_paths)
+                    summary['tx_fees_DEX'] = balanced_dex_icx_burned.get(tx_date)
+                    summary_counts[tx_date] = summary
+        
+            # summary_counts_native = convert_to_native(summary_counts)
+            # print(json.dumps(summary_counts_native, indent=4))
+        
+            df_tx_detail_summary = pd.DataFrame(summary_counts).T.rename_axis('date').reset_index()
+           
+            if not REFRESH_SAVED_SUMMARY:
+                df_tx_detail_summary_final = pd.concat([df_tx_detail_summary_loaded, df_tx_detail_summary], axis=0).reset_index(drop=True)
+            else:
+                df_tx_detail_summary_final = df_tx_detail_summary
+            
+            df_tx_detail_summary_final.to_csv(resultsPath.joinpath('tx_detail_summary.csv'), index=False)
     
     # this is for detailed tx analysis
     if ATTACH_WALLET_INFO:
