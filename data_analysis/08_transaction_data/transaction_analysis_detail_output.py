@@ -44,10 +44,10 @@ tx_block_paths = sorted([i for i in dataPath.glob('transaction_blocks*.csv')])
 
 # to use specific date (1), use yesterday (0), use range(2)
 use_specific_prev_date = 0 #0
-date_prev = "2024-08-02"
+date_prev = "2024-08-07"
 
 day_1 = "2023-07-01" #07
-day_2 = "2024-08-02"
+day_2 = "2024-08-08"
 
 def yesterday(doi = "2021-08-20", delta=1):
     yesterday = datetime.fromisoformat(doi) - timedelta(delta)
@@ -176,9 +176,8 @@ def get_balanced_burned(block_height):
     try:
         result = icon_service.call(call)
         print(f"Burned Amount: {result}")
-    except Exception as e:
+    except:
         result = '0x0'
-        print(f"An error occurred: {e}")
     
     return loop_to_icx(hex_to_int(result))
 
@@ -204,7 +203,7 @@ def get_balanced_burned_amount(date_of_interest, tx_block_paths):
     
         return differences
 
-
+    date_of_interest = [date_of_interest] if not isinstance(date_of_interest, list) else date_of_interest
     date_of_interest_with_previous = [yesterday(date_of_interest[0])] + date_of_interest    
     matching_paths = [path for path in tx_block_paths if any(date in str(path) for date in date_of_interest_with_previous)]
     
@@ -222,6 +221,24 @@ def get_balanced_burned_amount(date_of_interest, tx_block_paths):
     
     return calculate_differences(balanced_burned_collector)
     
+
+def find_token_transfer_path(base_path, date_str):
+    # Convert the date format to underscore
+    date_str_underscore = date_str.replace("-", "_")
+    
+    # Create a search pattern
+    search_pattern = f'IRC_token_transfer_{date_str_underscore}.csv'
+    
+    # Search through possible directory depths
+    for depth in range(1, 3):  # Searching up to 2 levels deep
+        pattern = f"{'*/' * depth}{search_pattern}"
+        for sub_path in base_path.glob(pattern):
+            # Check if the file exists
+            if sub_path.is_file():
+                return sub_path
+
+    return None
+
 
 def compute_tx_group(df, from_label='from_label_group', to_label='to_label_group'):
     """
@@ -623,13 +640,14 @@ def get_unique_active_wallet_interactions(df, save_path, tx_path_date, log_scale
 # RUN    
 # =============================================================================
 
+
+
+
 balanced_dex_icx_burned = get_balanced_burned_amount(date_of_interest, tx_block_paths)
 daily_issuance = get_iiss_info(walletPath)['Iglobal']*12/365
 
-
 for tx_path in tqdm(matching_paths):
     tx_path_date = tx_path.stem.split('_')[-1]
-    
     this_year = tx_path_date[0:4]
     
     resultsPath_year = resultsPath.joinpath(this_year)
@@ -649,8 +667,7 @@ for tx_path in tqdm(matching_paths):
     df_addresses = df_addresses[df_addresses['address'].str.startswith(('cx', 'hx')) | (df_addresses['address'] == '0x0')]
     
 
-    tx_path_date_underscore = tx_path_date.replace("-", "_")
-    tokentransfer_date_Path = tokentransferPath.joinpath(tx_path_date_underscore, f'IRC_token_transfer_{tx_path_date_underscore}.csv')
+    tokentransfer_date_Path = find_token_transfer_path(tokentransferPath, tx_path_date)    
     token_transfer_summary_df = pd.read_csv(tokentransfer_date_Path, low_memory=False)
     
     if 'address' in token_transfer_summary_df.columns:

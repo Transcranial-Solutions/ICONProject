@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Jan 28 18:23:21 2023
+Created on Tue Aug  6 05:43:58 2024
 
 @author: tono
 """
@@ -70,9 +70,46 @@ else:
     date_of_interest=[]
     print('No date selected.')
 
+
+def compute_rolling_means(df, column_specs):
+    """
+    Compute rolling means for specified columns with given windows.
+    
+    :param df: DataFrame to process
+    :param column_specs: Dictionary where keys are column names and values are lists of window sizes
+    :return: DataFrame with rolling means added
+    """
+    for col, windows in column_specs.items():
+        for window in windows:
+            df[f'{col} (MA{window})'] = df[col].rolling(window=window).mean()
+    return df
+
+def compute_averages(df, column_specs):
+    """
+    Compute daily, weekly, and monthly averages for specified columns.
+    
+    :param df: DataFrame to process
+    :param column_specs: List of column names to compute averages for
+    :return: Dictionary with computed averages
+    """
+    num_rows = len(df) - 2
+    if num_rows <= 0:
+        num_rows = 1  # Avoid division by zero if DataFrame is too small
+    
+    averages = {}
+    for col in column_specs:
+        total_sum = df[col].sum()
+        averages[f'average_{col}_per_day'] = total_sum / num_rows
+        averages[f'average_{col}_per_week'] = total_sum / round(num_rows / 7)
+        averages[f'average_{col}_per_month'] = total_sum / round(num_rows / 30)
+    
+    return averages
+
+
+
 print(date_of_interest)
 
-df_tx = pd.read_csv(os.path.join(resultPath, 'compiled_tx_summary_date.csv'), low_memory=False)
+df_tx = pd.read_csv(os.path.join(resultPath, 'tx_detail_summary.csv'), low_memory=False)
 
 
 for date_prev in date_of_interest:
@@ -85,34 +122,69 @@ for date_prev in date_of_interest:
 
     starting_date = x_days_ago(date_yesterday, days_to_plot)
     
-    df_tx = df_tx[df_tx['date'] >= starting_date]
+    df_tx = df_tx[df_tx['date'] >= starting_date].reset_index(drop=True)
     
-    df_tx['Regular & Interal Tx'] = df_tx['Regular Tx'] + df_tx['Internal Tx']
-    df_tx['Regular & Interal Tx (MA7)'] = df_tx['Regular & Interal Tx'].rolling(window=7).mean()
-    df_tx['Regular & Interal Tx (MA30)'] = df_tx['Regular & Interal Tx'].rolling(window=30).mean()
+    # Compute total fees
+    df_tx['total_fees'] = df_tx['tx_fees_L1'] + df_tx['tx_fees_DEX']
     
-    # df_tx['Regular Tx (MA7)'] = df_tx['Regular Tx'].rolling(window=7).mean()
-    # df_tx['Regular Tx (MA30)'] = df_tx['Regular Tx'].rolling(window=30).mean()
+    # Define column specifications for rolling means and averages
+    rolling_mean_specs = {
+        'tx_count': [7, 30],
+        'total_fees': [7, 30],
+        'hx_address_count': [7, 30]
+    }
     
-    # df_tx['Internal Tx (MA7)'] = df_tx['Internal Tx'].rolling(window=7).mean()
-    # df_tx['Internal Tx (MA30)'] = df_tx['Internal Tx'].rolling(window=30).mean()
+    average_specs = [
+        'total_fees',
+        'tx_count',
+        'hx_address_count'
+    ]
     
-    # df_tx['Internal Event (MA7)'] = df_tx['Internal Event (excluding Tx)'].rolling(window=7).mean()
-    # df_tx['Internal Event (MA30)'] = df_tx['Internal Event (excluding Tx)'].rolling(window=30).mean()
-    
-    df_tx['Fees burned (MA7)'] = df_tx['Fees burned'].rolling(window=7).mean()
-    df_tx['Fees burned (MA30)'] = df_tx['Fees burned'].rolling(window=30).mean()
-    
-    average_fee_per_day = df_tx['Fees burned'].sum()/(len(df_tx)-2)
-    average_fee_per_week = df_tx['Fees burned'].sum()/round((len(df_tx)-2)/7)
-    average_fee_per_month = df_tx['Fees burned'].sum()/round((len(df_tx)-2)/30)
-    
-    
-    average_tx_per_day = df_tx['Regular & Interal Tx'].sum()/(len(df_tx)-2)
-    average_tx_per_week = df_tx['Regular & Interal Tx'].sum()/round((len(df_tx)-2)/7)
-    average_tx_per_month = df_tx['Regular & Interal Tx'].sum()/round((len(df_tx)-2)/30)
+
+    rename_mapping = {
+        'tx_count': 'Transactions (fees-incurring)',
+        'tx_count (MA7)': 'Transactions (MA7)',
+        'tx_count (MA30)': 'Transactions (MA30)',
+        'total_fees': 'Fees burned',
+        'total_fees (MA7)': 'Fees burned (MA7)',
+        'total_fees (MA30)': 'Fees burned (MA30)',
+        'hx_address_count': 'Active wallet count',
+        'hx_address_count (MA7)': 'Active wallet count (MA7)',
+        'hx_address_count (MA30)': 'Active wallet count (MA30)'
+    }
     
     
+    df_tx = compute_rolling_means(df_tx, rolling_mean_specs)
+    averages = compute_averages(df_tx, average_specs)
+    
+    df_tx.rename(columns=rename_mapping, inplace=True)
+
+
+    
+    # df_tx['Transactions (fees-incurring)'] = df_tx['tx_count']
+    # df_tx['Transactions (MA7)'] = df_tx['tx_count'].rolling(window=7).mean()
+    # df_tx['Transactions (MA30)'] = df_tx['tx_count'].rolling(window=30).mean()
+
+    # df_tx['total_fees'] = df_tx['tx_fees_L1'] + df_tx['tx_fees_DEX']
+    # df_tx['Fees burned (MA7)'] = df_tx['total_fees'].rolling(window=7).mean()
+    # df_tx['Fees burned (MA30)'] = df_tx['total_fees'].rolling(window=30).mean()
+    
+    # df_tx['Active wallet count'] = df_tx['hx_address_count']
+    # df_tx['Active wallet count (MA7)'] = df_tx['hx_address_count'].rolling(window=7).mean()
+    # df_tx['Active wallet count (MA30)'] = df_tx['hx_address_count'].rolling(window=30).mean()
+
+    # average_fee_per_day = df_tx['total_fees'].sum()/(len(df_tx)-2)
+    # average_fee_per_week = df_tx['total_fees'].sum()/round((len(df_tx)-2)/7)
+    # average_fee_per_month = df_tx['total_fees'].sum()/round((len(df_tx)-2)/30)
+
+    # average_tx_per_day = df_tx['tx_count'].sum()/(len(df_tx)-2)
+    # average_tx_per_week = df_tx['tx_count'].sum()/round((len(df_tx)-2)/7)
+    # average_tx_per_month = df_tx['tx_count'].sum()/round((len(df_tx)-2)/30)
+    
+    # average_wallet_count_per_day = df_tx['hx_address_count'].sum()/(len(df_tx)-2)
+    # average_wallet_count_per_week = df_tx['hx_address_count'].sum()/round((len(df_tx)-2)/7)
+    # average_wallet_count_per_month = df_tx['hx_address_count'].sum()/round((len(df_tx)-2)/30)
+
     df_tx = df_tx.reset_index(drop=True)
     df_tx.to_csv(os.path.join(resultPath_year, f'tx_trend_{date_prev}.csv'))
     
@@ -129,9 +201,9 @@ for date_prev in date_of_interest:
         ax.plot(df_tx['date'], df_tx[invar2], label=invar2)
         ax.plot(df_tx['date'], df_tx[invar3], label=invar3)
         
-        ax.axhline(y = average_per_day, color='b', linestyle=':', label = f"Daily average ({'{:,}'.format(round(average_per_day))} {tickertype})")
-        ax.axhline(y = average_per_day, color='k', linestyle='None', label = f"Weekly average ({'{:,}'.format(round(average_per_week))} {tickertype})")
-        ax.axhline(y = average_per_day, color='k', linestyle='None', label = f"Monthly average ({'{:,}'.format(round(average_per_month))} {tickertype})")
+        ax.axhline(y = average_per_day, color='b', linestyle=':', label = f"Daily average ({'{:,}'.format(round(average_per_day))}{tickertype})")
+        ax.axhline(y = average_per_day, color='k', linestyle='None', label = f"Weekly average ({'{:,}'.format(round(average_per_week))}{tickertype})")
+        ax.axhline(y = average_per_day, color='k', linestyle='None', label = f"Monthly average ({'{:,}'.format(round(average_per_month))}{tickertype})")
         
         ax.xaxis.set_major_locator(mdates.MonthLocator())
         sns.despine(offset=5, trim=True)
@@ -164,15 +236,31 @@ for date_prev in date_of_interest:
     
     
     plot_ma('Fees burned', 'Fees burned (MA7)', 'Fees burned (MA30)',
-            average_fee_per_day, average_fee_per_week, average_fee_per_month, 'ICX',
+            averages.get('average_total_fees_per_day'), 
+            averages.get('average_total_fees_per_week'),
+            averages.get('average_total_fees_per_month'),
+            ' ICX',
             '$ICX',
             'cyan',
             'Fees ($ICX) burned (last 12 months)'
             )
     
-    plot_ma('Regular & Interal Tx', 'Regular & Interal Tx (MA7)', 'Regular & Interal Tx (MA30)',
-            average_tx_per_day, average_tx_per_week, average_tx_per_month, 'Tx',
+    plot_ma('Transactions (fees-incurring)', 'Transactions (MA7)', 'Transactions (MA30)',
+            averages.get('average_tx_count_per_day'), 
+            averages.get('average_tx_count_per_week'),
+            averages.get('average_tx_count_per_month'),
+            ' Tx',
             'Transactions',
             'white',
             'Transactions (last 12 months)'
+            )
+    
+    plot_ma('Active wallet count', 'Active wallet count (MA7)', 'Active wallet count (MA30)',
+            averages.get('average_hx_address_count_per_day'), 
+            averages.get('average_hx_address_count_per_week'),
+            averages.get('average_hx_address_count_per_month'),
+            '',
+            'Wallet count',
+            'white',
+            'Number of active wallets (last 12 months)'
             )

@@ -263,7 +263,7 @@ def manual_grouping(df, in_col):
 
 def grouping_wrapper(df, in_col):
     df = group_wallet(df, in_col)
-    # df = manual_grouping(df, in_col)
+    df = manual_grouping(df, in_col)
     return df
 
 

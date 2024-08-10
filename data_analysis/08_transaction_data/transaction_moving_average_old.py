@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Aug  6 05:43:58 2024
+Created on Sat Jan 28 18:23:21 2023
 
 @author: tono
 """
@@ -72,7 +72,7 @@ else:
 
 print(date_of_interest)
 
-df_tx = pd.read_csv(os.path.join(resultPath, 'tx_detail_summary.csv'), low_memory=False)
+df_tx = pd.read_csv(os.path.join(resultPath, 'compiled_tx_summary_date.csv'), low_memory=False)
 
 
 for date_prev in date_of_interest:
