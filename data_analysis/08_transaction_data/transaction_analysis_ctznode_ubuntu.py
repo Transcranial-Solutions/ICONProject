@@ -642,8 +642,8 @@ for date_prev in date_of_interest:
     if log_scale:
         ax1.set_yscale('log')
     
-    if save_data:
-       plt.savefig(os.path.join(resultPath_year, 'tx_summary_' + date_prev + '.png'))
+    # if save_data:
+    #    plt.savefig(os.path.join(resultPath_year, 'tx_summary_' + date_prev + '.png'))
 
     
     # donuts
@@ -736,13 +736,13 @@ for date_prev in date_of_interest:
         # plt.show()
         plt.tight_layout()
         
-        if save_data:
-            plt.savefig(os.path.join(resultPath_year, title.replace(' ', '_') + '_' + date_prev + '.png'))
+        # if save_data:
+        #     plt.savefig(os.path.join(resultPath_year, title.replace(' ', '_') + '_' + date_prev + '.png'))
 
-    plot_donut_df(df_col=0, title='Fees Burned', add_string=" ICX")
-    plot_donut_df(df_col=3, title='Regular Tx', add_string="")
-    plot_donut_df(df_col=2, title='Internal Tx', add_string="")
-    plot_donut_df(df_col=1, title='Internal Events', add_string="")
+    # plot_donut_df(df_col=0, title='Fees Burned', add_string=" ICX")
+    # plot_donut_df(df_col=3, title='Regular Tx', add_string="")
+    # plot_donut_df(df_col=2, title='Internal Tx', add_string="")
+    # plot_donut_df(df_col=1, title='Internal Events', add_string="")
     
     print(date_prev + ' is done!')
 

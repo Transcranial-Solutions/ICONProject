@@ -20,11 +20,11 @@ program_list = [
     os.path.join(transaction_data_path,"transaction_analysis_ctznode_ubuntu.py"),
     os.path.join(transaction_data_path,"transaction_analysis_ctznode_weekly_ubuntu.py"),
     os.path.join(transaction_data_path,"transaction_analysis_ctznode_monthly_ubuntu.py"),
-    os.path.join(transaction_data_path,"tx_summary_compiler_ubuntu.py"),
-    os.path.join(transaction_data_path,"transaction_moving_average.py"),
     os.path.join(transaction_data_path,"transaction_extraction_ctznode_ubuntu_v2.py"),
     os.path.join(transaction_data_path,"transaction_analysis_detail.py"),
     os.path.join(transaction_data_path,"transaction_analysis_detail_output.py"),
+    os.path.join(transaction_data_path,"tx_summary_compiler_ubuntu.py"),
+    os.path.join(transaction_data_path,"transaction_moving_average.py"),
                 ]
 
 for program in program_list:

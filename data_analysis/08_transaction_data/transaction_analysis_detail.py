@@ -278,7 +278,7 @@ def get_tx_via_icon_community_tracker(skip_pages):
         jtracker = req.json()  # Directly use json() method to parse response
         jtracker_df = pd.DataFrame(jtracker)
     except (requests.RequestException, ValueError) as e:
-        print(f"Error fetching or parsing data: {e}")
+        # print(f"Error fetching or parsing data: {e}")
         jtracker_df = pd.DataFrame()
     return jtracker_df
 

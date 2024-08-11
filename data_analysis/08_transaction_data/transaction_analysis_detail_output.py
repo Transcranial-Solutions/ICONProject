@@ -347,7 +347,7 @@ def get_active_user_wallet_count(df):
 
 
 
-def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, in_group=['to_label_group', 'tx_mode'], to_or_from='to', save_path='', log_scale=False):
+def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, issuance, period, date_text, in_group=['tx_group', 'tx_mode'], to_or_from='mixed', save_path='', log_scale=False):
     sns.set(style="dark")
     plt.style.use("dark_background")
 
@@ -390,7 +390,7 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
 
     tx_count_with_fees_pivoted.plot(kind='bar', stacked=True, ax=ax1, legend=False)
 
-    plt.title(f'Daily Transactions ({tx_path_date})', fontsize=14, weight='bold', pad=10, loc='left')
+    plt.title(f'{period.capitalize()} Transactions ({date_text})', fontsize=14, weight='bold', pad=10, loc='left')
     ax1.set_xlabel(f'{contract_address_label} Contracts/Addresses')
     ax1.set_ylabel('Transactions', labelpad=10)
     ax1.set_xticklabels(tx_count_with_fees_pivoted.index, rotation=90, ha="center")
@@ -404,8 +404,8 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
     ax2.plot(tx_count_with_fees_main_order.index, tx_count_with_fees_main_order['fees'], marker='h', linestyle='dotted', mfc='mediumturquoise', mec='black', markersize=8)
     ax2.set_ylabel('Fees burned (ICX)', labelpad=10)
     
-    daily_burned_percentage = f"{tx_count_with_fees_main_order['fees'].sum()/daily_issuance:.2%}"
-    fees_burned_label = f'Fees Burned: {total_fees} ICX (L1: {round(L1_fees):,}; DEX: {round(balanced_burn):,}) / {daily_burned_percentage} of daily inflation'
+    burned_percentage = f"{tx_count_with_fees_main_order['fees'].sum()/issuance:.2%}"
+    fees_burned_label = f'Fees Burned: {total_fees} ICX (L1: {round(L1_fees):,}; DEX: {round(balanced_burn):,}) / {burned_percentage} of {period} inflation'
 
     # Adjust axis formatting
     xmin, xmax = ax1.get_xlim()
@@ -454,15 +454,15 @@ def visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_val
     ax2.tick_params(axis='y', colors="cyan")
 
     if log_scale:
-        ax1.set_yscale('log')
+        # ax1.set_yscale('log')
+        ax2.set_yscale('log')
 
     plt.show()
-    plt.savefig(save_path.joinpath(f'tx_summary_{to_or_from}_{tx_path_date}.png'))
+    plt.savefig(save_path.joinpath(f"{period}_tx_summary_{to_or_from}_{date_text.replace(' ~ ','_to_')}.png"))
     plt.close()
 
 
-
-def plot_transaction_network(df, balanced_burn=0, from_column='from_label_group', to_column='to_label_group', 
+def plot_transaction_network(df, balanced_burn=0, period='daily', date_text='', from_column='from_label_group', to_column='to_label_group', 
                              tx_count_column='TxCount', fees_column='tx_fees', value_column='Value in USD', 
                              main_node_group='to_label_group', max_size_values=100_000,
                              save_path='', tx_path_date='', dpi=300):
@@ -539,7 +539,7 @@ def plot_transaction_network(df, balanced_burn=0, from_column='from_label_group'
     sm.set_array([])
     plt.colorbar(sm, label='Transaction Count')
 
-    plt.title(f'Transaction Network Graph ({tx_path_date})', fontsize=14, loc='left')    
+    plt.title(f'{period.capitalize()} Transaction Network Graph ({date_text})', fontsize=14, loc='left')    
     # plt.text(0.68, 1.013, '(', color='white', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
     # plt.text(0.78, 1.013, 'Value Transferred ', color='yellow', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
     # plt.text(0.87, 1.013, '&', color='white', fontsize=14, ha='center', va='center', transform=plt.gca().transAxes)
@@ -552,13 +552,13 @@ def plot_transaction_network(df, balanced_burn=0, from_column='from_label_group'
     plt.tight_layout()
     plt.show()
 
-    save_full_path = Path(save_path) / f'tx_network_graph_{tx_path_date}.png'
+    save_full_path = Path(save_path) / f"{period}_tx_network_graph_{date_text.replace(' ~ ','_to_')}.png"
     plt.savefig(save_full_path)#, dpi=dpi)
     plt.close()
 
 
 
-def get_unique_active_wallet_interactions(df, save_path, tx_path_date, log_scale=True):
+def get_unique_active_wallet_interactions(df, period, date_text, save_path, tx_path_date, log_scale=True):
     """
     Computes unique active wallet interactions and plots a bar chart.
 
@@ -604,9 +604,9 @@ def get_unique_active_wallet_interactions(df, save_path, tx_path_date, log_scale
     sns.barplot(data=wallet_interaction_by_group_counts, x='group', y='count', palette='viridis', ax=ax1)
 
     # Add title and labels
-    plt.title('Unique Active Wallet Interactions', fontsize=16)
-    plt.xlabel('Interaction Group', fontsize=14)
-    plt.ylabel('Number of Wallets', fontsize=14)
+    plt.title(f'{period.capitalize()} Unique Active Wallet Interactions ({date_text})', fontsize=14, loc='left')
+    plt.xlabel('Interaction Group', fontsize=12)
+    plt.ylabel('Number of Wallets', fontsize=12)
     plt.xticks(rotation=90)
 
     # Add counts above each bar
@@ -616,7 +616,7 @@ def get_unique_active_wallet_interactions(df, save_path, tx_path_date, log_scale
     # Apply logarithmic scale if specified
     if log_scale:
         ax1.set_yscale('log')
-        plt.ylabel('Number of Wallets (Log Scale)', fontsize=14)
+        plt.ylabel('Number of Wallets (Log Scale)', fontsize=12)
 
     ax1.text(
         0.98, 0.96,  # X and Y position in axes coordinates
@@ -631,97 +631,119 @@ def get_unique_active_wallet_interactions(df, save_path, tx_path_date, log_scale
     plt.tight_layout()
     plt.show()
     
-    save_full_path = Path(save_path) / f'active_wallet_count_{tx_path_date}.png'
+    save_full_path = Path(save_path) / f"{period}_active_wallet_count_{date_text.replace(' ~ ','_to_')}.png"
     plt.savefig(save_full_path)#, dpi=dpi)
     plt.close()
     
     
+def get_tx_summary_output(input_date, tx_detail_paths, tokentransferPath, tx_block_paths, period='daily'):
+    
+    this_year = input_date[0:4]
+
+    date_format = "%Y-%m-%d"
+    
+    if period == 'daily':
+        date_text = input_date
+        start_date = input_date
+        resultsPath_year = resultsPath.joinpath(this_year)
+        resultsPath_year.mkdir(parents=True, exist_ok=True)
+        
+    elif period == 'weekly':
+        start_date = (datetime.strptime(input_date, date_format) - timedelta(days=6)).strftime(date_format)
+        date_text = f"{start_date} ~ {input_date}"
+        date_text_save = date_text.replace(' ~ ', '_to_')
+        resultsPath_year = resultsPath.joinpath(period, date_text_save)
+        resultsPath_year.mkdir(parents=True, exist_ok=True)
+        
+    elif period == 'monthly':
+        start_date = (datetime.strptime(input_date, date_format) - timedelta(days=29)).strftime(date_format)
+        date_text = f"{start_date} ~ {input_date}"
+        date_text_save = date_text.replace(' ~ ', '_to_')
+        resultsPath_year = resultsPath.joinpath(period, date_text_save)
+        resultsPath_year.mkdir(parents=True, exist_ok=True)
+    
+    
+    # Create a list of dates in the range
+    date_list = pd.date_range(start=start_date, end=input_date, freq='D').strftime(date_format).tolist()
+    
+    
+    matching_paths = [path for path in tx_detail_paths if any(date in path.name for date in date_list)]
+
+    
+    # Update the balanced_dex_icx_burned to use the date_list
+    balanced_dex_icx_burned = get_balanced_burned_amount(date_list, tx_block_paths)
+    issuance = get_iiss_info(walletPath)['Iglobal'] * 12 / 365 * len(date_list)
+    
+    balanced_burn = np.sum([balanced_dex_icx_burned.get(this_date) for this_date in date_list])
+    
+    combined_df = pd.DataFrame()
+    # Filter and combine data based on the date list
+    for tx_path in tqdm(matching_paths):
+        tx_path_date = tx_path.stem.split('_')[-1]
+        if tx_path_date in date_list:
+            df = pd.read_csv(tx_path, low_memory=False)
+            df['date'] = tx_path_date
+            if "Unnamed: 0" in df.columns:
+                df.drop("Unnamed: 0", axis=1, inplace=True)
+            combined_df = pd.concat([combined_df, df], ignore_index=True)
+    
+    # Proceed with processing the combined DataFrame as before
+    combined_df_addresses = pd.concat([combined_df[['from','from_label_group','date']].rename(columns={'from':'address', 'from_label_group':'group'}),
+                                       combined_df[['to','to_label_group','date']].rename(columns={'to':'address', 'to_label_group':'group'})]).drop_duplicates()
+    
+    combined_df_addresses = combined_df_addresses.dropna()
+    combined_df_addresses = combined_df_addresses[combined_df_addresses['address'].str.startswith(('cx', 'hx')) | (combined_df_addresses['address'] == '0x0')]
+    
+    tokentransfer_date_Path = [find_token_transfer_path(tokentransferPath, this_date) for this_date in date_list]
+    
+    combined_token_transfer_summary_df = pd.DataFrame()
+    for tokentransfer_path in tqdm(tokentransfer_date_Path):
+        tokentransfer_date = tokentransfer_path.stem.split('IRC_token_transfer_')[-1].replace('_', '-')
+        token_transfer_summary_df = pd.read_csv(tokentransfer_path, low_memory=False)
+        token_transfer_summary_df['date'] = tokentransfer_date
+        combined_token_transfer_summary_df = pd.concat([combined_token_transfer_summary_df, token_transfer_summary_df], ignore_index=True)
+    
+    if 'address' in combined_token_transfer_summary_df.columns:
+        combined_token_transfer_summary_df = pd.merge(combined_token_transfer_summary_df, combined_df_addresses, on=['date', 'address'], how='left')
+    else:
+        token_addresses = load_from_json(tokenaddressPath.joinpath('token_addresses.json'))
+        symbol_to_address = {v['token_symbols']: k for k, v in token_addresses.items()}
+        combined_token_transfer_summary_df['address'] = combined_token_transfer_summary_df['IRC Token'].map(symbol_to_address)
+        combined_token_transfer_summary_df = pd.merge(combined_token_transfer_summary_df, combined_df_addresses, on=['date', 'address'], how='left')
+    
+    # Manual additions and further processing...
+    combined_token_transfer_summary_df['group'] = np.where(combined_token_transfer_summary_df['IRC Token'] == 'FIN', 'Optimus', combined_token_transfer_summary_df['IRC Token'])
+    combined_token_transfer_summary_df['group'] = np.where(combined_token_transfer_summary_df['IRC Token'] == 'BTCB', 'Bitcoin', combined_token_transfer_summary_df['IRC Token'])
+    combined_token_transfer_summary_df['group'] = np.where(combined_token_transfer_summary_df['IRC Token'] == 'BNB', 'BNB', combined_token_transfer_summary_df['IRC Token'])
+    combined_token_transfer_summary_df['group'] = np.where(combined_token_transfer_summary_df['IRC Token'] == 'HVH', 'Havah', combined_token_transfer_summary_df['IRC Token'])
+    combined_token_transfer_summary_df['group'] = np.where(combined_token_transfer_summary_df['IRC Token'].str.contains('USDC', na=False) & ~combined_token_transfer_summary_df['IRC Token'].str.contains('IUSDC', na=False), 'USDC', combined_token_transfer_summary_df['IRC Token'])
+    
+    combined_df = pd.merge(combined_df, combined_token_transfer_summary_df.rename(columns={'IRC Token':'symbol'})[['symbol', 'Price in USD', 'group', 'date']], on=['date','symbol'], how='left')
+    combined_df['group'] = np.where((combined_df['symbol'] == 'ICX') & combined_df['group'].isna(), 'ICX', combined_df['group'])
+    combined_df['value'] = combined_df['value'].astype('float64').fillna(0)
+    combined_df['Price in USD'] = combined_df['Price in USD'].astype('float64').fillna(0)
+    combined_df['Value in USD'] = combined_df['value'] * combined_df['Price in USD']
+    
+    # Outlier removal    
+    upper_cap = 50_000_000
+    combined_df.loc[combined_df['Value in USD'] > upper_cap, 'Value in USD'] = 0
+    
+    df_agg = get_agg_df_for_count_fees_and_value(combined_df)
+    
+    total_transfer_value = df_agg['Value in USD'].sum()
+    total_transfer_value_text = f'Value Transferred: ~{total_transfer_value:,.0f} USD'
+    
+    # Visualisation and further processing...
+    visualise_tx_group_with_fees_by_tx_mode(combined_df, input_date, total_transfer_value_text, balanced_burn, issuance, period, date_text, in_group=['tx_group', 'tx_mode'], to_or_from='mixed', save_path=resultsPath_year)
+    plot_transaction_network(df_agg, balanced_burn, period, date_text, save_path=resultsPath_year, tx_path_date=input_date)
+    get_unique_active_wallet_interactions(combined_df, period, date_text, save_path=resultsPath_year, tx_path_date=input_date, log_scale=True)
+
 # =============================================================================
 # RUN    
 # =============================================================================
 
 
-
-
-balanced_dex_icx_burned = get_balanced_burned_amount(date_of_interest, tx_block_paths)
-daily_issuance = get_iiss_info(walletPath)['Iglobal']*12/365
-
-for tx_path in tqdm(matching_paths):
-    tx_path_date = tx_path.stem.split('_')[-1]
-    this_year = tx_path_date[0:4]
-    
-    resultsPath_year = resultsPath.joinpath(this_year)
-    resultsPath_year.mkdir(parents=True, exist_ok=True)
-    
-    
-    df = pd.read_csv(tx_path, low_memory=False)
-    if "Unnamed: 0" in df.columns:
-        df.drop("Unnamed: 0", axis=1, inplace=True)
-
-    balanced_burn = balanced_dex_icx_burned.get(tx_path_date)  
-
-    df_addresses = pd.concat([df[['from','from_label_group']].rename(columns={'from':'address', 'from_label_group':'group'}),
-                             df[['to','to_label_group']].rename(columns={'to':'address', 'to_label_group':'group'})]).drop_duplicates()
-    
-    df_addresses = df_addresses.dropna()
-    df_addresses = df_addresses[df_addresses['address'].str.startswith(('cx', 'hx')) | (df_addresses['address'] == '0x0')]
-    
-
-    tokentransfer_date_Path = find_token_transfer_path(tokentransferPath, tx_path_date)    
-    token_transfer_summary_df = pd.read_csv(tokentransfer_date_Path, low_memory=False)
-    
-    if 'address' in token_transfer_summary_df.columns:
-        token_transfer_summary_df = pd.merge(token_transfer_summary_df, df_addresses, on='address', how='left')
-    else:
-        token_addresses = load_from_json(tokenaddressPath.joinpath('token_addresses.json'))
-        symbol_to_address = {v['token_symbols']: k for k, v in token_addresses.items()}
-        token_transfer_summary_df['address'] = token_transfer_summary_df['IRC Token'].map(symbol_to_address)
-        token_transfer_summary_df = pd.merge(token_transfer_summary_df, df_addresses, on='address', how='left')
-    
-    ## Manual addition
-    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'FIN', 'Optimus', token_transfer_summary_df['IRC Token'])
-    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'BTCB', 'Bitcoin', token_transfer_summary_df['IRC Token'])
-    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'BNB', 'BNB', token_transfer_summary_df['IRC Token'])
-    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'] == 'HVH', 'Havah', token_transfer_summary_df['IRC Token'])
-    token_transfer_summary_df['group'] = np.where(token_transfer_summary_df['IRC Token'].str.contains('USDC', na=False) & ~token_transfer_summary_df['IRC Token'].str.contains('IUSDC', na=False), 'USDC', token_transfer_summary_df['IRC Token'])
-
-    df = pd.merge(df, token_transfer_summary_df.rename(columns={'IRC Token':'symbol'})[['symbol', 'Price in USD', 'group']], on='symbol', how='left')
-    df['group'] = np.where((df['symbol'] == 'ICX') & df['group'].isna(), 'ICX', df['group'])
-    df['value'] = df['value'].astype('float64').fillna(0)
-    df['Price in USD'] = df['Price in USD'].astype('float64').fillna(0)
-    df['Value in USD'] = df['value'] * df['Price in USD']
-    
-    ## outlier removal    
-    upper_cap = 50_000_000
-    outliers = (df['Value in USD'] > upper_cap)
-    df.loc[df['Value in USD'] > upper_cap, 'Value in USD'] = 0
-    
-    df_agg = get_agg_df_for_count_fees_and_value(df)
-    
-    # total_transfer_value = df['Value in USD'].sum()
-    # total_transfer_value_by_group = df.groupby('group')['Value in USD'].sum()
-    # total_transfer_value_text = 'Total Value Transferred: ~' + '{:,}'.format(int(total_transfer_value)) + ' USD'
-    
-    total_transfer_value = df_agg['Value in USD'].sum()
-    # total_transfer_value_by_group = df_agg.groupby('group')['Value in USD'].sum()
-    total_transfer_value_text = f'Value Transferred: ~{total_transfer_value:,.0f} USD'
-
-    # visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, in_group=['from_label_group', 'tx_mode'], to_or_from='from', save_path=resultsPath_year)
-    # visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, in_group=['to_label_group', 'tx_mode'], to_or_from='to', save_path=resultsPath_year)
-    
-    # transaction count and fees
-    visualise_tx_group_with_fees_by_tx_mode(df, tx_path_date, total_transfer_value_text, balanced_burn, in_group=['tx_group', 'tx_mode'], to_or_from='mixed', save_path=resultsPath_year)
-
-    # network / value transferred and fees
-    plot_transaction_network(df_agg, balanced_burn, save_path=resultsPath_year, tx_path_date=tx_path_date)
-
-    # unique active wallet counts
-    get_unique_active_wallet_interactions(df, save_path=resultsPath_year, tx_path_date=tx_path_date, log_scale=True)
-
-
-
-
-
-
-
-
+for input_date in tqdm(date_of_interest):
+    get_tx_summary_output(input_date, tx_detail_paths, tokentransferPath, tx_block_paths, period='daily')
+    get_tx_summary_output(input_date, tx_detail_paths, tokentransferPath, tx_block_paths, period='weekly')
+    get_tx_summary_output(input_date, tx_detail_paths, tokentransferPath, tx_block_paths, period='monthly')
