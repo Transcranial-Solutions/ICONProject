@@ -263,11 +263,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxbd4192d265f1a5f6fad3f0c7721f2de60fb88841": {
+    "cxd17316e24ee40f2ef8ed6f3a497311db1b35206d": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxd17316e24ee40f2ef8ed6f3a497311db1b35206d": {
+    "cxbd4192d265f1a5f6fad3f0c7721f2de60fb88841": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -419,11 +419,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxf7c59acb61a6d0c038582ea134dfcf65beebd00b": {
+    "cx883042c10602b50defe69dd8c44acb21e999ada2": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx883042c10602b50defe69dd8c44acb21e999ada2": {
+    "cxf7c59acb61a6d0c038582ea134dfcf65beebd00b": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -463,11 +463,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
+    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
-    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
+    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
@@ -691,7 +691,7 @@
         "token_decimals": 18,
         "token_symbols": "PRT"
     },
-    "cxe6a6a1f373597a01c3773b0293189969fc25dce2": {
+    "cx08271d8252e852db22ea83248704ae450fd8afc7": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -739,6 +739,10 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
+    "cxe6a6a1f373597a01c3773b0293189969fc25dce2": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
     "cxad29163de9e90effaf2419ff4aba0d7088ed9d12": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
@@ -748,10 +752,6 @@
         "token_symbols": "$unknown"
     },
     "cxf1d1fa2452fa76f736490d232dc1174a3907fe38": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cx08271d8252e852db22ea83248704ae450fd8afc7": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -1019,19 +1019,15 @@
         "token_decimals": 24,
         "token_symbols": "XYZ"
     },
-    "cx8968ef96602f08ac0bdcc0d4878f07f8527fce45": {
-        "token_decimals": 18,
-        "token_symbols": "ZPR"
-    },
     "cx57795da3844a5004d5196312167f08b31d75a9a3": {
         "token_decimals": 18,
         "token_symbols": "ZPR"
     },
-    "cx0e42c4094de04c935f0382884c00f50fef396393": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
+    "cx8968ef96602f08ac0bdcc0d4878f07f8527fce45": {
+        "token_decimals": 18,
+        "token_symbols": "ZPR"
     },
-    "cx30f18d26f45d990112a4cd4825c0b79af73aac7c": {
+    "cxccf103a44f57bd17bc5da486c51a6405b99d29b8": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -1039,7 +1035,7 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxcbcb893aedb9d79d2588812af5297d309858c0f8": {
+    "cx0e42c4094de04c935f0382884c00f50fef396393": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -1047,15 +1043,19 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx12a58f7ab2cf2b08b426c490a91a9cb03ea05176": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
     "cx6e8571eead321d34de65241418b33ea370629269": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxccf103a44f57bd17bc5da486c51a6405b99d29b8": {
+    "cx30f18d26f45d990112a4cd4825c0b79af73aac7c": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cx12a58f7ab2cf2b08b426c490a91a9cb03ea05176": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cxcbcb893aedb9d79d2588812af5297d309858c0f8": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     }
