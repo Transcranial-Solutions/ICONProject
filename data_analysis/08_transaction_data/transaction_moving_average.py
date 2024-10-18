@@ -159,53 +159,51 @@ for date_prev in date_of_interest:
     
     df_tx.rename(columns=rename_mapping, inplace=True)
 
-
-    
-    # df_tx['Transactions (fees-incurring)'] = df_tx['tx_count']
-    # df_tx['Transactions (MA7)'] = df_tx['tx_count'].rolling(window=7).mean()
-    # df_tx['Transactions (MA30)'] = df_tx['tx_count'].rolling(window=30).mean()
-
-    # df_tx['total_fees'] = df_tx['tx_fees_L1'] + df_tx['tx_fees_DEX']
-    # df_tx['Fees burned (MA7)'] = df_tx['total_fees'].rolling(window=7).mean()
-    # df_tx['Fees burned (MA30)'] = df_tx['total_fees'].rolling(window=30).mean()
-    
-    # df_tx['Active wallet count'] = df_tx['hx_address_count']
-    # df_tx['Active wallet count (MA7)'] = df_tx['hx_address_count'].rolling(window=7).mean()
-    # df_tx['Active wallet count (MA30)'] = df_tx['hx_address_count'].rolling(window=30).mean()
-
-    # average_fee_per_day = df_tx['total_fees'].sum()/(len(df_tx)-2)
-    # average_fee_per_week = df_tx['total_fees'].sum()/round((len(df_tx)-2)/7)
-    # average_fee_per_month = df_tx['total_fees'].sum()/round((len(df_tx)-2)/30)
-
-    # average_tx_per_day = df_tx['tx_count'].sum()/(len(df_tx)-2)
-    # average_tx_per_week = df_tx['tx_count'].sum()/round((len(df_tx)-2)/7)
-    # average_tx_per_month = df_tx['tx_count'].sum()/round((len(df_tx)-2)/30)
-    
-    # average_wallet_count_per_day = df_tx['hx_address_count'].sum()/(len(df_tx)-2)
-    # average_wallet_count_per_week = df_tx['hx_address_count'].sum()/round((len(df_tx)-2)/7)
-    # average_wallet_count_per_month = df_tx['hx_address_count'].sum()/round((len(df_tx)-2)/30)
-
     df_tx = df_tx.reset_index(drop=True)
     df_tx.to_csv(os.path.join(resultPath_year, f'tx_trend_{date_prev}.csv'))
+    
+    df_tx['date'] = pd.to_datetime(df_tx['date'], errors='coerce')
     
     def plot_ma(invar1, invar2, invar3,
                 average_per_day, average_per_week, average_per_month,
                 tickertype,
                 ylab,
                 ylab_color,
-                my_title):
+                my_title,
+                months_to_plot=12,
+                show_ma7=True,
+                show_ma30=True,
+                show_daily_average=True,
+                ):
+        
+        end_date = df_tx['date'].max()
+        start_date = end_date - pd.DateOffset(months=months_to_plot)
+        filtered_df = df_tx[(df_tx['date'] >= start_date) & (df_tx['date'] <= end_date)]
+
+
         sns.set(style="ticks", rc={"lines.linewidth": 2})
         plt.style.use(['dark_background'])
         f, ax = plt.subplots(figsize=(12, 8))
-        ax.plot(df_tx['date'], df_tx[invar1], label=invar1, alpha=0.3)
-        ax.plot(df_tx['date'], df_tx[invar2], label=invar2)
-        ax.plot(df_tx['date'], df_tx[invar3], label=invar3)
+        ax.plot(filtered_df['date'], filtered_df[invar1], label=invar1, alpha=0.3)
         
-        ax.axhline(y = average_per_day, color='b', linestyle=':', label = f"Daily average ({'{:,}'.format(round(average_per_day))}{tickertype})")
+        if show_ma7:
+            ax.plot(filtered_df['date'], filtered_df[invar2], label=invar2)
+        if show_ma30:
+            ax.plot(filtered_df['date'], filtered_df[invar3], label=invar3)
+        
+        if show_daily_average:
+            ax.axhline(y = average_per_day, color='b', linestyle=':', label = f"Daily average ({'{:,}'.format(round(average_per_day))}{tickertype})")
         ax.axhline(y = average_per_day, color='k', linestyle='None', label = f"Weekly average ({'{:,}'.format(round(average_per_week))}{tickertype})")
         ax.axhline(y = average_per_day, color='k', linestyle='None', label = f"Monthly average ({'{:,}'.format(round(average_per_month))}{tickertype})")
         
-        ax.xaxis.set_major_locator(mdates.MonthLocator())
+        if months_to_plot < 6:
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        else:
+            ax.xaxis.set_major_locator(mdates.MonthLocator())
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+        
+        # ax.xaxis.set_major_locator(mdates.MonthLocator())
         sns.despine(offset=5, trim=True)
         plt.setp(ax.get_xticklabels(), rotation=90)
         ax.set_xlabel('Dates', fontsize=14, weight='bold', labelpad=10)
@@ -255,6 +253,7 @@ for date_prev in date_of_interest:
             'Transactions (last 12 months)'
             )
     
+    months_to_plot=1
     plot_ma('Active wallet count', 'Active wallet count (MA7)', 'Active wallet count (MA30)',
             averages.get('average_hx_address_count_per_day'), 
             averages.get('average_hx_address_count_per_week'),
@@ -262,5 +261,9 @@ for date_prev in date_of_interest:
             '',
             'Wallet count',
             'white',
-            'Number of active wallets (last 12 months)'
+            f'Number of active wallets (last {months_to_plot} months)',
+            months_to_plot=months_to_plot,
+            show_ma7=True,
+            show_ma30=False,
+            show_daily_average=False,
             )
