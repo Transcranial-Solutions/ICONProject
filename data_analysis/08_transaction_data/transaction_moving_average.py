@@ -175,12 +175,11 @@ for date_prev in date_of_interest:
                 show_ma30=True,
                 show_daily_average=True,
                 ):
-        
+            
         end_date = df_tx['date'].max()
         start_date = end_date - pd.DateOffset(months=months_to_plot)
         filtered_df = df_tx[(df_tx['date'] >= start_date) & (df_tx['date'] <= end_date)]
-
-
+    
         sns.set(style="ticks", rc={"lines.linewidth": 2})
         plt.style.use(['dark_background'])
         f, ax = plt.subplots(figsize=(12, 8))
@@ -191,45 +190,87 @@ for date_prev in date_of_interest:
         if show_ma30:
             ax.plot(filtered_df['date'], filtered_df[invar3], label=invar3)
         
-        if show_daily_average:
-            ax.axhline(y = average_per_day, color='b', linestyle=':', label = f"Daily average ({'{:,}'.format(round(average_per_day))}{tickertype})")
-        ax.axhline(y = average_per_day, color='k', linestyle='None', label = f"Weekly average ({'{:,}'.format(round(average_per_week))}{tickertype})")
-        ax.axhline(y = average_per_day, color='k', linestyle='None', label = f"Monthly average ({'{:,}'.format(round(average_per_month))}{tickertype})")
+        # Compute averages over filtered data
+        average_per_day_filtered = filtered_df[invar1].mean()
         
-        if months_to_plot < 6:
-            ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+        # Plot averages as horizontal lines
+        if show_daily_average:
+            ax.axhline(y=average_per_day_filtered, color='b', linestyle=':',
+                       label=f"Daily average ({'{:,}'.format(round(average_per_day_filtered))}{tickertype})")
+    
+        # Adjust x-axis based on months_to_plot
+        if months_to_plot <= 1:
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        elif months_to_plot < 6:
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=15))
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
         else:
             ax.xaxis.set_major_locator(mdates.MonthLocator())
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
         
-        # ax.xaxis.set_major_locator(mdates.MonthLocator())
-        sns.despine(offset=5, trim=True)
+        # Set x-axis limits to the data range
+        ax.set_xlim(filtered_df['date'].min(), filtered_df['date'].max())
+        
+        sns.despine(offset=5, trim=False)
         plt.setp(ax.get_xticklabels(), rotation=90)
         ax.set_xlabel('Dates', fontsize=14, weight='bold', labelpad=10)
         ax.set_ylabel(ylab, fontsize=14, weight='bold', labelpad=10)
         ax.set_title(my_title, fontsize=14, weight='bold', loc='left', pad=10)
-        plt.legend(loc="upper left")
-        plt.tight_layout()
         
         handles, labels = ax.get_legend_handles_labels()
-        
         ax.legend(handles, labels,
-                loc='upper right', bbox_to_anchor=(1, 1.08),
-                frameon=False, fancybox=True, shadow=True, ncol=2)
+                  loc='upper right', bbox_to_anchor=(1, 1.08),
+                  frameon=False, fancybox=True, shadow=True, ncol=2)
         
         ax.yaxis.label.set_color(ylab_color)
         
-        xmin, xmax = ax.get_xlim()
-        ymin, ymax = ax.get_ylim()
+        # Collect all y-values from the data being plotted
+        y_values = []
+    
+        # Add the main data
+        y_values.extend(filtered_df[invar1].dropna().values)
+    
+        # Add moving averages if plotted
+        if show_ma7:
+            y_values.extend(filtered_df[invar2].dropna().values)
+        if show_ma30:
+            y_values.extend(filtered_df[invar3].dropna().values)
+    
+        # Add averages if they are being plotted
+        if show_daily_average:
+            y_values.append(average_per_day_filtered)
+    
+        # Compute y-axis limits
+        y_min = min(y_values)
+        y_max = max(y_values)
+        y_range = y_max - y_min
+    
+        # Handle case when y_range is small or zero
+        if y_range == 0:
+            padding = y_max * 0.1 if y_max != 0 else 1  # Avoid zero padding
+        else:
+            padding = y_range * 0.1  # 10% of y_range
+    
+        # Ensure padding is at least a minimal value
+        min_padding = y_max * 0.02 if y_max != 0 else 1
+        padding = max(padding, min_padding)
+    
+        # Set y-limits with padding
+        ax.set_ylim(y_min - padding, y_max + padding)
+    
+        # Set the number of y-ticks
+        ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5, integer=True))
+    
+        # Update y-axis formatter
+        if y_max >= 1e6:
+            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f} M'.format(x / 1e6)))
+        elif y_max >= 1e4:
+            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f} K'.format(x / 1e3)))
+        else:
+            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,}'.format(int(x))))
         
-        if ymax >= 1000:
-            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
-        if ymax >= 100000:
-            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x / 1e3) + ' K'))
-        if ymax >= 1000000:
-            ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
-            
+        plt.tight_layout()
         plt.savefig(os.path.join(resultPath_year, my_title.replace(' ', '_') + '_' + date_prev + '.png'))
     
     
