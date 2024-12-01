@@ -47,11 +47,11 @@
         "token_decimals": 18,
         "token_symbols": "BTC"
     },
-    "cx018d9024fd6c989f56e7f9270c0540d08ecabcc9": {
+    "cxb1bbc36525dfbcb581ef693acbed63d0b23a9fc9": {
         "token_decimals": 18,
         "token_symbols": "bKarma"
     },
-    "cxb1bbc36525dfbcb581ef693acbed63d0b23a9fc9": {
+    "cx018d9024fd6c989f56e7f9270c0540d08ecabcc9": {
         "token_decimals": 18,
         "token_symbols": "bKarma"
     },
@@ -227,11 +227,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxf4e06a367bb463ba2a94843524c8efbd3a56071e": {
+    "cx35437766c9f85441530344b50f734026beab54f3": {
         "token_decimals": 18,
         "token_symbols": "finICX"
     },
-    "cx35437766c9f85441530344b50f734026beab54f3": {
+    "cxf4e06a367bb463ba2a94843524c8efbd3a56071e": {
         "token_decimals": 18,
         "token_symbols": "finICX"
     },
