@@ -342,7 +342,7 @@ try:
     token_price_balanced = request_into_df(url='https://balanced.icon.community/api/v1/tokens')
 
     # unifi protocol
-    token_price_unifi = request_into_df(url='https://assets.unifiprotocol.com/pools-icon.json')
+    # token_price_unifi = request_into_df(url='https://assets.unifiprotocol.com/pools-icon.json')
     
     # token price simple
     # token_price_balanced['Price in USD'] = token_price_balanced['tokens'].apply(lambda x: x.get('price'))
@@ -397,13 +397,14 @@ try:
     # ICX price
     ICX_price = token_price_balanced[token_price_balanced['symbol'] == 'ICX']['Price in USD']
     
-    token_price_unifi['Price in USD'] = token_price_unifi['price'].astype(float).apply(lambda x: x * ICX_price)
-    token_price_unifi = token_price_unifi[['name', 'Price in USD']].rename(columns={'name':'symbol'})
-    token_price_unifi = token_price_unifi[~token_price_unifi['symbol'].isin(token_price_balanced['symbol'])]
+    # token_price_unifi['Price in USD'] = token_price_unifi['price'].astype(float).apply(lambda x: x * ICX_price)
+    # token_price_unifi = token_price_unifi[['name', 'Price in USD']].rename(columns={'name':'symbol'})
+    # token_price_unifi = token_price_unifi[~token_price_unifi['symbol'].isin(token_price_balanced['symbol'])]
     
     token_price_balanced = token_price_balanced[token_price_balanced['symbol'] != 'ICX']
     
-    token_price_all = token_price_balanced.append(token_price_unifi).reset_index(drop=True)
+    # token_price_all = token_price_balanced.append(token_price_unifi).reset_index(drop=True)
+    token_price_all = token_price_balanced.reset_index(drop=True)
 except:
     token_price_all = pd.DataFrame()
 
