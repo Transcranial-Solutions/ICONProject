@@ -103,13 +103,13 @@
         "token_decimals": 18,
         "token_symbols": "CRI10X"
     },
-    "cxcf442ae3cb1cfe4972f35a9f478f0268e289c165": {
-        "token_decimals": 18,
-        "token_symbols": "CRN"
-    },
     "cx28b2ec885b50c8a93da752f2d0467a67127a70e8": {
         "token_decimals": 18,
         "token_symbols": "CROWN"
+    },
+    "cxcf442ae3cb1cfe4972f35a9f478f0268e289c165": {
+        "token_decimals": 18,
+        "token_symbols": "CRN"
     },
     "cx77d798a899a5103c2d389c5ba04a4cfa624425ba": {
         "token_decimals": 18,
