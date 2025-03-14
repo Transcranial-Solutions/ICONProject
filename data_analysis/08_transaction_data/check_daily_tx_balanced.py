@@ -9,6 +9,7 @@ from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import os
 import glob
 import re
@@ -17,7 +18,8 @@ import matplotlib.pyplot as plt  # for improving our visualizations
 import matplotlib.ticker as ticker
 import matplotlib.lines as mlines
 from tqdm import tqdm
-
+import requests
+from bs4 import BeautifulSoup
 
 # path
 #currPath = os.getcwd()
@@ -34,56 +36,114 @@ if not os.path.exists(dataPath):
     os.mkdir(dataPath)
 
 
-csv_files = list(Path(dataPath).glob('*tx_detail_with_group_info*.csv'))
+csv_files = sorted(list(Path(dataPath).glob('*tx_detail_with_group_info*.csv')))
+
+
+
+# =============================================================================
+# Get balanced contract addresses
+# =============================================================================
+url = 'https://github.com/balancednetwork/balanced-java-contracts/wiki/Contract-Addresses'
+
+response = requests.get(url)
+if response.status_code == 200:
+    soup = BeautifulSoup(response.content, 'html.parser')
+    list_items = soup.find_all('li')
+
+    balanced_contract_group = {} 
+    balanced_contract_group_grouped = {}
+
+    pattern = re.compile(r'"([^"]+)"\s*[:\-]?\s*("?(cx[a-fA-F0-9]+)"?)')
+
+    for item in list_items:
+        text = item.get_text(strip=True)
+
+        match = pattern.search(text)
+        if match:
+            contract_name = match.group(1).strip()
+            contract_address = match.group(2).strip('"').strip()
+
+            balanced_contract_group[contract_name] = contract_address
+            balanced_contract_group_grouped[contract_address] = 'Balanced'
+
 
 
 all_df =[]
 for dat in tqdm(csv_files):
-    print(dat)
     df = pd.read_csv(dat, low_memory=False)
-    df = df[['from','to','tx_date']]
-    all_df.append(df)
+    df['to_balanced_only'] = df['to'].map(balanced_contract_group_grouped)
+    df['from_balanced_only'] = df['from'].map(balanced_contract_group_grouped)
+    
+    df['to_label_group_new'] = np.where( (df['to_label_group'] != 'Balanced') & (df['to_balanced_only'] == 'Balanced' ), 'Balanced', df['to_label_group'])
+    df['from_label_group_new'] = np.where( (df['from_label_group'] != 'Balanced') & (df['from_balanced_only'] == 'Balanced' ), 'Balanced', df['from_label_group'])
+    
+    df_subset = df[(df['to_label_group_new'] == 'Balanced') | (df['from_label_group_new'] == 'Balanced')].reset_index(drop=True)
+    
+    data_date = dat.stem.split('_')[-1]
+    df_subset['date'] = data_date
+    
+    conditions = [df_subset['p2p'], df_subset['p2c'], df_subset['c2p'], df_subset['c2c']]
+    choices = ['hx -> hx', 'hx -> cx', 'cx -> hx', 'cx -> cx']
+    
+    df_subset.loc[:, 'tx_mode'] = np.select(conditions, choices, default=np.nan)
+    
+    df_subset['tx_mode'] = np.where(df_subset['intEvtCount']==1, 'IntEvent', df_subset['tx_mode'])
+    
+    df_final = df_subset[['date', 'tx_mode']]
+    all_df.append(df_final)
 
 
-df = pd.concat(all_df)
-melted = df.melt(id_vars=['tx_date'], value_vars=['from', 'to'], value_name='new_column')
-filtered_df = melted[melted['new_column'].str.startswith('hx')]
-df = filtered_df.rename(columns = {'tx_date': 'date', 'new_column': 'wallet'}).reset_index(drop=True)
-df = df.drop(columns='variable')
+df = pd.concat(all_df).reset_index(drop=True)
 
 
+df['tx_mode'] = np.where(df['tx_mode'] == 'hx -> hx', 'hx -> cx', df['tx_mode'])
+
+# =============================================================================
+# Plot
+# =============================================================================
+start_date = '2024-03-12'
+end_date = '2025-03-12'
 
 df['date'] = pd.to_datetime(df['date'])
-ucount_per_day = df.groupby(['date'])['wallet'].nunique()
 
+df_main = df[df['tx_mode'] != 'IntEvent']
+df_intevent = df[df['tx_mode'] == 'IntEvent']
 
-how_many_months = 6
-end_date = df['date'].max()
-start_date = end_date - pd.DateOffset(months=how_many_months)
+df_main_grouped = df_main.groupby(['date', 'tx_mode']).size().unstack(fill_value=0)
+df_intevent_grouped = df_intevent.groupby('date').size()
 
-df_last_x_months = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
+mask = (df_main_grouped.index >= start_date) & (df_main_grouped.index <= end_date)
+df_main_grouped = df_main_grouped.loc[mask]
+df_intevent_grouped = df_intevent_grouped.loc[start_date:end_date]
 
-unique_counts = df_last_x_months.groupby('date')['wallet'].nunique()
+df_main_grouped = df_main_grouped.sort_index()
+df_intevent_grouped = df_intevent_grouped.sort_index()
 
+df_intevent_grouped = df_intevent_grouped.reindex(df_main_grouped.index, fill_value=0)
 
+fig, ax = plt.subplots(figsize=(12, 6))
 
+bottom = None
+for tx_mode in df_main_grouped.columns:
+    ax.bar(df_main_grouped.index, df_main_grouped[tx_mode],
+           bottom=bottom, label=tx_mode)
+    if bottom is None:
+        bottom = df_main_grouped[tx_mode].values
+    else:
+        bottom += df_main_grouped[tx_mode].values
 
-moving_avg = unique_counts.rolling(window=7).mean()
-average_unique_counts = unique_counts.mean()
+ax.bar(df_intevent_grouped.index, df_intevent_grouped,
+       bottom=bottom, color='grey', alpha=0.3, label='IntEvent')
 
+avg_tx_per_day = df_main_grouped.sum(axis=1).mean()
+avg_tx_per_day_with_intevent = (df_main_grouped.sum(axis=1) + df_intevent_grouped).mean()
 
-plt.figure(figsize=(14, 7))
-plt.bar(unique_counts.index, unique_counts.values, color='skyblue', label='Unique Active Wallets')
-plt.plot(moving_avg.index, moving_avg.values, color='r', linestyle='--', linewidth=2, label='7-Day Moving Average')
-plt.title(f'Unique Active Wallets per Day (Last {how_many_months} Months)')
-plt.xlabel('Date')
-plt.ylabel('Number of Unique Active Wallets')
-plt.grid(True, linestyle='--', alpha=0.7)
-
-plt.axhline(y=average_unique_counts, color='green', linestyle='--', linewidth=1.5, label=f'Average: {average_unique_counts:.0f}')
-plt.text(x=unique_counts.index[-1], y=average_unique_counts, s=f'Average: {average_unique_counts:.0f}', color='green', va='bottom', ha='right', fontsize=10)
-
-plt.xticks(ticks=unique_counts.index[::10], rotation=45)
-plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
-plt.tight_layout(rect=[0, 0, 0.95, 1])
+ax.set_xlabel('Date')
+ax.set_ylabel('Transaction Count')
+ax.set_title('Balanced Transaction Count')
+ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', title="Transaction Mode")
+avg_text = f"Avg transactions per day: {int(avg_tx_per_day)} ({int(avg_tx_per_day_with_intevent)} incl. IntEvent)"
+ax.text(0.02, 0.95, avg_text, transform=ax.transAxes, fontsize=12, verticalalignment='top')
+ax.xaxis.set_major_locator(plt.MaxNLocator(nbins=10))
+plt.tight_layout()  
 plt.show()

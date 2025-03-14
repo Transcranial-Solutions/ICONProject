@@ -8,10 +8,6 @@ Created on Tue Jul 16 20:09:39 2024
 from pathlib import Path
 import pandas as pd
 import matplotlib.pyplot as plt
-
-
-
-
 import pandas as pd
 import os
 import glob
@@ -60,15 +56,13 @@ df['date'] = pd.to_datetime(df['date'])
 ucount_per_day = df.groupby(['date'])['wallet'].nunique()
 
 
-how_many_months = 12
+how_many_months = 3
 end_date = df['date'].max()
 start_date = end_date - pd.DateOffset(months=how_many_months)
 
 df_last_x_months = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
 
 unique_counts = df_last_x_months.groupby('date')['wallet'].nunique()
-
-
 
 
 moving_avg = unique_counts.rolling(window=7).mean()
@@ -91,27 +85,3 @@ plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
 plt.tight_layout(rect=[0, 0, 0.95, 1])
 plt.show()
 
-
-
-import requests
-from bs4 import BeautifulSoup
-
-url = 'https://github.com/balancednetwork/balanced-java-contracts/wiki/Contract-Addresses'
-
-response = requests.get(url)
-if response.status_code == 200:
-    soup = BeautifulSoup(response.content, 'html.parser')
-    list_items = soup.find_all('li')
-    
-    for item in list_items:
-        text = item.get_text(strip=True)
-        # print(text)
-        
-        if '": "' in text:
-            contract_name, contract_address = text.split(':')
-            contract_name = contract_name.strip().strip('"').strip(',"')
-            contract_address = contract_address.strip().strip('"').strip(',"')
-            
-            print(f'\nContract Name: {contract_name}\nAddress: {contract_address}')
-else:
-    print('Failed to retrieve the page.')
