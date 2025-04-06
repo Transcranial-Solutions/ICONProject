@@ -84,13 +84,13 @@ use_specified_date = 0 # yes(1) no(0)
 
 # date is range
 if date_is_range == 1:
-    day_1 = "2021_03_23"; day_2 = "2021_03_24"
+    day_1 = "2024_01_01"; day_2 = "2024_08_02"
     day_1_text = day_to_text(day_1); day_2_text = day_to_text(day_2)
     date_of_interest = pd.date_range(start=day_1_text, end=day_2_text, freq='D').strftime("%Y-%m-%d").to_list()
 
 # specified date
 if date_is_range == 0 and use_specified_date == 1:
-   day_1 = "2022_03_25"
+   day_1 = "2024_07_25"
    day_prev = "2022_03_24"
    date_of_interest = [day_to_text(day_1)]
 
@@ -263,19 +263,19 @@ def token_tx_using_original_icon_tracker(total_pages=500):
     return token_xfer_df
 
 
-def try_multiple_times_if_fails():
+def try_multiple_times_if_fails(total_pages=500):
     ## just adding multiple try catch so that hopefully it'll go through
     try:
-        df = token_tx_using_community_tracker(total_pages=500)
+        df = token_tx_using_community_tracker(total_pages)
     except:
         try:
-            df = token_tx_using_newer_icon_tracker(total_pages=500)
+            df = token_tx_using_newer_icon_tracker(total_pages)
         except:
-            df = token_tx_using_original_icon_tracker(total_pages=500)
+            df = token_tx_using_original_icon_tracker(total_pages)
     finally:
         return df
 
-token_xfer_df = try_multiple_times_if_fails()
+token_xfer_df = try_multiple_times_if_fails(total_pages=500)
 
 token_xfer_df['token_name'] = np.where(token_xfer_df['token_name'] == '', 
                                        'unknown_token', 
@@ -284,6 +284,9 @@ token_xfer_df['token_name'] = np.where(token_xfer_df['token_name'] == '',
 token_xfer_df['symbol'] = np.where(token_xfer_df['symbol'] == '', 
                                        '$unknown', 
                                        token_xfer_df['symbol'])
+
+token_xfer_df = token_xfer_df.drop_duplicates()
+token_xfer_df.to_csv(os.path.join(windows_path, 'token_transfer_detail_' + day_today + '.csv'), index=False)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Token price data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 def request_into_df(url):
@@ -339,7 +342,7 @@ try:
     token_price_balanced = request_into_df(url='https://balanced.icon.community/api/v1/tokens')
 
     # unifi protocol
-    token_price_unifi = request_into_df(url='https://assets.unifiprotocol.com/pools-icon.json')
+    # token_price_unifi = request_into_df(url='https://assets.unifiprotocol.com/pools-icon.json')
     
     # token price simple
     # token_price_balanced['Price in USD'] = token_price_balanced['tokens'].apply(lambda x: x.get('price'))
@@ -394,13 +397,14 @@ try:
     # ICX price
     ICX_price = token_price_balanced[token_price_balanced['symbol'] == 'ICX']['Price in USD']
     
-    token_price_unifi['Price in USD'] = token_price_unifi['price'].astype(float).apply(lambda x: x * ICX_price)
-    token_price_unifi = token_price_unifi[['name', 'Price in USD']].rename(columns={'name':'symbol'})
-    token_price_unifi = token_price_unifi[~token_price_unifi['symbol'].isin(token_price_balanced['symbol'])]
+    # token_price_unifi['Price in USD'] = token_price_unifi['price'].astype(float).apply(lambda x: x * ICX_price)
+    # token_price_unifi = token_price_unifi[['name', 'Price in USD']].rename(columns={'name':'symbol'})
+    # token_price_unifi = token_price_unifi[~token_price_unifi['symbol'].isin(token_price_balanced['symbol'])]
     
     token_price_balanced = token_price_balanced[token_price_balanced['symbol'] != 'ICX']
     
-    token_price_all = token_price_balanced.append(token_price_unifi).reset_index(drop=True)
+    # token_price_all = token_price_balanced.append(token_price_unifi).reset_index(drop=True)
+    token_price_all = token_price_balanced.reset_index(drop=True)
 except:
     token_price_all = pd.DataFrame()
 
@@ -416,7 +420,7 @@ except:
 
 
 table_now = token_xfer_df.copy()
-
+table_now = table_now[table_now['datetime'] == title_date]
 
 # table_now = pd.merge(table_now, token_price_all, 
 #                 how='left', 
@@ -469,8 +473,10 @@ except:
     table_now['Price in USD'] = np.nan
     table_now['Value Transferred in USD'] = np.nan
 
+save_these_cols = ['IRC Token', 'holders','liquidity','Amount', 'No. of Transactions', 'Price in USD', 'Value Transferred in USD', 'address', 'path']
 keep_these_cols = ['IRC Token', 'holders','liquidity','Amount', 'No. of Transactions', 'Price in USD', 'Value Transferred in USD']
-table_now = table_now[keep_these_cols]
+
+table_now = table_now[save_these_cols]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Save ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # saving this term's token transfer
 table_now.to_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + '.csv'), index=False)
@@ -491,8 +497,8 @@ table_now.to_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Load previous data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # reading previous term data
-table_prev = pd.read_csv(os.path.join(windows_path_prev, 'IRC_token_transfer_' + day_prev + '.csv'))
-table_now = pd.read_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + '.csv'))
+table_prev = pd.read_csv(os.path.join(windows_path_prev, 'IRC_token_transfer_' + day_prev + '.csv'))[keep_these_cols]
+table_now = pd.read_csv(os.path.join(windows_path, 'IRC_token_transfer_' + day_today + '.csv'))[keep_these_cols]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Load previous data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 ## removing ICX from the data (leaving ICX in the saved data for other purposes)

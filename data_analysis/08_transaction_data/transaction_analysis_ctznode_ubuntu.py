@@ -194,6 +194,7 @@ for date_prev in date_of_interest:
     tokentransfer_date_Path = os.path.join(tokentransferPath, date_prev_underscore) 
     token_transfer_df = pd.read_csv(os.path.join(tokentransfer_date_Path, 'IRC_token_transfer_' + date_prev_underscore + '.csv'), low_memory=False)
     
+    
     token_transfer_value = token_transfer_df['Value Transferred in USD'].sum()
     
     try:
@@ -426,8 +427,14 @@ for date_prev in date_of_interest:
         .merge(to_def, how='left', on='to')
 
     def grouping_wrapper(df, in_col):
+        # def wallet_grouping(df, in_col, in_name, else_name):
+        #     df['group'] = np.where(df[in_col].str.contains(in_name, case=False, regex=True), in_name, else_name)
+        #     df['group'] = np.where(df['to'] == 'System', 'System', df['group'])
+        #     return df        
         def wallet_grouping(df, in_col, in_name, else_name):
-            df['group'] = np.where(df[in_col].str.contains(in_name, case=False, regex=True), in_name, else_name)
+            df['group'] = else_name
+            mask = df[in_col].notna() & df[in_col].str.contains(in_name, case=False, regex=True)
+            df.loc[mask, 'group'] = in_name
             df['group'] = np.where(df['to'] == 'System', 'System', df['group'])
             return df
 
@@ -585,9 +592,9 @@ for date_prev in date_of_interest:
     xmin, xmax = ax1.get_xlim()
     ymin, ymax = ax1.get_ylim()
 
-    if ymax >= 1000:
+    if ymax >= 3_000:
         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x / 1e3) + ' K'))
-    if ymax >= 1000000:
+    if ymax >= 1_000_000:
         ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.1f}'.format(x / 1e6) + ' M'))
 
     ax2.set_ylabel('Fees burned (ICX)', labelpad=10)
@@ -635,8 +642,8 @@ for date_prev in date_of_interest:
     if log_scale:
         ax1.set_yscale('log')
     
-    if save_data:
-       plt.savefig(os.path.join(resultPath_year, 'tx_summary_' + date_prev + '.png'))
+    # if save_data:
+    #    plt.savefig(os.path.join(resultPath_year, 'tx_summary_' + date_prev + '.png'))
 
     
     # donuts
@@ -729,13 +736,13 @@ for date_prev in date_of_interest:
         # plt.show()
         plt.tight_layout()
         
-        if save_data:
-            plt.savefig(os.path.join(resultPath_year, title.replace(' ', '_') + '_' + date_prev + '.png'))
+        # if save_data:
+        #     plt.savefig(os.path.join(resultPath_year, title.replace(' ', '_') + '_' + date_prev + '.png'))
 
-    plot_donut_df(df_col=0, title='Fees Burned', add_string=" ICX")
-    plot_donut_df(df_col=3, title='Regular Tx', add_string="")
-    plot_donut_df(df_col=2, title='Internal Tx', add_string="")
-    plot_donut_df(df_col=1, title='Internal Events', add_string="")
+    # plot_donut_df(df_col=0, title='Fees Burned', add_string=" ICX")
+    # plot_donut_df(df_col=3, title='Regular Tx', add_string="")
+    # plot_donut_df(df_col=2, title='Internal Tx', add_string="")
+    # plot_donut_df(df_col=1, title='Internal Events', add_string="")
     
     print(date_prev + ' is done!')
 

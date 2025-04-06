@@ -462,7 +462,7 @@ def plot_donut_df(df_col=3, title='Regular Tx', add_string=""):
     # plt.show()
     plt.tight_layout()
 
-    plt.savefig(os.path.join(thismonthresultPath, title.replace(' ', '_') + '_' + start_date + '_to_' + end_date + '.png'))
+    # plt.savefig(os.path.join(thismonthresultPath, title.replace(' ', '_') + '_' + start_date + '_to_' + end_date + '.png'))
 
 
 iglobal = get_iiss_info()['Iglobal']
@@ -721,7 +721,7 @@ ax2.spines['right'].set_color('cyan')
 ax2.yaxis.label.set_color('cyan')
 ax2.tick_params(axis='y', colors="cyan")
         
-plt.savefig(os.path.join(thismonthresultPath, 'tx_summary_' + start_date + '_to_' + end_date + '.png'))
+# plt.savefig(os.path.join(thismonthresultPath, 'tx_summary_' + start_date + '_to_' + end_date + '.png'))
 
 
 # donuts
