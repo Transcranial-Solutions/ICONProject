@@ -155,11 +155,11 @@
         "token_decimals": 18,
         "token_symbols": "GUP"
     },
-    "cx3e263b3d82b69eeb6723f285d96af83186c631c4": {
+    "cx42763d4ce9e52a4031b5aa44f4f5c3abe2135f9d": {
         "token_decimals": 18,
         "token_symbols": "ETH"
     },
-    "cx42763d4ce9e52a4031b5aa44f4f5c3abe2135f9d": {
+    "cx3e263b3d82b69eeb6723f285d96af83186c631c4": {
         "token_decimals": 18,
         "token_symbols": "ETH"
     },
@@ -411,11 +411,11 @@
         "token_decimals": 18,
         "token_symbols": "JJT"
     },
-    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
+    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
-    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
+    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
