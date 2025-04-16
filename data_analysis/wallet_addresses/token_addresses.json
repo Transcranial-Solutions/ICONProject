@@ -143,11 +143,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
+    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
-    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
+    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
@@ -155,11 +155,11 @@
         "token_decimals": 18,
         "token_symbols": "GUP"
     },
-    "cx42763d4ce9e52a4031b5aa44f4f5c3abe2135f9d": {
+    "cx3e263b3d82b69eeb6723f285d96af83186c631c4": {
         "token_decimals": 18,
         "token_symbols": "ETH"
     },
-    "cx3e263b3d82b69eeb6723f285d96af83186c631c4": {
+    "cx42763d4ce9e52a4031b5aa44f4f5c3abe2135f9d": {
         "token_decimals": 18,
         "token_symbols": "ETH"
     },
