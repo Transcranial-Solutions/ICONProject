@@ -21,7 +21,7 @@ from functools import reduce
 from iconsdk.icon_service import IconService
 from iconsdk.providers.http_provider import HTTPProvider
 from iconsdk.wallet.wallet import KeyWallet
-from time import time
+from time import sleep
 from datetime import date, datetime, timedelta
 from tqdm import tqdm
 from functools import reduce
@@ -195,7 +195,7 @@ def block_df_using_community_tracker(total_pages=500):
         except:
             random_sleep_except = random.uniform(200,300)
             print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-            time.sleep(random_sleep_except) #sleep the script for x seconds and....#
+            sleep(random_sleep_except) #sleep the script for x seconds and....#
             continue
 
     block_df = pd.concat(block_all)
@@ -234,7 +234,7 @@ def block_df_using_newer_icon_tracker(page_count=500):
         except:
             random_sleep_except = random.uniform(200,300)
             print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-            time.sleep(random_sleep_except) #sleep the script for x seconds and....#
+            sleep(random_sleep_except) #sleep the script for x seconds and....#
             continue
 
     block_df = pd.concat(block_all).sort_values(by="height", ascending=True)
@@ -271,7 +271,7 @@ def block_df_using_original_icon_tracker(page_count=500):
         except:
             random_sleep_except = random.uniform(200,300)
             print("I've encountered an error! I'll pause for"+str(random_sleep_except/60) + " minutes and try again \n")
-            time.sleep(random_sleep_except) #sleep the script for x seconds and....#
+            sleep(random_sleep_except) #sleep the script for x seconds and....#
             continue
 
     block_df = pd.concat(block_all).sort_values(by="height", ascending=True)
