@@ -227,11 +227,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx6f1e52e96cac213fd3689ada4fb2da637cc1822c": {
+    "cx7baf94bd53b505353285ee4c4c050f9703581703": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx7baf94bd53b505353285ee4c4c050f9703581703": {
+    "cx6f1e52e96cac213fd3689ada4fb2da637cc1822c": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -1079,6 +1079,26 @@
         "token_decimals": 18,
         "token_symbols": "XCROWN"
     },
+    "cx6e8571eead321d34de65241418b33ea370629269": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cxb9b1123a92980ce1282cb28c90701407d73dc5a3": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cx4a2d109dac5032b439fdeecd81652ce0f9604032": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cx30f18d26f45d990112a4cd4825c0b79af73aac7c": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cxcbcb893aedb9d79d2588812af5297d309858c0f8": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
     "cx32743b6f4588f5c1b025c5bb732ac62349365417": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
@@ -1087,31 +1107,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx12a58f7ab2cf2b08b426c490a91a9cb03ea05176": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cx30f18d26f45d990112a4cd4825c0b79af73aac7c": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cxb9b1123a92980ce1282cb28c90701407d73dc5a3": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
     "cxc499adbab72acece15f369916298324c37079934": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx6e8571eead321d34de65241418b33ea370629269": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cx4a2d109dac5032b439fdeecd81652ce0f9604032": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cxcbcb893aedb9d79d2588812af5297d309858c0f8": {
+    "cx12a58f7ab2cf2b08b426c490a91a9cb03ea05176": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     }
