@@ -607,13 +607,13 @@
         "token_decimals": 18,
         "token_symbols": "obnUSD"
     },
-    "cxcb2468dea701356641c6402c1c6dce556090ffa5": {
-        "token_decimals": 18,
-        "token_symbols": "FinICX"
-    },
     "cx221cad4d4a88f03f24457c82209d66160275ed4b": {
         "token_decimals": 18,
         "token_symbols": "finICX"
+    },
+    "cxcb2468dea701356641c6402c1c6dce556090ffa5": {
+        "token_decimals": 18,
+        "token_symbols": "FinICX"
     },
     "cx0e4f5f3020431da08adfbb1c01e3847221fe8210": {
         "token_decimals": 6,
@@ -911,11 +911,11 @@
         "token_decimals": 18,
         "token_symbols": "ZPR"
     },
-    "cxb1bbc36525dfbcb581ef693acbed63d0b23a9fc9": {
+    "cx018d9024fd6c989f56e7f9270c0540d08ecabcc9": {
         "token_decimals": 18,
         "token_symbols": "bKarma"
     },
-    "cx018d9024fd6c989f56e7f9270c0540d08ecabcc9": {
+    "cxb1bbc36525dfbcb581ef693acbed63d0b23a9fc9": {
         "token_decimals": 18,
         "token_symbols": "bKarma"
     },
@@ -955,11 +955,11 @@
         "token_decimals": 18,
         "token_symbols": "IDOGE"
     },
-    "cx9f9ce05c6a0e7d10eae81059e623d9840160fef7": {
+    "cx883042c10602b50defe69dd8c44acb21e999ada2": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx883042c10602b50defe69dd8c44acb21e999ada2": {
+    "cx9f9ce05c6a0e7d10eae81059e623d9840160fef7": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
