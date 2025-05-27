@@ -607,13 +607,13 @@
         "token_decimals": 18,
         "token_symbols": "obnUSD"
     },
-    "cx221cad4d4a88f03f24457c82209d66160275ed4b": {
-        "token_decimals": 18,
-        "token_symbols": "finICX"
-    },
     "cxcb2468dea701356641c6402c1c6dce556090ffa5": {
         "token_decimals": 18,
         "token_symbols": "FinICX"
+    },
+    "cx221cad4d4a88f03f24457c82209d66160275ed4b": {
+        "token_decimals": 18,
+        "token_symbols": "finICX"
     },
     "cx0e4f5f3020431da08adfbb1c01e3847221fe8210": {
         "token_decimals": 6,
@@ -691,11 +691,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx45cf0c108c3df650b1c28d9e2fdc8b4d068cb2fa": {
+    "cxe5dc9b456b377696a9a508beb89848d3f749200a": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxe5dc9b456b377696a9a508beb89848d3f749200a": {
+    "cx45cf0c108c3df650b1c28d9e2fdc8b4d068cb2fa": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
