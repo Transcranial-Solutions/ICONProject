@@ -411,11 +411,11 @@
         "token_decimals": 18,
         "token_symbols": "JJT"
     },
-    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
+    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
-    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
+    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
@@ -695,11 +695,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx45cf0c108c3df650b1c28d9e2fdc8b4d068cb2fa": {
+    "cxcd514acd61631c05d3e9a64a97a8bc7a98dbc894": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxcd514acd61631c05d3e9a64a97a8bc7a98dbc894": {
+    "cx45cf0c108c3df650b1c28d9e2fdc8b4d068cb2fa": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
