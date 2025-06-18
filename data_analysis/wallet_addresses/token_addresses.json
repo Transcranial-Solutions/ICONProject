@@ -143,11 +143,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
+    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
-    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
+    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
@@ -299,12 +299,12 @@
         "token_decimals": 18,
         "token_symbols": "ILINK"
     },
-    "cx834943934d9d3ee22df16ccb3208c796bb081657": {
-        "token_decimals": 8,
-        "token_symbols": "IDAI"
-    },
     "cx8428262d07f43cf168ff94106e357ed9bd64b507": {
         "token_decimals": 18,
+        "token_symbols": "IDAI"
+    },
+    "cx834943934d9d3ee22df16ccb3208c796bb081657": {
+        "token_decimals": 8,
         "token_symbols": "IDAI"
     },
     "cx924b9d3acf963bf7ae82cd45cd84c4b3484f8b1f": {
