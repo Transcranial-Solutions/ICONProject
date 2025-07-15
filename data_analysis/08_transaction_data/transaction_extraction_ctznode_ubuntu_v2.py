@@ -92,7 +92,7 @@ date_today = today.strftime("%Y-%m-%d")
 
 # to use specific date (1), use yesterday (0), use range(2)
 use_specific_prev_date = 0 #0
-date_prev = "2024-08-02"
+date_prev = "2025-07-07"
 
 day_1 = "2023-07-01" #07
 day_2 = "2023-12-31"

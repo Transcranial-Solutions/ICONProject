@@ -479,8 +479,8 @@ start_date = one_week_ago(yesterday(date_today))
 end_date = yesterday(date_today)
 
 # manual
-# start_date = '2022-02-04'
-# end_date = '2022-02-10'
+# start_date = '2025-07-07'
+# end_date = '2025-07-13'
 
 thisweekresultPath = os.path.join(weeklyresultPath, start_date + '_to_' + end_date)
 if not os.path.exists(thisweekresultPath):
