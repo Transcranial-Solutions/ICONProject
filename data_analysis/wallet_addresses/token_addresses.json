@@ -607,13 +607,13 @@
         "token_decimals": 18,
         "token_symbols": "obnUSD"
     },
-    "cxcb2468dea701356641c6402c1c6dce556090ffa5": {
-        "token_decimals": 18,
-        "token_symbols": "FinICX"
-    },
     "cx221cad4d4a88f03f24457c82209d66160275ed4b": {
         "token_decimals": 18,
         "token_symbols": "finICX"
+    },
+    "cxcb2468dea701356641c6402c1c6dce556090ffa5": {
+        "token_decimals": 18,
+        "token_symbols": "FinICX"
     },
     "cx0e4f5f3020431da08adfbb1c01e3847221fe8210": {
         "token_decimals": 6,
@@ -903,11 +903,11 @@
         "token_decimals": 24,
         "token_symbols": "XYZ"
     },
-    "cx8968ef96602f08ac0bdcc0d4878f07f8527fce45": {
+    "cx57795da3844a5004d5196312167f08b31d75a9a3": {
         "token_decimals": 18,
         "token_symbols": "ZPR"
     },
-    "cx57795da3844a5004d5196312167f08b31d75a9a3": {
+    "cx8968ef96602f08ac0bdcc0d4878f07f8527fce45": {
         "token_decimals": 18,
         "token_symbols": "ZPR"
     },
@@ -955,10 +955,6 @@
         "token_decimals": 18,
         "token_symbols": "IDOGE"
     },
-    "cxc14c7415efa75d8d75dcd9c50e6ce1072217cd5e": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
     "cxf7c59acb61a6d0c038582ea134dfcf65beebd00b": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
@@ -968,6 +964,10 @@
         "token_symbols": "$unknown"
     },
     "cx9f9ce05c6a0e7d10eae81059e623d9840160fef7": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cxc14c7415efa75d8d75dcd9c50e6ce1072217cd5e": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
