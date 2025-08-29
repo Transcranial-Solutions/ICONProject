@@ -955,11 +955,11 @@
         "token_decimals": 18,
         "token_symbols": "IDOGE"
     },
-    "cx9f9ce05c6a0e7d10eae81059e623d9840160fef7": {
+    "cxf7c59acb61a6d0c038582ea134dfcf65beebd00b": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx883042c10602b50defe69dd8c44acb21e999ada2": {
+    "cx9f9ce05c6a0e7d10eae81059e623d9840160fef7": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -967,7 +967,7 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxf7c59acb61a6d0c038582ea134dfcf65beebd00b": {
+    "cx883042c10602b50defe69dd8c44acb21e999ada2": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
