@@ -143,11 +143,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
+    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
-    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
+    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
@@ -251,11 +251,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxbd4192d265f1a5f6fad3f0c7721f2de60fb88841": {
+    "cxd17316e24ee40f2ef8ed6f3a497311db1b35206d": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxd17316e24ee40f2ef8ed6f3a497311db1b35206d": {
+    "cxbd4192d265f1a5f6fad3f0c7721f2de60fb88841": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -411,11 +411,11 @@
         "token_decimals": 18,
         "token_symbols": "JJT"
     },
-    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
+    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
-    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
+    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
@@ -607,13 +607,13 @@
         "token_decimals": 18,
         "token_symbols": "obnUSD"
     },
-    "cx221cad4d4a88f03f24457c82209d66160275ed4b": {
-        "token_decimals": 18,
-        "token_symbols": "finICX"
-    },
     "cxcb2468dea701356641c6402c1c6dce556090ffa5": {
         "token_decimals": 18,
         "token_symbols": "FinICX"
+    },
+    "cx221cad4d4a88f03f24457c82209d66160275ed4b": {
+        "token_decimals": 18,
+        "token_symbols": "finICX"
     },
     "cx0e4f5f3020431da08adfbb1c01e3847221fe8210": {
         "token_decimals": 6,
