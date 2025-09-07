@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = 'empty-project-type'
-recent_files = ['data_analysis/1_daily_snapshot_before_12_UTC.py', 'data_analysis/2_daily_snapshot_after_12_UTC.py', 'data_analysis/08_transaction_data/transaction_extraction_ctznode_ubuntu_v2.py', 'data_analysis/08_transaction_data/transaction_extraction_ctznode_ubuntu.py']
+recent_files = ['data_analysis/1_daily_snapshot_before_12_UTC.py', 'data_analysis/2_daily_snapshot_after_12_UTC.py', 'data_analysis/08_transaction_data/transaction_extraction_ctznode_ubuntu_v2.py', 'data_analysis/08_transaction_data/transaction_extraction_ctznode_ubuntu.py', 'data_analysis/08_transaction_data/transaction_analysis_ctznode_weekly_ubuntu.py', 'data_analysis/08_transaction_data/transaction_moving_average.py']
 
 [main]
 version = 0.2.0
