@@ -299,12 +299,12 @@
         "token_decimals": 18,
         "token_symbols": "ILINK"
     },
-    "cx8428262d07f43cf168ff94106e357ed9bd64b507": {
-        "token_decimals": 18,
-        "token_symbols": "IDAI"
-    },
     "cx834943934d9d3ee22df16ccb3208c796bb081657": {
         "token_decimals": 8,
+        "token_symbols": "IDAI"
+    },
+    "cx8428262d07f43cf168ff94106e357ed9bd64b507": {
+        "token_decimals": 18,
         "token_symbols": "IDAI"
     },
     "cx924b9d3acf963bf7ae82cd45cd84c4b3484f8b1f": {
