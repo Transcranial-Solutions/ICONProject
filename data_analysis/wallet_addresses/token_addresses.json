@@ -143,11 +143,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
+    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
-    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
+    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
@@ -219,11 +219,11 @@
         "token_decimals": 4,
         "token_symbols": "GPST"
     },
-    "cx53f8ccd5426534f82cf10cb742de033e51da72fc": {
+    "cx4983db3b01bfa6a801504c0987873227480814cb": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx4983db3b01bfa6a801504c0987873227480814cb": {
+    "cx53f8ccd5426534f82cf10cb742de033e51da72fc": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -503,11 +503,11 @@
         "token_decimals": 18,
         "token_symbols": "METX"
     },
-    "cxc8ac53bc23daf4a313a4aea558ec40034199a4c0": {
+    "cx53d1d9ca3e052339d5fc890073660e24d47b964b": {
         "token_decimals": 18,
         "token_symbols": "PLAY"
     },
-    "cx53d1d9ca3e052339d5fc890073660e24d47b964b": {
+    "cxc8ac53bc23daf4a313a4aea558ec40034199a4c0": {
         "token_decimals": 18,
         "token_symbols": "PLAY"
     },
