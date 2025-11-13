@@ -143,11 +143,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
+    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
-    "cx17eb6014740f2ae1d547df76fa593f988986661b": {
+    "cx155c7aaa9de2add77d322713e31dee4ac43094e7": {
         "token_decimals": 18,
         "token_symbols": "DCX"
     },
@@ -251,11 +251,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxd17316e24ee40f2ef8ed6f3a497311db1b35206d": {
+    "cxbd4192d265f1a5f6fad3f0c7721f2de60fb88841": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxbd4192d265f1a5f6fad3f0c7721f2de60fb88841": {
+    "cxd17316e24ee40f2ef8ed6f3a497311db1b35206d": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -299,12 +299,12 @@
         "token_decimals": 18,
         "token_symbols": "ILINK"
     },
-    "cx834943934d9d3ee22df16ccb3208c796bb081657": {
-        "token_decimals": 8,
-        "token_symbols": "IDAI"
-    },
     "cx8428262d07f43cf168ff94106e357ed9bd64b507": {
         "token_decimals": 18,
+        "token_symbols": "IDAI"
+    },
+    "cx834943934d9d3ee22df16ccb3208c796bb081657": {
+        "token_decimals": 8,
         "token_symbols": "IDAI"
     },
     "cx924b9d3acf963bf7ae82cd45cd84c4b3484f8b1f": {
@@ -411,11 +411,11 @@
         "token_decimals": 18,
         "token_symbols": "JJT"
     },
-    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
+    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
-    "cx54bdc94049041acaedae695ec703aba3fd4c8dcc": {
+    "cxbd31ecb07aca9f6f65e00cbcb94189eb209c5148": {
         "token_decimals": 4,
         "token_symbols": "KRWb"
     },
@@ -667,15 +667,7 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx61325803ca4b076f3e79f1ecf73410824b0b3c0c": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cx45cf0c108c3df650b1c28d9e2fdc8b4d068cb2fa": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cxe5dc9b456b377696a9a508beb89848d3f749200a": {
+    "cxf24179be1153e4a27d0f860d57253fa1ac0ccdfa": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -687,7 +679,7 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxcd514acd61631c05d3e9a64a97a8bc7a98dbc894": {
+    "cxf1d1fa2452fa76f736490d232dc1174a3907fe38": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -695,7 +687,7 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx9e575e67c5913cef7b2318c7049599dd507c283b": {
+    "cx45cf0c108c3df650b1c28d9e2fdc8b4d068cb2fa": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -703,15 +695,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx08271d8252e852db22ea83248704ae450fd8afc7": {
+    "cx61325803ca4b076f3e79f1ecf73410824b0b3c0c": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx8c0bb00ca421771e7e6a67d7f0dc04f3e1af96a3": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cxf24179be1153e4a27d0f860d57253fa1ac0ccdfa": {
+    "cxe5dc9b456b377696a9a508beb89848d3f749200a": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -719,11 +707,23 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
+    "cx9e575e67c5913cef7b2318c7049599dd507c283b": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
     "cx3893a333f22ca2e936e183fef39f3eb248b459c0": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxf1d1fa2452fa76f736490d232dc1174a3907fe38": {
+    "cx08271d8252e852db22ea83248704ae450fd8afc7": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cxcd514acd61631c05d3e9a64a97a8bc7a98dbc894": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cx8c0bb00ca421771e7e6a67d7f0dc04f3e1af96a3": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -911,11 +911,11 @@
         "token_decimals": 18,
         "token_symbols": "ZPR"
     },
-    "cx018d9024fd6c989f56e7f9270c0540d08ecabcc9": {
+    "cxb1bbc36525dfbcb581ef693acbed63d0b23a9fc9": {
         "token_decimals": 18,
         "token_symbols": "bKarma"
     },
-    "cxb1bbc36525dfbcb581ef693acbed63d0b23a9fc9": {
+    "cx018d9024fd6c989f56e7f9270c0540d08ecabcc9": {
         "token_decimals": 18,
         "token_symbols": "bKarma"
     },
@@ -963,11 +963,11 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx883042c10602b50defe69dd8c44acb21e999ada2": {
+    "cxc14c7415efa75d8d75dcd9c50e6ce1072217cd5e": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cxc14c7415efa75d8d75dcd9c50e6ce1072217cd5e": {
+    "cx883042c10602b50defe69dd8c44acb21e999ada2": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -1083,23 +1083,7 @@
         "token_decimals": 18,
         "token_symbols": "XCROWN"
     },
-    "cx12a58f7ab2cf2b08b426c490a91a9cb03ea05176": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cxb9b1123a92980ce1282cb28c90701407d73dc5a3": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cx32743b6f4588f5c1b025c5bb732ac62349365417": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cx6e8571eead321d34de65241418b33ea370629269": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cxc499adbab72acece15f369916298324c37079934": {
+    "cx4a2d109dac5032b439fdeecd81652ce0f9604032": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
@@ -1111,11 +1095,27 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx0e42c4094de04c935f0382884c00f50fef396393": {
+    "cxc499adbab72acece15f369916298324c37079934": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
-    "cx4a2d109dac5032b439fdeecd81652ce0f9604032": {
+    "cx32743b6f4588f5c1b025c5bb732ac62349365417": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cx12a58f7ab2cf2b08b426c490a91a9cb03ea05176": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cxb9b1123a92980ce1282cb28c90701407d73dc5a3": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cx6e8571eead321d34de65241418b33ea370629269": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
+    "cx0e42c4094de04c935f0382884c00f50fef396393": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     }
