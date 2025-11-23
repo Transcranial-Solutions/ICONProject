@@ -36,7 +36,10 @@ if not os.path.exists(dataPath):
     os.mkdir(dataPath)
 
 
-csv_files = sorted(list(Path(dataPath).glob('*tx_detail_with_group_info*.csv')))
+# csv_files = sorted(list(Path(dataPath).glob('*tx_detail_with_group_info*.csv')))
+csv_files = sorted(list(Path(dataPath).glob('*tx_detail_with_group_info_2025*.csv')))
+
+# csv_files = sorted(list(Path(dataPath).glob('*tx_detail_2025*.csv')))
 
 
 
@@ -74,10 +77,13 @@ for dat in tqdm(csv_files):
     df['to_balanced_only'] = df['to'].map(balanced_contract_group_grouped)
     df['from_balanced_only'] = df['from'].map(balanced_contract_group_grouped)
     
-    df['to_label_group_new'] = np.where( (df['to_label_group'] != 'Balanced') & (df['to_balanced_only'] == 'Balanced' ), 'Balanced', df['to_label_group'])
-    df['from_label_group_new'] = np.where( (df['from_label_group'] != 'Balanced') & (df['from_balanced_only'] == 'Balanced' ), 'Balanced', df['from_label_group'])
-    
-    df_subset = df[(df['to_label_group_new'] == 'Balanced') | (df['from_label_group_new'] == 'Balanced')].reset_index(drop=True)
+    if 'to_label_group' in df.columns:
+        df['to_label_group_new'] = np.where( (df['to_label_group'] != 'Balanced') & (df['to_balanced_only'] == 'Balanced' ), 'Balanced', df['to_label_group'])
+        df['from_label_group_new'] = np.where( (df['from_label_group'] != 'Balanced') & (df['from_balanced_only'] == 'Balanced' ), 'Balanced', df['from_label_group'])
+        df_subset = df[(df['to_label_group_new'] == 'Balanced') | (df['from_label_group_new'] == 'Balanced')].reset_index(drop=True)
+        
+    else:
+        df_subset = df
     
     data_date = dat.stem.split('_')[-1]
     df_subset['date'] = data_date

@@ -40,10 +40,10 @@ POSSIBLE_NANS = ['', ' ', np.nan]
 
 # to use specific date (1), use yesterday (0), use range(2)
 use_specific_prev_date = 0 #0
-date_prev = "2024-08-02"
+date_prev = "2025-11-05"
 
-day_1 = "2023-07-01" #07
-day_2 = "2024-08-08"
+day_1 = "2025-10-09" #07
+day_2 = "2025-11-05"
 
 def yesterday(doi = "2021-08-20", delta=1):
     yesterday = datetime.fromisoformat(doi) - timedelta(delta)
