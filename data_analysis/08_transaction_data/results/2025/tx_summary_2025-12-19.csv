@@ -1,0 +1,124 @@
+to,Fees burned,Regular Tx,to_def,Internal Tx,Internal Event (excluding Tx),group
+0,0.0,43169,System,1,43170,System
+cx0000000000000000000000000000000000000000,1.8503099999999666,1057,governance,720,0,governance
+cx88fd7df7ddff82f7cc735c871dc519838cb235bb,47.80300967499997,547,bnUSD,3434,12,bnUSD
+cxca5faa5a71d986a2e84dd7e6f5ff791d29901ebe,1.7624813499999992,341,Relay_4,0,0,Relay
+cxb2f67b60ef68f8f239d247e1f23412c0685d4b9b,1.996817299999992,303,unknown_cx,0,118,unknown_cx
+cxf14dea1cff7ceb29a46e6d04533a08f84441e41d,0.7745635499999968,198,Blobble Stake Token,185,0,Blobble
+cx02da5d1c7f21d9d13534b326fa9a5b7234838221,8.715524062499993,166,ICON Pyth verifier,0,0,ICON Pyth verifier
+cxd82fb5d3effecd8c9071a4bba3856ad7222c4b91,2.2497148374999987,71,Balanced Savings,97,0,Balanced
+cx3975b43d260fb8ec802cef6e60c2f4d07486f11d,3.8343265999999967,59,Wrapped ICX,349,23,Wrapped ICX
+cx1be33c283c7dc7617181d1b21a6a2309e71b1ee7,0.810665949999998,43,unknown_cx,85,0,unknown_cx
+cx2609b924e33ef00b648a409245c7ea394c467824,4.320747837499999,43,sICX,288,3,sICX
+cx5a0af85407c69945eb318d4ac18e9e842184163c,1.3669679374999986,35,GangWar Simulation,51,25,GangstaBet
+cxabea09a8c5f3efa54d0a0370b14715e6f2270591,0.7548451999999997,33,Balanced Asset Manager,132,33,Balanced
+cx508002ec116fbf3ab406329c0df28e70d7e75fb3,1.8806450374999995,31,Sui,163,0,Sui
+hxb568381d35d3e7a6383200e8a0d30310af20b929,0.03125,25,binance_hot,0,0,binance
+hx4dbf66982346c15349e2c76b709448f9f90e04da,0.02625,21,unknown_hx,0,0,unknown_hx
+cx66a031cc3bd305c76371fb586e93801b948254f0,1.7380273249999996,21,Avalanche,135,0,Avalanche
+cxa0af3165c08318e988cb30993b3048335b94af6c,1.2066052624999997,20,balanced_dex,91,25,Balanced
+cx07b184a37f03c6ab681fcbd0b45aec6dc3eafbeb,1.5520147874999997,19,Bitcoin,121,0,Bitcoin
+cx10d59e8103ab44635190bd4139dbfd682fa2d07e,1.369152624999999,18,balanced_rewards,41,0,Balanced
+cx66d4d90f5f113eba575bf793570135f9b10cece1,1.5980711124999993,15,balanced_loans,40,17,Balanced
+cxba62bb61baf8dd8b6a04633fe33806547785a00c,0.4429918749999999,14,MyID_3,14,0,MyID
+cx8dc674ce709c518bf1a6058a2722a59f94b6fb7f,0.5819477749999994,13,balanced_staked_lp,0,26,Balanced
+cxa07f426062a1384bdd762afa6a87d123fbc81c75,0.7087773625,13,xCall,48,49,xCall
+cxdbfb9d63e84e6ad6ab301a2f2ef6b6e6e9227cbe,0.18076093749999939,12,unknown_cx,0,12,unknown_cx
+cx288d13e1b63563459a2ac6179f237711f6851cb5,0.8102113374999992,10,Ethereum,63,0,Ethereum
+cx4297f4b63262507623b6ad575d0d8dd2db980e4e,0.7999933249999992,9,Injective,63,0,Injective
+hx1865261cc28080f6059c737348e231051214c21c,0.00875,7,unknown_hx,0,0,unknown_hx
+hx3a701d86c3145ced7629429dde84bac8d0a3360f,0.00875,7,unknown_hx,0,0,unknown_hx
+cx518f64edcd35db9044a2de63fdc10abfd5f7d611,1.0252317749999997,6,Stellar,66,0,Stellar
+cxf61cd5a45dc9f91c15aa65831a30a90d59a09619,0.4638734375,5,balanced_baln,36,2,Balanced
+hx622fdda8601d5bc01f51e635bc66d99d2e13cfd8,0.005,4,unknown_hx,0,0,unknown_hx
+cx694e8c9f1a05c8c3719f30d46b97697960e4289e,0.03800075,4,MyID_2,4,0,MyID
+cxe5cdf3b0f26967b0efc72d470d57bbf534268f94,0.0338489499999996,4,unknown_cx,0,4,unknown_cx
+hxa1372bbec1e946dbe7681c28fadaac91b38befd9,0.005,4,unknown_hx,0,0,unknown_hx
+hx3527f5f4d718c0346bd418fdd6f3b7165ab9330d,0.005,4,unknown_hx,0,0,unknown_hx
+hxd9fb974459fe46eb9d5a7c438f17ae6e75c0f2d1,0.00375,3,huobi_01,0,0,huobi_01
+cx2d552c485ec8bcaa75aac02424e2aca6ffdb2f1b,0.2645478,3,Binance Coin,21,0,binance
+hx94165ff0c4c93a68c8978b83dd97cbc5203ea3e1,0.00375,3,unknown_hx,0,0,unknown_hx
+hxa565a28c6d34b3f63e57fb8dc15f1905d3c9b985,0.00375,3,unknown_hx,0,0,unknown_hx
+cx22319ac7f412f53eabe3c9827acf5e27e9c6a95f,0.19465305,3,USDC,18,0,USDC
+hxc70ba5d4d4bdea9b7d312af3444d26c18cbb1a09,0.0025,2,unknown_hx,0,0,unknown_hx
+hx16a12628d78f25d83f836597ce225524de8d6027,0.0025,2,unknown_hx,0,0,unknown_hx
+cx5b5a03cb525a1845d0af3a872d525b18a810acb0,0.14208975000000001,2,btp-0x38.bsc-BTCB,14,0,BTP
+hx470791761244e611519201a9c8a3dd989ceebdcc,0.0025,2,unknown_hx,0,0,unknown_hx
+hxac8855c483fb0e6be875a26ae55c4947de3be86a,0.0025,2,unknown_hx,0,0,unknown_hx
+hx29780c2e7cd0b286d116342153c34210f978c9b7,0.0025,2,unknown_hx,0,0,unknown_hx
+hx8ac037ad14449b686777b60e84adb2780a69f365,0.0025,2,unknown_hx,0,0,unknown_hx
+hxa7b7a53c0cc78d39fc8e9d9444890fe7733e9142,0.00125,1,unknown_hx,0,0,unknown_hx
+hxab05446278c5aef22836483e995a0e4d4455038c,0.00125,1,unknown_hx,0,0,unknown_hx
+hxa9550408aba9fd4166927709438cd10ccb566ec1,0.00125,1,unknown_hx,0,0,unknown_hx
+hxa9f4b6080cefe7af0224f309a7e6935ef0b1a7b1,0.00125,1,unknown_hx,0,0,unknown_hx
+hx8ed5d4e94876b65fc09204f007f85320ab0b23f3,0.00125,1,unknown_hx,0,0,unknown_hx
+hx88d0bbd157ddb4ea6c188e7423d2bf2824812b67,0.00125,1,unknown_hx,0,0,unknown_hx
+hx9f1253a2b91e3f6817116e2a0da3120aeda183d2,0.00125,1,unknown_hx,0,0,unknown_hx
+hx9d4b2e99716dead1c4356ea2c878861ad9c3aca2,0.00125,1,unknown_hx,0,0,unknown_hx
+hx95658da8906c50a8beb48dbe2dd4c1b3d734ccd0,0.00125,1,unknown_hx,0,0,unknown_hx
+hx8f8767029f1bb6363e7f47dda3f7bfe93d189ec9,0.00125,1,unknown_hx,0,0,unknown_hx
+hxa28bf1566ec82115aa53061508e5a69bcd54ed3a,0.00125,1,unknown_hx,0,0,unknown_hx
+cx21e94c08c03daee80c25d8ee3ea22a20786ec231,0.229243425,1,balanced_router,10,1,Balanced
+hxad585e9ac3c042857477ecdbcb25dfd85f48cbd5,0.00125,1,unknown_hx,0,0,unknown_hx
+hxccfa40f0831d5531a465fde0e51707a7ea33df53,0.00125,1,unknown_hx,0,0,unknown_hx
+hxf6e350acda99c19d7971f7cc04b0ab1ba33ae223,0.00125,1,unknown_hx,0,0,unknown_hx
+hxf3bc0439715697d5cca0bcfe527716991344ba8a,0.00125,1,unknown_hx,0,0,unknown_hx
+hxed5e0d1bade8dc01084d0a68e0d370c41c69465d,0.00125,1,unknown_hx,0,0,unknown_hx
+hxec052dfc0db0ae26086ca78e36a054a8424d3707,0.00125,1,unknown_hx,0,0,Blobble
+hxd99b12114b11022eef2c9c5ddaf8377b463ba157,0.00125,1,unknown_hx,0,0,unknown_hx
+hxd6a9c0867b844bd6fb7bbc1c4f6403f3b6385028,0.00125,1,unknown_hx,0,0,unknown_hx
+hxd5ace539bf910635c2fa0e9c185d2d3c8d52c4cc,0.00125,1,binance.us,0,0,binance
+hxd3199992d8a9089703161b25f0e2b5d9d5fb5092,0.00125,1,unknown_hx,0,0,unknown_hx
+hxca0ff6c0ee3121a89255dc3e13e2304575ddeaf2,0.00125,1,unknown_hx,0,0,unknown_hx
+hxb3d7a63231891645f63c44a4e1d7f22cc3c6dfd5,0.00125,1,unknown_hx,0,0,unknown_hx
+hxc70704ca7f499b9e1c484e1f6c07aa56ed5bba7d,0.00125,1,unknown_hx,0,0,unknown_hx
+hxc69f3dcf0440e0182a30408166805a5530907a94,0.00125,1,unknown_hx,0,0,unknown_hx
+hxc63d95bc323f5a827b41068dac055a012571099d,0.00125,1,unknown_hx,0,0,unknown_hx
+hxc484ec2335382141296d19255d94599cd5fa36d7,0.00125,1,unknown_hx,0,0,unknown_hx
+hxc46443a39219632e18a74890d2368c003163e8ca,0.00125,1,unknown_hx,0,0,unknown_hx
+hxbb984f278abd66ae2155edbd91f8c87ce98411c8,0.00125,1,kucoin,0,0,kucoin
+hxbade77a20fd4bd693f42e1f85d609c9dbedfc889,0.00125,1,unknown_hx,0,0,unknown_hx
+hx83318ffd1a82fef35fbbbe516656c596bab3df81,0.00125,1,unknown_hx,0,0,unknown_hx
+hx86e53d31e89e45dece5dc19b3f68572e4c1d6353,0.00125,1,unknown_hx,0,0,unknown_hx
+cx69bcdf1753472c1444188ec3f5188657e30c8322,0.003210125,1,"broof - we prove, verify and love you.",0,0,"broof - we prove, verify and love you."
+hx6e6a2595af3311fb23f19318987a31453fc4f8c0,0.00125,1,unknown_hx,0,0,unknown_hx
+hx2196f44adb66395abbee0760b07e7ad685bb686c,0.00125,1,unknown_hx,0,0,unknown_hx
+hx19d9a3d5da621bac9e76a231cf73164b08e9df56,0.00125,1,unknown_hx,0,0,unknown_hx
+hx18e2af50e831d372116c607babbb22154c47122c,0.00125,1,unknown_hx,0,0,unknown_hx
+hx135b40d8a4624c0d3f7c759a6efb933f17e8ac1f,0.00125,1,unknown_hx,0,0,unknown_hx
+hx12c63504c934cd60339f3c907bb8550849455faf,0.00125,1,unknown_hx,0,0,unknown_hx
+hx109a827e553de8ea0148ac0ffd2c562bf5988b1f,0.00125,1,unknown_hx,0,0,unknown_hx
+hx0e573245f59a82ee78e4c2ed84431bd9a4237388,0.00125,1,unknown_hx,0,0,unknown_hx
+hx0cd95c8fc1c69bd4764d945b0af706f9e75af7dd,0.00125,1,unknown_hx,0,0,unknown_hx
+hx0a86520370a6f0114a5d41b3949f773e8db59f05,0.00125,1,unknown_hx,0,0,unknown_hx
+hx06e70141e4970521741fa435aefdf2d642fff1c1,0.00125,1,unknown_hx,0,0,unknown_hx
+hx0264761f64c74ff327604250cfa2b66d1fd28e8c,0.00125,1,unknown_hx,0,0,unknown_hx
+hx01b387e216c8d2f996115972838c2954f463f4ac,0.00125,1,unknown_hx,0,0,unknown_hx
+cxfa09b71b9a82abc56678707ac4cbc0437635ff1d,0.2502695374999999,1,ICON Proof of liquidity Manager,6,3,ICON Proof of liquidity Manager
+cx553b05df18e9d7c00d8bf4675e579cbbb23c4b30,0.077238425,1,OMM Fee Distribution,2,1,Omm
+cxe0252e6c1fe4040412811d83d13979e335287e45,0.0764296625,1,balanced_boosted_baln,3,2,Balanced
+cxdc30a0d3a1f131565c071272a20bc0b06fd4c17b,0.04520385,1,Balanced-ICON Burner,0,0,Balanced
+cx65c9e3d4fea842e00add0d32a5b4c5e4e04c7a6b,0.0227417875,1,Solana,1,1,Solana
+cxd08fe6f4cf2b0622aa210b57210feb6fbbe41a3e,0.20027735,1,ICON IRelay Inflation Manager,8,2,Relay
+hx213c82008688689aa2d01efbdf726c65add40b97,0.00125,1,unknown_hx,0,0,unknown_hx
+hx23b0a921071d8249c3124898a84320928d2d8c58,0.00125,1,unknown_hx,0,0,unknown_hx
+hx6b91c8dea3114de74ecfa85908b875778c2b599c,0.00125,1,bybit,0,0,bybit
+hx29eb841f8c659af8e4788eac63e343fb22006aaa,0.00125,1,unknown_hx,0,0,unknown_hx
+hx68646780e14ee9097085f7280ab137c3633b4b5f,0.00125,1,kraken_hot,0,0,kraken
+hx65aca01eb1f3ea08341694a12e7ed10caefaa13b,0.00125,1,unknown_hx,0,0,unknown_hx
+hx636d2c0563989185e98395430f28e12fe959ee48,0.00125,1,unknown_hx,0,0,unknown_hx
+hx621b2f2e2de4af513a11b7f5466046f6c964e0aa,0.00125,1,unknown_hx,0,0,unknown_hx
+hx617ac15dd764220ec831b3a7868f0fcf6397c799,0.00125,1,unknown_hx,0,0,unknown_hx
+hx5ea47668418db82fa53c13dd6bbcfa56d9ee406f,0.00125,1,unknown_hx,0,0,unknown_hx
+hx5d0f4ede2653be1128df93b5a896b309dd547a27,0.00125,1,unknown_hx,0,0,unknown_hx
+hx566f5c0b5ce63e574e0f85b6e3a6e3e4400820ba,0.00125,1,unknown_hx,0,0,unknown_hx
+hx50d4554ddf83df072f4e8ebc9eed798f1fe6443c,0.00125,1,unknown_hx,0,0,unknown_hx
+hx4cb1ab50e8b189860ed714603caaaf0e9bee9632,0.00125,1,unknown_hx,0,0,unknown_hx
+hx4846c4d1e83751f3810fc6b8dabf699cfec5de60,0.00125,1,unknown_hx,0,0,unknown_hx
+hx45ded124c21c860f11a0506cd37926ad073113a8,0.00125,1,unknown_hx,0,0,unknown_hx
+hx455bcbc0d018da67f4b92c14e61f5b5628f6adfa,0.00125,1,unknown_hx,0,0,unknown_hx
+hx42554c9b949dcf420bb384476adb35b5b0d60e48,0.00125,1,unknown_hx,0,0,unknown_hx
+hx3d5c3ce7554f4d762f6396e53b2c5de07074ec39,0.00125,1,unknown_hx,0,0,unknown_hx
+hx33913d2e0418cdbe30dede51188fd24227e424f0,0.00125,1,unknown_hx,0,0,unknown_hx
+hx2f1d35d8004bbae1d6d5e779ef2e267c84ab661f,0.00125,1,unknown_hx,0,0,unknown_hx
+hxf8ba428a4400768a734f3cec7f75db87f96e5a86,0.00125,1,unknown_hx,0,0,unknown_hx
