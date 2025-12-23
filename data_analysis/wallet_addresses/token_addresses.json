@@ -671,6 +671,10 @@
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
+    "cx08271d8252e852db22ea83248704ae450fd8afc7": {
+        "token_decimals": NaN,
+        "token_symbols": "$unknown"
+    },
     "cx9e46d9a41938accd08193e4ed5ae621c84dc644b": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
@@ -688,10 +692,6 @@
         "token_symbols": "$unknown"
     },
     "cxad29163de9e90effaf2419ff4aba0d7088ed9d12": {
-        "token_decimals": NaN,
-        "token_symbols": "$unknown"
-    },
-    "cx08271d8252e852db22ea83248704ae450fd8afc7": {
         "token_decimals": NaN,
         "token_symbols": "$unknown"
     },
